@@ -18,7 +18,6 @@ public class ProductDao {
     // Phương thức lấy tất cả các sản phẩm
     public List<Product> getAll() {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
-
         String query = "SELECT " +
                 "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, " +
                 "p.catalog_id, p.description, p.created_at, p.updated_at, " +
@@ -28,8 +27,9 @@ public class ProductDao {
                 "LEFT JOIN inventory i ON p.id = i.product_id " +
                 "LEFT JOIN product_materials pm ON p.id = pm.product_id " +
                 "LEFT JOIN materials m ON pm.material_id = m.id " +
+                "GROUP BY p.id, m.id " + // gom nhóm để tính toán stock
+                "HAVING stock > 0 " +    // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
                 "ORDER BY p.id";
-
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query);
              ResultSet rs = statement.executeQuery()) {
@@ -309,7 +309,13 @@ public class ProductDao {
     }
     public List<Product> getProductViewest(int limit) {
         List<Product> re = new ArrayList<>();
-        String query = "SELECT id, name, price, discount, view, img FROM products ORDER BY view DESC LIMIT ?";
+        String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, " +
+                "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock " +
+                "FROM products p " +
+                "LEFT JOIN inventory i ON p.id = i.product_id " +
+                "GROUP BY p.id " +
+                "HAVING stock > 0 " +
+                "ORDER BY p.view DESC LIMIT ?";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, limit);
