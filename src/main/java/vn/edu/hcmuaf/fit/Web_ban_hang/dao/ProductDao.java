@@ -28,7 +28,7 @@ public class ProductDao {
                 "LEFT JOIN product_materials pm ON p.id = pm.product_id " +
                 "LEFT JOIN materials m ON pm.material_id = m.id " +
                 "GROUP BY p.id, m.id " + // gom nhóm để tính toán stock
-                "HAVING stock > 0 " +    // chặn tồn kho = 0 hoặc khi sản phẩm khoong có trong inventory
+                "HAVING stock > 0 " +    // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
                 "ORDER BY p.id";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query);
