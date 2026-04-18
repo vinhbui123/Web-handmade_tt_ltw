@@ -13,14 +13,14 @@ import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Base64; // Import this for Encoding
+import java.nio.file.Paths;
 
 @WebServlet(name = "AccountController", urlPatterns = "/account")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024,
-        maxFileSize = 1024 * 1024 * 5, // 5MB
+        maxFileSize = 1024 * 1024 * 3, // 3MB
         maxRequestSize = 1024 * 1024 * 10
 )
 public class AccountController extends HttpServlet {
@@ -45,7 +45,7 @@ public class AccountController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        // 1. Get Inputs
+        // Get Inputs
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email"); // Handle null if disabled in JSP!
         String phoneNumber = request.getParameter("phoneNumber");
@@ -54,14 +54,14 @@ public class AccountController extends HttpServlet {
         String firstName = parts.length > 0 ? parts[0] : "";
         String lastName = parts.length > 1 ? parts[1] : "";
 
-        // 2. Validate
+        // Validate
         String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber);
         if (errorMsg != null) {
             handleUpdateUserError(request, response, errorMsg);
             return;
         }
 
-        // 3. Update User Object Basic Info
+        // Update User Object Basic Info
         user.setFirstName(firstName);
         user.setLastName(lastName);
         if (email != null && !email.trim().isEmpty()) user.setEmail(email);
@@ -69,27 +69,40 @@ public class AccountController extends HttpServlet {
         user.setAddress(request.getParameter("address"));
         user.setBio(request.getParameter("bio"));
 
-        // ================================================================
-        // 4. Handle Avatar Upload (CONVERT TO BASE64 STRING)
-        // ================================================================
         Part avatarPart = request.getPart("avatarUpload");
+
         if (avatarPart != null && avatarPart.getSize() > 0) {
-            try (InputStream inputStream = avatarPart.getInputStream()) {
-                // Read all bytes from the uploaded file
-                byte[] imageBytes = inputStream.readAllBytes();
 
-                // Convert bytes to Base64 String
-                String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            log.info("begin upload avatar");
+            if (user.getAvatar() != null && !user.getAvatar().trim().isEmpty()) {
+                String oldFilePath = request.getServletContext().getRealPath("/") + user.getAvatar();
+                File oldFile = new File(oldFilePath);
 
-                // Save this LONG string into the User object
-                user.setAvatar(base64Image);
-            } catch (IOException e) {
-                log.error(e.getMessage());
+                // If the file exists on server, delete it
+                if (oldFile.exists() && oldFile.isFile()) {
+                    boolean deleted = oldFile.delete();
+                    if (!deleted) {
+                        log.warn("Cant delete avatar file: {}", oldFilePath);
+                    }
+                }
             }
-        }
-        // ================================================================
 
-        // 5. Update Database
+            String originalFileName = Paths.get(avatarPart.getSubmittedFileName()).getFileName().toString();
+            // Make file save dont collision when upload
+            String newFileName = System.currentTimeMillis() + "_" + originalFileName;
+
+            String uploadPath = request.getServletContext().getRealPath("/images/avatars");
+            File uploadDir = new File(uploadPath);
+            if (!uploadDir.exists()) uploadDir.mkdirs();
+
+            String filePath = Paths.get(uploadPath, newFileName).toString();
+            avatarPart.write(filePath);
+
+            // Update the user object with the new database path
+            user.setAvatar("images/avatars/" + newFileName);
+        }
+
+        // Update Database
         boolean success = this.userService.updateUser(user);
 
         if (!success) {
@@ -104,7 +117,6 @@ public class AccountController extends HttpServlet {
         request.getRequestDispatcher("account.jsp").forward(request, response);
     }
 
-    // ... keep doGet and handleUpdateUserError the same ...
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -137,4 +149,5 @@ public class AccountController extends HttpServlet {
         request.setAttribute("user", tempUser);
         request.getRequestDispatcher("account.jsp").forward(request, response);
     }
+
 }

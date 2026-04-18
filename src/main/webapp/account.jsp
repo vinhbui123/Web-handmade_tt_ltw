@@ -72,10 +72,10 @@
             <div class="avatar-section">
                 <div class="avatar-container" id="avatarPreview">
                     <c:choose>
-                        <%-- CASE 1: User has an avatar in Database (Base64 string) --%>
+                        <%-- CASE 1: User has an avatar in Database (File Path) --%>
                         <c:when test="${not empty user.avatar}">
                             <img id="avatarImage"
-                                 src="data:image/jpeg;base64,${user.avatar}"
+                                 src="${pageContext.request.contextPath}/${user.avatar}"
                                  alt="Avatar"
                                  style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 1px solid #ddd;">
                         </c:when>
@@ -144,16 +144,37 @@
 <script>
     function previewImage(input) {
         var preview = document.getElementById('avatarImage');
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
+        if (!preview) return;
 
-            reader.onload = function (e) {
-                // Set the src of the image to the file user just picked
-                preview.src = e.target.result;
-            }
+        var file = input.files && input.files[0];
+        if (!file) return;
 
-            reader.readAsDataURL(input.files[0]);
+        // 1. Validate file type
+        var allowedTypes = ['image/jpeg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Chỉ chấp nhận file .JPEG hoặc .PNG');
+            input.value = ''; // Reset input
+            return;
         }
+
+        // 2. Validate file size (max 1MB)
+        var maxSize = 1024 * 1024; // 1MB in bytes
+        if (file.size > maxSize) {
+            alert('File ảnh không được vượt quá 1MB');
+            input.value = ''; // Reset input
+            return;
+        }
+
+        // 3. Preview the image
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+        };
+        reader.onerror = function () {
+            alert('Không thể đọc file ảnh. Vui lòng thử lại.');
+            input.value = '';
+        };
+        reader.readAsDataURL(file);
     }
 </script>
 </html>
