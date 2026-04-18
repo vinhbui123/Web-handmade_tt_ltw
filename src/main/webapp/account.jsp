@@ -158,7 +158,7 @@
         }
 
         // 2. Validate file size (max 1MB)
-        var maxSize = 1024 * 1024; // 1MB in bytes
+        var maxSize = 1024 * 1024*3; // 1MB in bytes
         if (file.size > maxSize) {
             alert('File ảnh không được vượt quá 1MB');
             input.value = ''; // Reset input

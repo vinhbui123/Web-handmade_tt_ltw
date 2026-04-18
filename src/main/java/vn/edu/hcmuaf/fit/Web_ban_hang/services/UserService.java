@@ -33,10 +33,15 @@ public class UserService {
     }
 
     // Add this method to your UserService.java class
-    public String validateUpdateProfile(String firstName, String lastName, String phone) {
-        if (firstName == null || firstName.isEmpty()) return "Tên không được để trống.";
-        if (lastName == null || lastName.isEmpty()) return "Họ không được để trống.";
-        if (phone == null || phone.isEmpty()) return "Số điện thoại không được để trống.";
+// Thêm tham số address và bio vào hàm
+    public String validateUpdateProfile(String firstName, String lastName, String phone, String address) {
+        if (firstName == null || firstName.trim().isEmpty()) return "Tên không được để trống.";
+        if (lastName == null || lastName.trim().isEmpty()) return "Họ không được để trống.";
+        if (phone == null || phone.trim().isEmpty()) return "Số điện thoại không được để trống.";
+        if (!phone.matches("^0\\d{9}$")) {
+            return "Số điện thoại phải bao gồm đúng 10 chữ số và bắt đầu bằng số 0.";
+        }
+        if (address == null || address.trim().isEmpty()) return "Địa chỉ không được để trống.";
         return null;
     }
 

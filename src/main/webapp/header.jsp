@@ -24,77 +24,79 @@
                     <img src="images/logo.png">
                 </a>
             </div>
-            <div class="header-action">
-                <div class="header-search">
-                    <div class="search-box">
-                        <form id="searchForm" action="search" method="get">
-                            <input type="text" name="keyword" placeholder="Tìm Kiếm Sản Phẩm" required>
-                            <button type="submit"><i class="fas fa-search"></i></button>
-                        </form>
-                    </div>
-                </div>
-                <c:set var="user" value="${sessionScope.user}"/>
-                <div class="header-account">
-                     <span class="account-icon">
-            <c:choose>
-                <%-- CASE 1: User is Logged In --%>
-                <c:when test="${user.getUsername() != null}">
-            <a href="${pageContext.request.contextPath}/account">
-                <c:choose>
-                    <%-- User has an uploaded avatar --%>
-                    <c:when test="${not empty user.avatar}">
-                        <img src="${pageContext.request.contextPath}/${user.avatar}"
-                             alt="Avatar"
-                             style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; vertical-align: middle;">
-                    </c:when>
-                    <%-- User does NOT have an avatar, show default icon --%>
-                    <c:otherwise>
-                        <i class="fas fa-user"></i>
-                    </c:otherwise>
-                </c:choose>
-            </a>
-                </c:when>
 
-                <%-- CASE 2: User is NOT Logged In --%>
-                <c:otherwise>
-                    <a href="${pageContext.request.contextPath}/login"><i class="fas fa-user"></i></a>
-                </c:otherwise>
-            </c:choose>
-            </span>
-                    <div class="account-info">
-                        <c:choose>
-                            <c:when test="${not empty user.getUsername()}">
-                                    <span class="account-text">Xin chào, ${user.getFirstName()}
-                                        ${user.getLastName()}!</span>
-                                <a href="${pageContext.request.contextPath}/change-password">
-                                    <span class="account-menu"> Đổi mật khẩu </span></a>
-                                <a href="${pageContext.request.contextPath}/logout">
-                                    <span class="account-menu"> Đăng Xuất <i class="fas fa-sign-out-alt"></i></span></a>
-                            </c:when>
-                            <c:otherwise>
-                                <span> Xin Chào khách hàng </span>
-                                <span class="account-text"><a
-                                        href="${pageContext.request.contextPath}/login">Đăng Nhập</a> /
-                                        <a href="${pageContext.request.contextPath}/register">Đăng
-                                            Ký</a></span>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
+            <%-- 2. KHỐI TÀI KHOẢN --%>
+            <c:set var="user" value="${sessionScope.user}"/>
+            <div class="header-account">
+                 <span class="account-icon">
+                    <c:choose>
+                        <c:when test="${user.getUsername() != null}">
+                            <a href="${pageContext.request.contextPath}/account">
+                                <c:choose>
+                                    <c:when test="${not empty user.avatar}">
+                                        <img src="${pageContext.request.contextPath}/${user.avatar}"
+                                             alt="Avatar"
+                                             style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; vertical-align: middle;"
+                                             onerror="this.src='${pageContext.request.contextPath}/images/default-avatar.png';">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <i class="fas fa-user"></i>
+                                    </c:otherwise>
+                                </c:choose>
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/login"><i class="fas fa-user"></i></a>
+                        </c:otherwise>
+                    </c:choose>
+                </span>
+                <div class="account-info">
+                    <c:choose>
+                        <c:when test="${not empty user.getUsername()}">
+                            <span class="account-text">Xin chào, ${user.getFirstName()} ${user.getLastName()}!</span>
+                            <a href="${pageContext.request.contextPath}/change-password">
+                                <span class="account-menu"> Đổi mật khẩu </span></a>
+                            <a href="${pageContext.request.contextPath}/logout">
+                                <span class="account-menu"> Đăng Xuất <i class="fas fa-sign-out-alt"></i></span></a>
+                        </c:when>
+                        <c:otherwise>
+                            <span> Xin Chào khách hàng </span>
+                            <span class="account-text">
+                                <a href="${pageContext.request.contextPath}/login">Đăng Nhập</a> /
+                                <a href="${pageContext.request.contextPath}/register">Đăng Ký</a>
+                            </span>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
+            </div>
+
+            <%-- 3. KHỐI TÌM KIẾM --%>
+            <div class="header-search">
+                <div class="search-box">
+                    <form id="searchForm" action="search" method="get">
+                        <input type="text" name="keyword" placeholder="Tìm Kiếm Sản Phẩm" required>
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <%-- 4. KHỐI ACTION (Chỉ còn Giỏ hàng, Đơn mua, Quản trị) --%>
+            <div class="header-action">
                 <div class="header-cart" onclick="window.location.href='cart'">
                     <i class="fas fa-cart-shopping"></i>
-
                     <c:if test="${sessionScope.cart !=  null}">
                         <span class="cart-count">${sessionScope.cart.getList().size()}</span>
                     </c:if>
                     <span class="cart-text"> Giỏ Hàng</span>
                 </div>
+
                 <c:if test="${not empty sessionScope.user}">
                     <div class="header-purchase" onclick="window.location.href='purchase'">
                         <i class="fas fa-receipt"></i>
                         <span class="cart-text">Đơn Mua</span>
                     </div>
                 </c:if>
+
                 <c:set var="user" value="${sessionScope.user}"/>
                 <c:if test="${user != null && user.role == 1}">
                     <a href="${pageContext.request.contextPath}/adminProducts" class="admin-btn">
@@ -102,9 +104,9 @@
                     </a>
                 </c:if>
             </div>
+
         </div>
     </div>
-
     <div class="headerMenu">
         <div class="container-menu">
             <ul class="menu">
