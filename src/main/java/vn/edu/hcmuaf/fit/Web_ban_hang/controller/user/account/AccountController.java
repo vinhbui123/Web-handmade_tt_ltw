@@ -54,8 +54,9 @@ public class AccountController extends HttpServlet {
         String firstName = parts.length > 0 ? parts[0] : "";
         String lastName = parts.length > 1 ? parts[1] : "";
 
-        // Validate
-        String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber);
+        String address = request.getParameter("address");
+
+        String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber, address);
         if (errorMsg != null) {
             handleUpdateUserError(request, response, errorMsg);
             return;
