@@ -49,13 +49,13 @@ public class AccountController extends HttpServlet {
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email"); // Handle null if disabled in JSP!
         String phoneNumber = request.getParameter("phoneNumber");
-
+        String address = request.getParameter("address");
         String[] parts = fullName.trim().split(" ", 2);
         String firstName = parts.length > 0 ? parts[0] : "";
         String lastName = parts.length > 1 ? parts[1] : "";
 
         // Validate
-        String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber);
+        String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber,address);
         if (errorMsg != null) {
             handleUpdateUserError(request, response, errorMsg);
             return;

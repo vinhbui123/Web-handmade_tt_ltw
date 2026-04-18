@@ -1,5 +1,6 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
@@ -18,25 +19,26 @@ public class UserService {
 
     //input filter
     public String validateInputs(String firstName, String lastName, String username, String email, String password, String confirmPassword) {
-        if (firstName == null || firstName.isEmpty()) return "Tên không được để trống.";
-        if (lastName == null || lastName.isEmpty()) return "Họ không được để trống.";
-        if (username == null || username.isEmpty()) return "Tên người dùng không được để trống.";
-        if (email == null || email.isEmpty()) return "Email không được để trống.";
+        if (StringUtils.isBlank(firstName)) return "Tên không được để trống.";
+        if (StringUtils.isBlank(lastName)) return "Họ không được để trống.";
+        if (StringUtils.isBlank(username)) return "Tên người dùng không được để trống.";
+        if (StringUtils.isBlank(email)) return "Email không được để trống.";
         if (!email.matches("^[\\w-]+(?:\\.[\\w-]+)*@(?:[\\w-]+\\.)+[a-zA-Z]{2,7}$")) {
             return "Email không hợp lệ.";
         }
-        if (password == null || password.isEmpty()) return "Mật khẩu không được để trống.";
+        if (StringUtils.isBlank(password)) return "Mật khẩu không được để trống.";
         if (!password.equals(confirmPassword)) return "Mật khẩu và xác nhận mật khẩu không khớp.";
         if (isEmailExists(email)) return "Email đã được sử dụng";
         if (isUsernameExists(username)) return "Tên đăng nhập đã tồn tại.";
         return null;
     }
 
-    // Add this method to your UserService.java class
-    public String validateUpdateProfile(String firstName, String lastName, String phone) {
-        if (firstName == null || firstName.isEmpty()) return "Tên không được để trống.";
-        if (lastName == null || lastName.isEmpty()) return "Họ không được để trống.";
-        if (phone == null || phone.isEmpty()) return "Số điện thoại không được để trống.";
+    // Kiểm tra null và empty
+    public String validateUpdateProfile(String firstName, String lastName, String phone, String address) {
+        if (StringUtils.isBlank(firstName)) return "Tên không được để trống.";
+        if (StringUtils.isBlank(lastName)) return "Họ không được để trống.";
+        if (StringUtils.isBlank(phone)) return "Số điện thoại không được để trống.";
+        if (StringUtils.isBlank(address)) return "Địa chỉ không được để trống.";
         return null;
     }
 

@@ -149,7 +149,7 @@
         var file = input.files && input.files[0];
         if (!file) return;
 
-        // 1. Validate file type
+        // Validate file type
         var allowedTypes = ['image/jpeg', 'image/png'];
         if (!allowedTypes.includes(file.type)) {
             alert('Chỉ chấp nhận file .JPEG hoặc .PNG');
@@ -157,15 +157,15 @@
             return;
         }
 
-        // 2. Validate file size (max 1MB)
-        var maxSize = 1024 * 1024; // 1MB in bytes
+        // Validate file size (max 3MB)
+        var maxSize = 1024 * 1024 * 3; // 3MB in bytes
         if (file.size > maxSize) {
-            alert('File ảnh không được vượt quá 1MB');
+            alert('File ảnh không được vượt quá 3MB');
             input.value = ''; // Reset input
             return;
         }
 
-        // 3. Preview the image
+        // Preview the image
         var reader = new FileReader();
         reader.onload = function (e) {
             preview.src = e.target.result;
