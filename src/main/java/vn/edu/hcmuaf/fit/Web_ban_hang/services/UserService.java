@@ -38,6 +38,9 @@ public class UserService {
         if (StringUtils.isBlank(firstName)) return "Tên không được để trống.";
         if (StringUtils.isBlank(lastName)) return "Họ không được để trống.";
         if (StringUtils.isBlank(phone)) return "Số điện thoại không được để trống.";
+        if (!phone.matches("^0\\d{9}$")) {
+            return "Số điện thoại phải bao gồm đúng 10 chữ số và bắt đầu bằng số 0.";
+        }
         if (StringUtils.isBlank(address)) return "Địa chỉ không được để trống.";
         return null;
     }
