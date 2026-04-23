@@ -21,7 +21,7 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import java.io.IOException;
 import java.util.Collections;
 
-@WebServlet("/callback")
+@WebServlet("/google/callback")
 public class GoogleCallbackServlet extends HttpServlet {
     protected static final String CLIENT_ID = GoogleConfig.getClientId();
     protected static final String CLIENT_SECRET = GoogleConfig.getClientSecret();
@@ -37,7 +37,7 @@ public class GoogleCallbackServlet extends HttpServlet {
                 HttpTransport httpTransport = new NetHttpTransport();
                 JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-                String redirectUri = "http://localhost:8080/Web_ban_hang/callback";
+                String redirectUri = "http://localhost:8080/Web_ban_hang/google/callback";
 
                 System.out.println("Redirect URI sent to Google: " + redirectUri);
 

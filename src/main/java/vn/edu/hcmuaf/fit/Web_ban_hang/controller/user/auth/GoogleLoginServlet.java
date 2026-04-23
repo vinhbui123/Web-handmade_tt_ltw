@@ -25,7 +25,7 @@ public class GoogleLoginServlet extends HttpServlet {
         if (serverPort != 80 && serverPort != 443) {
             url.append(":").append(serverPort);
         }
-        url.append(contextPath).append("/callback");
+        url.append(contextPath).append("/google/callback");
         String redirectUri = url.toString();
 
         String authorizationUrl = "https://accounts.google.com/o/oauth2/auth?" +

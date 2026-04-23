@@ -336,4 +336,50 @@ public class UserDao {
         }
         return null;
     }
+
+    public void insertFacebookUser(User user) {
+        String sql = "INSERT INTO users (email, username, first_name, last_name, role, status, auth_provider, password, create_at, update_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            String randomPassword = UUID.randomUUID().toString();
+            user.setPassword(HashUtil.toSHA256(randomPassword));
+
+            Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+
+            stmt.setString(1, user.getEmail());
+            stmt.setString(2, user.getUsername());
+            stmt.setString(3, user.getFirstName());
+            stmt.setString(4, user.getLastName());
+            user.setRole(0);
+            stmt.setInt(5, user.getRole());
+            stmt.setInt(6, user.getStatus());
+            stmt.setString(7, user.getAuthProvider());
+            stmt.setString(8, user.getPassword());
+            stmt.setTimestamp(9, now);
+            stmt.setTimestamp(10, now);
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public void updateAuthProvider(String email, String provider) {
+        String sql = "UPDATE users SET auth_provider = ? WHERE email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, provider);
+            stmt.setString(2, email);
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
 }
