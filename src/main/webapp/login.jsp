@@ -110,6 +110,19 @@
                 <input type="password" class="login__input" name="password" placeholder="Mật khẩu" required>
             </div>
 
+            <div class="login__field captcha-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px;">
+                <div style="flex: 1; position: relative; display: flex; align-items: center;">
+                    <i class="login__icon fas fa-shield-alt" style="position: absolute; left: 15px; color: #333; margin: 0; font-size: 20px;"></i>
+                    <input type="text" class="login__input" name="captcha" placeholder="Mã CAPTCHA" required style="padding-left: 45px; width: 100%; box-sizing: border-box; height: 42px; margin: 0;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <img src="${pageContext.request.contextPath}/captcha" id="captchaImage" alt="CAPTCHA" style="height: 42px; border-radius: 8px; cursor: pointer; border: 1px solid #ccc; background: white;" onclick="document.getElementById('captchaImage').src='${pageContext.request.contextPath}/captcha?' + new Date().getTime();">
+                    <button type="button" class="btn-refresh" onclick="document.getElementById('captchaImage').src='${pageContext.request.contextPath}/captcha?' + new Date().getTime();" style="background: none; border: none; cursor: pointer; color: #333; font-size: 20px; padding: 5px; outline: none;" title="Tải lại mã">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
             <button type="submit" class="button login__submit">
                 <span class="button__text">Đăng Nhập</span>
                 <i class="button__icon fas fa-chevron-right"></i>
