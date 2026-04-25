@@ -13,9 +13,7 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HttpUtil;
 
-
 import java.io.IOException;
-import java.sql.Timestamp;
 
 @WebServlet("/facebook/callback")
 public class FacebookCallbackServlet extends HttpServlet {

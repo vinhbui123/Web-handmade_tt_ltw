@@ -1,5 +1,11 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.auth;
 
+import java.io.IOException;
+import java.util.Collections;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -14,12 +20,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-import java.io.IOException;
-import java.util.Collections;
+
 
 @WebServlet("/google/callback")
 public class GoogleCallbackServlet extends HttpServlet {

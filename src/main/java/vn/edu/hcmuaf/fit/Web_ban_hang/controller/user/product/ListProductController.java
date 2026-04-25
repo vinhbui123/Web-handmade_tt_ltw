@@ -5,7 +5,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
