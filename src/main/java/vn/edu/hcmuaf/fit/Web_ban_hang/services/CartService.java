@@ -1,7 +1,7 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.CartProduct;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.session.CartProduct;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 
 import java.io.Serializable;
