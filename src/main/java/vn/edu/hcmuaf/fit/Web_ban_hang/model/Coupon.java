@@ -1,4 +1,4 @@
-package vn.edu.hcmuaf.fit.Nhom24_DoAnWeb.dao.model;
+package vn.edu.hcmuaf.fit.Web_ban_hang.model;
 
 import java.io.Serializable;
 import java.text.NumberFormat;

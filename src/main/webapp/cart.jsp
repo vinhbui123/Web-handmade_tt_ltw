@@ -138,6 +138,18 @@
                                         </div>
                                     </c:forEach>
 
+                                    <!-- Phần Nhập Mã Giảm Giá -->
+                                    <div class="coupon-section" style="padding: 15px; background: #fff; border-radius: 5px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <i class="fas fa-ticket-alt" style="color: #e74c3c; font-size: 1.2rem;"></i>
+                                            <span style="font-weight: bold; font-size: 1.1rem;">Khuyến mãi</span>
+                                        </div>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="text" id="coupon-code" placeholder="Nhập mã giảm giá..." style="padding: 10px 15px; border: 1px solid #ccc; border-radius: 4px; outline: none; width: 250px;">
+                                            <button type="button" onclick="applyCoupon()" style="padding: 10px 20px; background-color: #5a9153; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s;">Áp Dụng</button>
+                                        </div>
+                                    </div>
+
                                     <!-- Thanh toán -->
                                     <div class="cart-summary">
                                         <div class="left-summary">
