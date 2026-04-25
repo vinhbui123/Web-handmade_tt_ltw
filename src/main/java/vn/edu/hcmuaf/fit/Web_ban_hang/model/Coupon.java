@@ -9,12 +9,12 @@ import java.util.Locale;
 public class Coupon implements Serializable {
     private int id;
     private String code;
-    private String description;
+    private int type; // 0: Tiền mặt, 1: Phần trăm
     private int discountValue;
-    private int discountPercent;
+    private Integer maxDiscountValue; // Dùng Integer để có thể nhận giá trị null
     private int minOrderAmount;
-    private Integer maxDiscountValue;
-    private LocalDateTime expiredAt;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private LocalDateTime createdAt;
 
     // Constructor không tham số
@@ -22,15 +22,15 @@ public class Coupon implements Serializable {
     }
 
     // Constructor đầy đủ
-    public Coupon(int id, String code, int discountValue, int discountPercent, int minOrderAmount,
-                  Integer maxDiscountValue, LocalDateTime expiredAt, LocalDateTime createdAt) {
+    public Coupon(int id, String code, int type, int discountValue, int minOrderAmount,
+                  Integer maxDiscountValue, LocalDateTime startDate,  LocalDateTime endDate, LocalDateTime createdAt) {
         this.id = id;
         this.code = code;
+        this.type = type;
         this.discountValue = discountValue;
-        this.discountPercent = discountPercent;
         this.minOrderAmount = minOrderAmount;
         this.maxDiscountValue = maxDiscountValue;
-        this.expiredAt = expiredAt;
+        this.startDate = startDate;
         this.createdAt = createdAt;
     }
 
@@ -41,6 +41,14 @@ public class Coupon implements Serializable {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public String getCode() {
@@ -59,14 +67,6 @@ public class Coupon implements Serializable {
         this.discountValue = discountValue;
     }
 
-    public int getDiscountPercent() {
-        return discountPercent;
-    }
-
-    public void setDiscountPercent(int discountPercent) {
-        this.discountPercent = discountPercent;
-    }
-
     public int getMinOrderAmount() {
         return minOrderAmount;
     }
@@ -83,12 +83,20 @@ public class Coupon implements Serializable {
         this.maxDiscountValue = maxDiscountValue;
     }
 
-    public LocalDateTime getExpiredAt() {
-        return expiredAt;
+    public LocalDateTime getStartDate() {
+        return startDate;
     }
 
-    public void setExpiredAt(LocalDateTime expiredAt) {
-        this.expiredAt = expiredAt;
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -99,22 +107,14 @@ public class Coupon implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getFormattedDiscountValue() {
         NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
         return nf.format(this.discountValue) + "đ";
     }
 
     public String getFormattedExpiredDate() {
-        if (this.expiredAt == null) return "";
-        return this.expiredAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (this.endDate == null) return "";
+        return this.endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
     public String getFormattedMinOrderAmount() {
