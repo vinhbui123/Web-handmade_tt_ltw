@@ -135,29 +135,6 @@ label {
     width: 100%;
 }
 
-#addressFormView .form-row input,
-#addressFormView .form-row textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    font-size: 12px;
-    margin-bottom: 0;
-    background: #fafbfc;
-    transition: border 0.2s;
-    box-sizing: border-box;
-    height: 28px;
-}
-
-#addressFormView .form-row textarea {
-    min-height: 36px;
-    max-height: 36px;
-    height: 36px;
-    resize: none;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
 .input-error {
     border: 2px solid #ff4444 !important;
     background-color: #fff0f0;
@@ -277,27 +254,13 @@ label {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-#addressFormView input[type="radio"], input[type="checkbox"] {
-    margin-right: 4px;
-    width: 14px;
-    height: 14px;
-}
-
-label[for="isDefault"] {
-    font-weight: 600;
-    color: #222;
-    margin-bottom: 0;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-}
-
 #addressFormView {
     margin-top: 0;
 }
 
 #addressFormView .form-row input,
-#addressFormView .form-row textarea {
+#addressFormView .form-row textarea,
+.form-control-api {
     width: 100%;
     padding: 12px 14px;
     border: 1px solid #ddd;
@@ -305,8 +268,29 @@ label[for="isDefault"] {
     font-size: 15px;
     margin-bottom: 0;
     background: #fafbfc;
-    transition: border 0.2s;
+    transition: border 0.2s, border-color 0.2s;
     box-sizing: border-box;
+    height: 44px;
+    color: #333;
+    outline: none;
+}
+
+.form-control-api {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.form-control-api:focus,
+#addressFormView .form-row input:focus,
+#addressFormView .form-row textarea:focus {
+    border-color: #f60; /* Đổi viền cam khi click vào */
+}
+
+/* Giao diện khi ô Select bị khóa (disabled) */
+.form-control-api:disabled {
+    background-color: #eeeeee;
+    color: #888;
+    cursor: not-allowed;
 }
 
 #addressFormView .form-row textarea {
@@ -315,7 +299,7 @@ label[for="isDefault"] {
 }
 
 label {
-    font-size: 12px;
+    font-size: 15px;
     margin-bottom: 4px;
 }
 
@@ -325,7 +309,7 @@ label {
 }
 
 .address-type label {
-    font-size: 12px;
+    font-size: 15px;
 }
 
 #addressFormView input[type="radio"], input[type="checkbox"] {
@@ -418,7 +402,7 @@ label[for="isDefault"] {
 
 label[for="isDefault"] {
     font-size: 15px;
-    margin-top: 12px;
+    margin-top: 15px;
     margin-bottom: 10px;
     padding-left: 2px;
     display: flex;
@@ -442,4 +426,30 @@ label[for="isDefault"] {
 
 .add-address-btn:hover {
     background-color: #e55;
+}
+
+.address-card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background-color: #fff;
+}
+
+.address-card .address-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.button-group {
+    display: flex;
+    gap: 8px;
+}
+.address-card button {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
 }

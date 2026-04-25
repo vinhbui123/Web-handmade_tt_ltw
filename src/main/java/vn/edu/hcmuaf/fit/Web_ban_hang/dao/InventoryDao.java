@@ -37,57 +37,39 @@ public class InventoryDao {
             throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu", e);
         }
     }
-
-
     public boolean updateInventory(Connection conn, int productId, int quantityIn, int quantityOut) {
-        String sql = """
-                INSERT INTO inventory (product_id, quantity_in, quantity_out)
-                VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                    quantity_in = quantity_in + VALUES(quantity_in),
-                    quantity_out = quantity_out + VALUES(quantity_out)
-                """;
+        // Vì sản phẩm được hiển thị bán luôn có trong kho, (ko có thì ẩn) --> update thẳng vào quantity_out
+        String sql = "UPDATE inventory SET quantity_in = quantity_in + ?, quantity_out = quantity_out + ? WHERE product_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, productId);
-            stmt.setInt(2, quantityIn);
-            stmt.setInt(3, quantityOut);
+            stmt.setInt(1, quantityIn);
+            stmt.setInt(2, quantityOut);
+            stmt.setInt(3, productId);
 
             int rows = stmt.executeUpdate();
-            System.out.println("📝 updateInventory: " + (rows > 0));
+            System.out.println("updateInventory: " + (rows > 0) + " (Đã cập nhật " + rows + " dòng)");
             return rows > 0;
-
         } catch (SQLException e) {
-            System.out.println("❌ updateInventory lỗi:");
+            System.out.println("Lỗi SQL tại updateInventory:");
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
-
-    // ✅ Lưu lịch sử giao dịch - dùng Connection truyền vào để dùng chung transaction
     public boolean insertTransaction(Connection conn, int productId, int userId, int quantity, String type) {
-        String sql = """
-                    INSERT INTO inventory_transactions (product_id, user_id, quantity, type, created_at)
-                    VALUES (?, ?, ?, ?, NOW())
-                """;
+        String sql = "INSERT INTO inventory_transactions (product_id, user_id, quantity, type, created_at) VALUES (?, ?, ?, ?, NOW())";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, productId);
             stmt.setInt(2, userId);
             stmt.setInt(3, quantity);
             stmt.setString(4, type);
-
-            int rows = stmt.executeUpdate();
-            System.out.println("🧾 insertTransaction: " + (rows > 0));
-            return rows > 0;
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println("❌ insertTransaction lỗi:");
-            e.printStackTrace();
+            // NẾU BẢNG NÀY KHÔNG TỒN TẠI TRONG DB, NÓ SẼ BÁO LỖI Ở ĐÂY NHƯNG KHÔNG LÀM SẬP TIẾN TRÌNH
+            System.out.println("Cảnh báo: Không thể lưu lịch sử giao dịch (Có thể bảng inventory_transactions chưa được tạo). Bỏ qua bước này.");
+            return false;
         }
-        return false;
     }
-
 
     public boolean importProduct(int productId, int quantity, int userId) {
         Connection conn = null;
@@ -98,10 +80,10 @@ public class InventoryDao {
             boolean transOk = insertTransaction(conn, productId, userId, quantity, "import");
             boolean updateOk = updateInventory(conn, productId, quantity, 0);
 
-            System.out.println("📦 updateInventory: " + updateOk);
+            System.out.println("updateInventory: " + updateOk);
 
             if (!transOk || !updateOk) {
-                System.out.println("❌ Một trong hai thao tác thất bại!");
+                System.out.println("Một trong hai thao tác thất bại!");
                 conn.rollback();
                 return false;
             }
@@ -131,21 +113,20 @@ public class InventoryDao {
         try {
             int stock = getStock(productId);
             if (stock < quantity) {
-                System.out.println("⚠️ Không đủ hàng trong kho!");
+                System.out.println("Không đủ hàng! (Tồn: " + stock + ", Yêu cầu: " + quantity + ")");
                 return false;
             }
 
             conn = DBConnect.getConnection();
             conn.setAutoCommit(false);
 
-            boolean transOk = insertTransaction(conn, productId, userId, quantity, type);
             boolean updateOk = updateInventory(conn, productId, 0, quantity);
-
-            if (!transOk || !updateOk) {
+            if (!updateOk) {
                 conn.rollback();
                 return false;
             }
 
+            insertTransaction(conn, productId, userId, quantity, type);
             conn.commit();
             return true;
 
@@ -158,9 +139,6 @@ public class InventoryDao {
         return false;
     }
 
-
-
-    // ✅ Lấy lịch sử giao dịch (tái sử dụng)
     public List<Map<String, Object>> getTransactionHistory() {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = """
