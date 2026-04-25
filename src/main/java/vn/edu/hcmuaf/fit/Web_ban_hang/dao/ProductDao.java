@@ -10,7 +10,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import java.sql.*;
 import java.util.*;
 
-
 public class ProductDao {
     private static final Logger log = LoggerFactory.getLogger(ProductDao.class);
     static Map<Integer, Product> data = new HashMap<>();
@@ -28,11 +27,11 @@ public class ProductDao {
                 "LEFT JOIN product_materials pm ON p.id = pm.product_id " +
                 "LEFT JOIN materials m ON pm.material_id = m.id " +
                 "GROUP BY p.id, m.id " + // gom nhóm để tính toán stock
-                "HAVING stock > 0 " +    // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
+                "HAVING stock > 0 " + // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
                 "ORDER BY p.id";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet rs = statement.executeQuery()) {
+                PreparedStatement statement = connection.prepareStatement(query);
+                ResultSet rs = statement.executeQuery()) {
 
             while (rs.next()) {
                 int productId = rs.getInt("product_id");
@@ -48,7 +47,7 @@ public class ProductDao {
                     p.setImg(rs.getString("img"));
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
-//                    p.setStock(rs.getInt("stock"));
+                    // p.setStock(rs.getInt("stock"));
                     p.setMaterials(new ArrayList<>());
                     productMap.put(productId, p);
                 }
@@ -73,12 +72,11 @@ public class ProductDao {
         return new ArrayList<>(productMap.values());
     }
 
-
     // Phương thức lấy sản phẩm theo id
     public static Product getById(int id) {
         String query = "SELECT * FROM products WHERE id = ?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
 
             try (ResultSet rs = statement.executeQuery()) {
@@ -120,7 +118,7 @@ public class ProductDao {
                 "ORDER BY p.id ASC";
 
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, categoryId);
             ResultSet rs = statement.executeQuery();
@@ -162,16 +160,12 @@ public class ProductDao {
         return new ArrayList<>(productMap.values());
     }
 
-
-
-
-
     // Lấy màu sắc của sản phẩm
     private static List<Color> getColorsByProductId(int id) throws SQLException {
         List<Color> colors = new ArrayList<>();
         String query = "SELECT pc.color_id, c.name FROM product_color pc JOIN colors c ON c.id = pc.color_id WHERE pc.product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -189,7 +183,7 @@ public class ProductDao {
         List<Material> materials = new ArrayList<>();
         String query = "SELECT pm.material_id, m.name FROM product_materials pm JOIN materials m ON m.id = pm.material_id WHERE product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -207,7 +201,7 @@ public class ProductDao {
         List<String> subImages = new ArrayList<>();
         String query = "SELECT img_path FROM images WHERE product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -220,7 +214,7 @@ public class ProductDao {
     public void increaseView(int productId) {
         String query = "UPDATE products SET view = view + 1 WHERE id=?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, productId);
             stmt.executeUpdate();
             Product p = getById(productId);
@@ -307,6 +301,7 @@ public class ProductDao {
 
         return re;
     }
+
     public List<Product> getProductViewest(int limit) {
         List<Product> re = new ArrayList<>();
         String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, " +
@@ -317,7 +312,7 @@ public class ProductDao {
                 "HAVING stock > 0 " +
                 "ORDER BY p.view DESC LIMIT ?";
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, limit);
             ResultSet rs = statement.executeQuery();
 
@@ -337,12 +332,13 @@ public class ProductDao {
         }
         return re;
     }
+
     public List<Product> getProductsByLimit(int offset, int size) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT id, name, price, discount, view, img, quantity FROM products LIMIT ?, ?";
 
         try (Connection conn = DBConnect.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, offset);
             stmt.setInt(2, size);
             ResultSet rs = stmt.executeQuery();
@@ -365,12 +361,11 @@ public class ProductDao {
         return products;
     }
 
-
     public int countProducts() {
         String sql = "SELECT COUNT(*) FROM products";
         try (Connection conn = DBConnect.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -379,6 +374,7 @@ public class ProductDao {
         }
         return 0;
     }
+
     public List<Product> getProductsInStock() {
         List<Product> products = new ArrayList<>();
         String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, " +
@@ -388,7 +384,7 @@ public class ProductDao {
                 "WHERE i.quantity > 0";
 
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+                PreparedStatement stmt = connection.prepareStatement(query)) {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -410,13 +406,14 @@ public class ProductDao {
 
         return products;
     }
+
     // Lấy các sản phẩm có lượt xem lớn hơn một ngưỡng nhất định (ví dụ 200)
     public List<Product> getProductsViewedAbove(int minView) {
         List<Product> products = new ArrayList<>();
         String query = "SELECT id, name, price, discount, view, img FROM products WHERE view >= ? ORDER BY view DESC";
 
         try (Connection connection = DBConnect.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, minView);
             ResultSet rs = statement.executeQuery();
@@ -438,6 +435,7 @@ public class ProductDao {
 
         return products;
     }
+
     public List<Product> getTopRatedProducts() {
         String query = "SELECT p.id, p.name, p.price, p.discount, p.img, p.view, " +
                 "AVG(c.rating) AS avg_rating " +
@@ -449,8 +447,8 @@ public class ProductDao {
 
         List<Product> products = new ArrayList<>();
         try (Connection conn = DBConnect.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(query);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Product p = new Product();
                 p.setId(rs.getInt("id"));
@@ -466,7 +464,5 @@ public class ProductDao {
         }
         return products;
     }
-
-
 
 }
