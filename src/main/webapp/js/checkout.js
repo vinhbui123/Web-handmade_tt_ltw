@@ -69,26 +69,25 @@ function placeOrder() {
         .catch(error => console.error('Lỗi:', error));
 }
 
-function openCouponPopup() {
-    document.getElementById("couponModalPopup").style.display = "flex";
-}
-
-function closeCouponPopup() {
-    document.getElementById("couponModalPopup").style.display = "none";
-}
-
 function applyCoupon(code) {
-    fetch(`${contextPath}/apply-coupon`, {
+    if (!code) {
+        alert("Vui lòng nhập mã giảm giá!");
+        return;
+    }
+
+    var formData = new URLSearchParams();
+    formData.append("code", code);
+
+    fetch(contextPath + "/apply-coupon", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: `code=${encodeURIComponent(code)}`
+        body: formData
     })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                closeCouponPopup();
                 alert(data.message);
 
                 const discountAmount = data.discountAmount || 0;
@@ -106,15 +105,55 @@ function applyCoupon(code) {
                 document.querySelector('.order-summary strong span').textContent = `${formattedNewTotal} VND`;
 
                 document.getElementById('applied-coupon-info').innerHTML = `
-                <p style="margin: 0;">Mã đã áp dụng: <strong>${code}</strong></p>
-                <p style="margin: 0;">Đã giảm: <strong>${formattedDiscount} VND</strong></p>
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                    <div style="text-align: right;">
+                        <p style="margin: 0; color: #e74c3c;">Mã đã áp dụng: <strong>${code}</strong></p>
+                        <p style="margin: 0; color: #e74c3c;">Đã giảm: <strong>-${formattedDiscount} VND</strong></p>
+                    </div>
+                    <a href="javascript:void(0)" onclick="removeCoupon()" style="color: #e74c3c; font-size: 1.2rem; margin-left: 5px;" title="Hủy mã giảm giá"><i class="fas fa-times"></i></a>
+                </div>
             `;
 
                 document.getElementById('selectedCouponCode').value = code;
+                const couponInput = document.getElementById('coupon-code-checkout');
+                if (couponInput) couponInput.value = '';
 
             } else {
                 alert(data.message);
             }
         });
+}
+
+function removeCoupon() {
+    fetch(contextPath + "/remove-coupon", {
+        method: "POST"
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+
+                const totalText = document.querySelector('#total-order-value').textContent.replace(/[^\d]/g, '');
+                const shippingText = document.querySelector('.shipping-fee').textContent.replace(/[^\d]/g, '');
+
+                const total = parseInt(totalText || '0');
+                const shipping = parseInt(shippingText || '0');
+                const newTotal = total + shipping; // khong tru discountAmount vi da huy
+
+                const formatter = new Intl.NumberFormat('vi-VN');
+                const formattedNewTotal = formatter.format(newTotal);
+
+                document.querySelector('.order-summary strong span').textContent = `${formattedNewTotal} VND`;
+
+                document.getElementById('applied-coupon-info').innerHTML = '';
+                document.getElementById('selectedCouponCode').value = '';
+                const couponInput = document.getElementById('coupon-code-checkout');
+                if (couponInput) couponInput.value = '';
+
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Lỗi:', error));
 }
 

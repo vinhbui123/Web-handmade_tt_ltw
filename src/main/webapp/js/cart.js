@@ -46,7 +46,7 @@ function updateCartCount(count) {
 function addToCart(productId, quantity = 1) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function updateSelection(productId, isSelected) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -166,7 +166,7 @@ function updateSelection(productId, isSelected) {
 function selectAll(isSelected) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -201,54 +201,3 @@ function selectAll(isSelected) {
         });
 }
 
-// Xử lý áp dụng mã giảm giá
-function applyCoupon() {
-    const contextPath = document.body.dataset.contextPath || '';
-    const codeInput = document.getElementById("coupon-code");
-    const code = codeInput ? codeInput.value.trim() : '';
-
-    if (!code) {
-        showCartPopup("Vui lòng nhập mã giảm giá!", false);
-        return;
-    }
-
-    const formData = new URLSearchParams();
-    formData.append("code", code);
-
-    fetch(`${contextPath}/apply-coupon`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showCartPopup(data.message, true);
-            
-            // Cập nhật hiển thị số tiền giảm
-            const discountAmount = data.discountAmount || 0;
-            if (discountAmount > 0) {
-                let discountDisplay = document.getElementById("cart-discount-amount");
-                const productTotalDiv = document.querySelector(".product-total");
-                
-                if (!discountDisplay && productTotalDiv) {
-                    const discountHtml = ` | Giảm giá: <span id="cart-discount-amount" style="color: #e74c3c; font-weight: bold;">-${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(discountAmount)}</span>`;
-                    productTotalDiv.insertAdjacentHTML('beforeend', discountHtml);
-                } else if (discountDisplay) {
-                    discountDisplay.innerText = `-${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(discountAmount)}`;
-                }
-                
-                // Xóa nội dung input sau khi áp dụng thành công
-                if (codeInput) codeInput.value = '';
-            }
-        } else {
-            showCartPopup(data.message, false);
-        }
-    })
-    .catch(error => {
-        console.error("Lỗi apply coupon:", error);
-        showCartPopup("Có lỗi xảy ra khi áp dụng mã giảm giá!", false);
-    });
-}

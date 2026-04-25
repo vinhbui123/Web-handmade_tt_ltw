@@ -102,13 +102,14 @@
                                                     <input type="hidden" name="action" value="update">
                                                     <input type="hidden" name="id" value="${cp.id}">
                                                     <button type="submit" name="quantity" value="${cp.quantity - 1}"
-                                                        class="quantity-btn" ${cp.quantity <=1 ? 'disabled' : ''
-                                                        }>-</button>
+                                                        class="quantity-btn" ${cp.quantity <=1 ? 'disabled' : '' }>-
+                                                    </button>
                                                     <input type="text" value="${cp.quantity}" readonly
                                                         class="quantity-input" style="width: 40px; text-align: center;">
                                                     <button type="submit" name="quantity" value="${cp.quantity + 1}"
                                                         class="quantity-btn" ${cp.quantity>= cp.stock ? 'disabled' :
-                                                        ''}>+</button>
+                                                        ''}>+
+                                                    </button>
                                                 </form>
                                             </div>
 
@@ -139,14 +140,19 @@
                                     </c:forEach>
 
                                     <!-- Phần Nhập Mã Giảm Giá -->
-                                    <div class="coupon-section" style="padding: 15px; background: #fff; border-radius: 5px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <div class="coupon-section"
+                                        style="padding: 15px; background: #fff; border-radius: 5px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <i class="fas fa-ticket-alt" style="color: #e74c3c; font-size: 1.2rem;"></i>
                                             <span style="font-weight: bold; font-size: 1.1rem;">Khuyến mãi</span>
                                         </div>
                                         <div style="display: flex; gap: 10px;">
-                                            <input type="text" id="coupon-code" placeholder="Nhập mã giảm giá..." style="padding: 10px 15px; border: 1px solid #ccc; border-radius: 4px; outline: none; width: 250px;">
-                                            <button type="button" onclick="applyCoupon()" style="padding: 10px 20px; background-color: #5a9153; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s;">Áp Dụng</button>
+                                            <input type="text" id="coupon-code" placeholder="Nhập mã giảm giá..."
+                                                style="padding: 10px 15px; border: 1px solid #ccc; border-radius: 4px; outline: none; width: 250px;">
+                                            <button type="button" onclick="applyCoupon()"
+                                                style="padding: 10px 20px; background-color: #5a9153; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s;">
+                                                Áp Dụng
+                                            </button>
                                         </div>
                                     </div>
 
@@ -160,8 +166,22 @@
                                         <div class="product-total">
                                             Tổng số lượng: <span
                                                 id="cart-total-quantity">${sessionScope.cart.selectedQuantity}</span>
+                                            <c:if
+                                                test="${not empty requestScope.discountAmount and requestScope.discountAmount > 0}">
+                                                <span id="discount-container">
+                                                    | Giảm giá: <span id="cart-discount-amount"
+                                                        style="color: #e74c3c; font-weight: bold;">-
+                                                        <f:formatNumber value="${requestScope.discountAmount}"
+                                                            pattern="#,##0đ" />
+                                                    </span>
+                                                    <a href="javascript:void(0)" onclick="removeCoupon()"
+                                                        style="color: #e74c3c; margin-left: 5px;"
+                                                        title="Hủy mã giảm giá"><i class="fas fa-times"></i></a>
+                                                </span>
+                                            </c:if>
                                             | Tổng tiền: <span id="cart-total-price">
-                                                <f:formatNumber value="${sessionScope.cart.selectedTotalWithDiscount}"
+                                                <f:formatNumber
+                                                    value="${requestScope.finalTotal != null ? requestScope.finalTotal : sessionScope.cart.selectedTotalWithDiscount}"
                                                     pattern="#,##0đ" />
                                             </span>
                                         </div>
@@ -173,7 +193,127 @@
                             </c:choose>
                         </div>
                     </div>
+
+                    <!-- Popup thông báo -->
+                    <div id="cart-popup" class="popup hidden">
+                        <div class="popup-content">
+                            <p>Thông báo</p>
+                        </div>
+                    </div>
+
                     <%@include file="footer.jsp" %>
+
+                        <script>
+                            function formatVND(amount) {
+                                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+                            }
+
+                            function applyCoupon() {
+                                console.log("Nút áp dụng đã được bấm!");
+                                var contextPath = document.body.dataset.contextPath || '';
+                                var codeInput = document.getElementById("coupon-code");
+                                var code = codeInput ? codeInput.value.trim() : '';
+
+                                if (!code) {
+                                    showCartPopup("Vui lòng nhập mã giảm giá!", false);
+                                    return;
+                                }
+
+                                var formData = new URLSearchParams();
+                                formData.append("code", code);
+
+                                fetch(contextPath + "/apply-coupon", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/x-www-form-urlencoded"
+                                    },
+                                    body: formData
+                                })
+                                    .then(function (response) {
+                                        if (!response.ok) {
+                                            throw new Error("Server trả về lỗi: " + response.status);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(function (data) {
+                                        if (data.success) {
+                                            showCartPopup(data.message, true);
+
+                                            // Cập nhật hiển thị số tiền giảm
+                                            var discountAmount = data.discountAmount || 0;
+                                            if (discountAmount > 0) {
+                                                var discountDisplay = document.getElementById("cart-discount-amount");
+                                                var productTotalDiv = document.querySelector(".product-total");
+
+                                                if (!discountDisplay && productTotalDiv) {
+                                                    var discountHtml = '<span id="discount-container"> | Giảm giá: <span id="cart-discount-amount" style="color: #e74c3c; font-weight: bold;">-' + formatVND(discountAmount) + '</span><a href="javascript:void(0)" onclick="removeCoupon()" style="color: #e74c3c; margin-left: 5px;" title="Hủy mã giảm giá"><i class="fas fa-times"></i></a></span>';
+                                                    productTotalDiv.insertAdjacentHTML('beforeend', discountHtml);
+                                                } else if (discountDisplay) {
+                                                    discountDisplay.innerText = '-' + formatVND(discountAmount);
+                                                }
+
+                                                if (data.newTotal !== undefined) {
+                                                    var totalPriceDisplay = document.getElementById("cart-total-price");
+                                                    if (totalPriceDisplay) {
+                                                        totalPriceDisplay.innerText = formatVND(data.newTotal);
+                                                    }
+                                                }
+
+                                                // Xóa nội dung input sau khi áp dụng thành công
+                                                if (codeInput) codeInput.value = '';
+                                            }
+                                        } else {
+                                            showCartPopup(data.message, false);
+                                        }
+                                    })
+                                    .catch(function (error) {
+                                        console.error("Lỗi apply coupon:", error);
+                                        showCartPopup("Có lỗi xảy ra khi áp dụng mã giảm giá!", false);
+                                    });
+                            }
+                        </script>
+
+                        <script>
+                            function removeCoupon() {
+                                var contextPath = document.body.dataset.contextPath || '';
+
+                                fetch(contextPath + "/remove-coupon", {
+                                    method: "POST"
+                                })
+                                    .then(function (response) {
+                                        if (!response.ok) {
+                                            throw new Error("Server trả về lỗi: " + response.status);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(function (data) {
+                                        if (data.success) {
+                                            showCartPopup(data.message, true);
+
+                                            var discountContainer = document.getElementById("discount-container");
+                                            if (discountContainer) {
+                                                discountContainer.remove();
+                                            }
+
+                                            var totalPriceDisplay = document.getElementById("cart-total-price");
+                                            if (totalPriceDisplay && data.newTotal !== undefined) {
+                                                totalPriceDisplay.innerText = formatVND(data.newTotal);
+                                            }
+
+                                            var codeInput = document.getElementById("coupon-code");
+                                            if (codeInput) {
+                                                codeInput.value = '';
+                                            }
+                                        } else {
+                                            showCartPopup(data.message, false);
+                                        }
+                                    })
+                                    .catch(function (error) {
+                                        console.error("Lỗi remove coupon:", error);
+                                        showCartPopup("Có lỗi xảy ra khi hủy mã giảm giá!", false);
+                                    });
+                            }
+                        </script>
 
                         <script
                             src="${pageContext.request.contextPath}/js/cart.js?v=<%= System.currentTimeMillis() %>"></script>
