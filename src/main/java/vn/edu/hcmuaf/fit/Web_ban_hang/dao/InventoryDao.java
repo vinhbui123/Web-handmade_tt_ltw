@@ -38,17 +38,25 @@ public class InventoryDao {
         }
     }
     public boolean updateInventory(Connection conn, int productId, int quantityIn, int quantityOut) {
-        // Vì sản phẩm được hiển thị bán luôn có trong kho, (ko có thì ẩn) --> update thẳng vào quantity_out
-        String sql = "UPDATE inventory SET quantity_in = quantity_in + ?, quantity_out = quantity_out + ? WHERE product_id = ?";
+
+        //String sql = "UPDATE inventory SET quantity_in = quantity_in + ?, quantity_out = quantity_out + ? WHERE product_id = ?";
+        String sql = """
+            INSERT INTO inventory (product_id, quantity_in, quantity_out)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                quantity_in = quantity_in + ?,
+                quantity_out = quantity_out + ?
+            """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, quantityIn);
-            stmt.setInt(2, quantityOut);
-            stmt.setInt(3, productId);
+            stmt.setInt(1, productId);
+            stmt.setInt(2, quantityIn);
+            stmt.setInt(3, quantityOut);
+            stmt.setInt(4, quantityIn);
+            stmt.setInt(5, quantityOut);
 
-            int rows = stmt.executeUpdate();
-            System.out.println("updateInventory: " + (rows > 0) + " (Đã cập nhật " + rows + " dòng)");
-            return rows > 0;
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Lỗi SQL tại updateInventory:");
             e.printStackTrace();
