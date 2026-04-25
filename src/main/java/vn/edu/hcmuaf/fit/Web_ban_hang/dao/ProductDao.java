@@ -47,7 +47,7 @@ public class ProductDao {
                     p.setImg(rs.getString("img"));
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
-                    // p.setStock(rs.getInt("stock"));
+                    p.setStock(rs.getInt("stock"));
                     p.setMaterials(new ArrayList<>());
                     productMap.put(productId, p);
                 }
