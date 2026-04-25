@@ -7,7 +7,6 @@
     <title>Đăng Nhập</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Thư viện FontAwesome và CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/index.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/login.css">
@@ -18,6 +17,67 @@
             font-weight: bold;
             text-align: center;
             margin-bottom: 10px;
+        }
+
+        /* --- Custom UI for Social Login --- */
+        .social-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0 15px 0;
+            color: #777;
+            font-size: 14px;
+        }
+        .social-divider::before,
+        .social-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ccc;
+        }
+        .social-divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+        .social-divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .social-login-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .social-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+
+        .social-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .social-btn i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .google-btn {
+            background-color: #db4a39;
+        }
+
+        .facebook-btn {
+            background-color: #3b5998;
         }
     </style>
 </head>
@@ -30,28 +90,37 @@
         <form class="login" action="login" method="post">
             <div class="login-title"><h3>Đăng Nhập Tài Khoản!</h3></div>
 
-            <!-- Thông báo đăng ký thành công -->
             <c:if test="${not empty success}">
                 <div style="padding: 15px; margin: 20px 0; border-radius: 5px; font-size: 16px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; text-align: center;">
                         ${success}
                 </div>
             </c:if>
 
-            <!-- Hiển thị lỗi -->
             <c:if test="${not empty errorMessage}">
                 <div class="error-message">${errorMessage}</div>
             </c:if>
 
-            <!-- Tên đăng nhập -->
             <div class="login__field">
                 <i class="login__icon fas fa-user"></i>
                 <input type="text" class="login__input" name="username" placeholder="Tên đăng nhập" required value="${username}">
             </div>
 
-            <!-- Mật khẩu -->
             <div class="login__field">
                 <i class="login__icon fas fa-lock"></i>
                 <input type="password" class="login__input" name="password" placeholder="Mật khẩu" required>
+            </div>
+
+            <div class="login__field captcha-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px;">
+                <div style="flex: 1; position: relative; display: flex; align-items: center;">
+                    <i class="login__icon fas fa-shield-alt" style="position: absolute; left: 15px; color: #333; margin: 0; font-size: 20px;"></i>
+                    <input type="text" class="login__input" name="captcha" placeholder="Mã CAPTCHA" required style="padding-left: 45px; width: 100%; box-sizing: border-box; height: 42px; margin: 0;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <img src="${pageContext.request.contextPath}/captcha" id="captchaImage" alt="CAPTCHA" style="height: 42px; border-radius: 8px; cursor: pointer; border: 1px solid #ccc; background: white;" onclick="document.getElementById('captchaImage').src='${pageContext.request.contextPath}/captcha?' + new Date().getTime();">
+                    <button type="button" class="btn-refresh" onclick="document.getElementById('captchaImage').src='${pageContext.request.contextPath}/captcha?' + new Date().getTime();" style="background: none; border: none; cursor: pointer; color: #333; font-size: 20px; padding: 5px; outline: none;" title="Tải lại mã">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="button login__submit">
@@ -62,6 +131,17 @@
             <div class="login__options">
                 <a href="${pageContext.request.contextPath}/forget-password.jsp" class="login__link">Quên mật khẩu?</a>
                 <a href="${pageContext.request.contextPath}/register.jsp" class="login__link">Bạn chưa có tài khoản? Đăng ký</a>
+            </div>
+
+            <div class="social-divider">Hoặc đăng nhập bằng</div>
+
+            <div class="social-login-container">
+                <a href="${pageContext.request.contextPath}/google-login" class="social-btn google-btn">
+                    <i class="fab fa-google"></i> Google
+                </a>
+                <a href="${pageContext.request.contextPath}/facebook-login" class="social-btn facebook-btn">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </a>
             </div>
 
         </form>

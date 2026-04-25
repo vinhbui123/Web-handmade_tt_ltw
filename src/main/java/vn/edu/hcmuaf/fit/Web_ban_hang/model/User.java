@@ -21,6 +21,7 @@ public class User implements Serializable {
     private Date updateAt;
     private String salt;
     private int role;
+    private String authProvider;
 
     public User() {}
 
@@ -161,5 +162,13 @@ public class User implements Serializable {
                 ", lastName='" + lastName + '\'' +
                 ", username='" + username + '\'' +
                 '}';
+    }
+
+    public void setAuthProvider(String provider) {
+        this.authProvider = provider;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
     }
 }
