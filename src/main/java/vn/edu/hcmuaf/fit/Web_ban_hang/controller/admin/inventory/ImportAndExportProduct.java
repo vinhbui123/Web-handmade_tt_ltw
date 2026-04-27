@@ -58,7 +58,7 @@ public class ImportAndExportProduct extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            // 1. Xác định trang hiện tại và kích thước trang
+            //Xác định trang hiện tại và kích thước trang
             int page = 1;
             int pageSize = 10; // Mỗi trang hiện 10 món
             String pageParam = req.getParameter("page");
@@ -67,20 +67,19 @@ public class ImportAndExportProduct extends HttpServlet {
             }
             int offset = (page - 1) * pageSize;
 
-            // 2. Lấy bộ lọc Category
+            // Lấy bộ lọc Category
             String categoryIdParam = req.getParameter("category");
             Integer categoryId = (categoryIdParam != null && !categoryIdParam.isEmpty())
                     ? Integer.parseInt(categoryIdParam) : null;
 
-            // 3. GỌI DAO ĐỂ LẤY DỮ LIỆU PHÂN TRANG (Thay vì getAll)
-            // Kiệt nhớ dùng hàm getProductsPaged mà mình đã viết cho bạn ở trên nhé
+            // GỌI DAO ĐỂ LẤY DỮ LIỆU PHÂN TRANG (Thay vì getAll)
             List<Product> products = productDao.getProductsPaged(true, categoryId, offset, pageSize);
 
-            // 4. TÍNH TỔNG SỐ TRANG
+            //  TÍNH TỔNG SỐ TRANG
             int totalProducts = productDao.getTotalCount(true, categoryId);
             int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
-            // 5. Đẩy các biến này sang JSP để JSTL xử lý
+            // Đẩy các biến này sang JSP để JSTL xử lý
             req.setAttribute("products", products);
             req.setAttribute("totalPages", totalPages);
             req.setAttribute("currentPage", page);
