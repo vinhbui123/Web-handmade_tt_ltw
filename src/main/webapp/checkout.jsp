@@ -24,7 +24,7 @@
                         <main>
                             <section class="shipping-address">
                                 <div class="address-header">
-                                    <span>📍 Địa Chỉ Nhận Hàng</span>
+                                    <span> Địa Chỉ Nhận Hàng</span>
                                     <%@include file="address-form.jsp" %>
                                 </div>
 
@@ -68,11 +68,26 @@
                                                 </div>
                                             </div>
                                             <div class="price-info">
-                                                <c:out value="${product.price}" /> VND
+                                                <c:choose>
+                                                    <c:when test="${product.discount > 0}">
+                                                        <f:formatNumber value="${product.discountedPrice}"
+                                                            pattern="#,##0" /> VND
+                                                        <br>
+                                                        <span
+                                                            style="text-decoration: line-through; color: #999; font-size: 0.8em;">
+                                                            <f:formatNumber value="${product.price}" pattern="#,##0" />
+                                                            VND
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <f:formatNumber value="${product.price}" pattern="#,##0" /> VND
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
                                             <div class="quantity-info">${product.quantity}</div>
                                             <div class="total-info">
-                                                <c:out value="${product.price * product.quantity}" /> VND
+                                                <f:formatNumber value="${product.discountedPrice * product.quantity}"
+                                                    pattern="#,##0" /> VND
                                             </div>
                                         </div>
                                     </c:if>
