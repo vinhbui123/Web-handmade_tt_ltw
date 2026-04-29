@@ -42,8 +42,7 @@ public class PurchaseController extends HttpServlet {
             PurchaseService purchaseService = new PurchaseService();
 
             List<OrderDTO> orders = purchaseService.getAllPurchaseByUserID(user.getId());
-            System.out.println(orders);
-            request.setAttribute("orders", orders);  // thay vì PurchaseItems
+            request.setAttribute("orders", orders);
             request.getRequestDispatcher("purchase.jsp").forward(request, response);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -52,8 +51,6 @@ public class PurchaseController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println(" doPost đã được gọi!");
-
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -65,9 +62,7 @@ public class PurchaseController extends HttpServlet {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             int price = Integer.parseInt(request.getParameter("price"));
-            log.info(String.valueOf(price));
             int discount = Integer.parseInt(request.getParameter("discount"));
-            log.info(String.valueOf(discount));
             int total = (quantity * price) - (discount * price);
 
             // Tính discount từ coupon trong session
@@ -111,11 +106,11 @@ public class PurchaseController extends HttpServlet {
             // 2. Lưu đơn hàng nếu đủ hàng
             OrderDao orderDAO = new OrderDao();
             orderDAO.addOrder(order, details);
-            System.out.println(" Đã thêm đơn hàng!");
+            log.info("Đã thêm đơn hàng!");
 
             // 3. Xuất kho
             boolean success = inventoryDao.exportProduct(productId, quantity, user.getId(),"Đặt hàng");
-            System.out.println(" export result: " + success);
+            log.error(" export result: {}", success);
             if (!success) {
                 request.setAttribute("error", " Xuất kho thất bại sau khi tạo đơn hàng!");
                 request.getRequestDispatcher("/purchase.jsp").forward(request, response);

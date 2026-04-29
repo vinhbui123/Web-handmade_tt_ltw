@@ -29,7 +29,7 @@
                 <th>Mã Đơn</th>
                 <th>Người Đặt</th>
                 <th>Sản Phẩm (ID - Tên - SL)</th>
-                <th>Tổng Tiền</th>
+                <th>Chi Tiết Tiền</th>
                 <th>Thanh Toán</th>
                 <th>Trạng Thái</th>
                 <th>Thời gian</th>
@@ -50,6 +50,7 @@
                 request.setAttribute("groupedOrders", groupedOrders);
             %>
 
+            <tbody>
             <c:forEach var="entry" items="${groupedOrders}">
                 <c:set var="products" value="${entry.value}"/>
                 <c:set var="firstRow" value="${products[0]}"/>
@@ -63,13 +64,35 @@
                             </c:forEach>
                         </div>
                     </td>
+
                     <td>
-                        <c:set var="total" value="0"/>
+                        <c:set var="subTotal" value="0"/>
+                        <c:set var="totalDiscount" value="0"/>
+
                         <c:forEach var="p" items="${products}">
-                            <c:set var="total" value="${total + p.total_money}"/>
+                            <c:set var="subTotal" value="${subTotal + p.total_money}"/>
+                            <c:set var="discountForProduct" value="${p.discount_amount + (p.total_money * p.discount_percentage / 100)}"/>
+                            <c:set var="totalDiscount" value="${totalDiscount + discountForProduct}"/>
                         </c:forEach>
-                            ${total}
+
+                        <c:set var="finalTotal" value="${subTotal - totalDiscount}"/>
+
+                        <div style="line-height: 1.6; font-size: 0.95em;">
+                            <div style="color: #555;">
+                                Tổng gốc: <fmt:formatNumber value="${subTotal}" type="number"/> đ
+                            </div>
+
+                            <c:if test="${totalDiscount > 0}">
+                                <div style="color: #e74c3c;"> Giảm giá: -<fmt:formatNumber value="${totalDiscount}" type="number"/> đ
+                                </div>
+                            </c:if>
+
+                            <div style="font-weight: bold; color: #2ecc71; font-size: 1.15em; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                Thực thu: <fmt:formatNumber value="${finalTotal}" type="number"/> đ
+                            </div>
+                        </div>
                     </td>
+
                     <td>${firstRow.payment_code}</td>
 
                     <td>
@@ -102,33 +125,32 @@
 
                         <c:choose>
                             <c:when test="${firstRow.status == 1}">
-                                <small>🕒 Ngày xác nhận:
+                                <small> Ngày xác nhận:
                                     <fmt:formatDate value="${firstRow.updated_at}" pattern="dd/MM/yyyy HH:mm:ss"/>
                                 </small>
                             </c:when>
                             <c:when test="${firstRow.status == 2}">
-                                <small>🕒 Ngày giao hàng:
+                                <small> Ngày giao hàng:
                                     <fmt:formatDate value="${firstRow.updated_at}" pattern="dd/MM/yyyy HH:mm:ss"/>
                                 </small>
                             </c:when>
                             <c:when test="${firstRow.status == 3}">
-                                <small>🕒 Ngày hoàn thành:
+                                <small> Ngày hoàn thành:
                                     <fmt:formatDate value="${firstRow.updated_at}" pattern="dd/MM/yyyy HH:mm:ss"/>
                                 </small>
                             </c:when>
                             <c:when test="${firstRow.status == 4}">
-                                <small>🕒 Ngày huỷ:
+                                <small> Ngày huỷ:
                                     <fmt:formatDate value="${firstRow.updated_at}" pattern="dd/MM/yyyy HH:mm:ss"/>
                                 </small>
                             </c:when>
                             <c:otherwise>
-                                <small>🕒 Chưa có cập nhật</small>
+                                <small> Chưa có cập nhật</small>
                             </c:otherwise>
                         </c:choose>
                     </td>
                     <td>
                         <c:if test="${firstRow.status == 0 && sessionScope.user.role == 1}">
-                            <!-- Nút xác nhận -->
                             <form action="${pageContext.request.contextPath}/confirmOrder" method="post" style="margin-bottom: 5px;">
                                 <input type="hidden" name="orderId" value="${firstRow.order_id}">
                                 <button type="submit" class="btn-confirm"
@@ -138,7 +160,6 @@
                         </c:if>
 
                         <c:if test="${(firstRow.status == 0 || firstRow.status == 1) && sessionScope.user.role == 1}">
-                            <!-- Nút hủy -->
                             <form action="${pageContext.request.contextPath}/cancelOrder" method="post">
                                 <input type="hidden" name="orderId" value="${firstRow.order_id}">
                                 <button type="submit" class="btn-cancel"

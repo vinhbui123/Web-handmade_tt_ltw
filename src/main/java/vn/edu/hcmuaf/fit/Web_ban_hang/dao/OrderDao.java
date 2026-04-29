@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 public class OrderDao {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderDao.class);
 
     // Lấy danh sách tất cả đơn hàng theo uid
     public List<Order> getAllOrders(int uid) {
@@ -31,12 +35,12 @@ public class OrderDao {
                 orders.add(o);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return orders;
     }
 
-    // Thêm đơn hàng và chi tiết vào database (KHÔNG dùng total_amount nữa)
+    // Thêm đơn hàng và chi tiết vào database
     public void addOrder(Order order, List<OrderDetail> details) {
         String query = "INSERT INTO orders (status, user_id, free_shipping, payment_type_id) VALUES (?, ?, ?, ?)";
 
@@ -61,7 +65,7 @@ public class OrderDao {
                 addDetailsOrder(connection, details, orderId, order.getStatus());
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -82,7 +86,7 @@ public class OrderDao {
             }
             statement.executeBatch();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -97,6 +101,8 @@ public class OrderDao {
                 p.name AS product_name,
                 od.quantity,
                 od.total_money,
+                od.discount_percentage,
+                od.discount_amount,
                 o.status,
                 o.create_at,
                 o.updated_at,
@@ -122,6 +128,8 @@ public class OrderDao {
                 row.put("product_name", rs.getString("product_name"));
                 row.put("quantity", rs.getInt("quantity"));
                 row.put("total_money", rs.getInt("total_money"));
+                row.put("discount_percentage", rs.getInt("discount_percentage"));
+                row.put("discount_amount", rs.getInt("discount_amount"));
                 row.put("status", rs.getByte("status"));
                 row.put("create_at", rs.getTimestamp("create_at"));
                 row.put("updated_at", rs.getTimestamp("updated_at"));
@@ -130,7 +138,7 @@ public class OrderDao {
                 result.add(row);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
 
         return result;
@@ -189,7 +197,7 @@ public class OrderDao {
 
         } catch (Exception e) {
             if (conn != null) try { conn.rollback(); } catch (SQLException ignored) {}
-            e.printStackTrace();
+            log.error(e.getMessage());
         } finally {
             if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
         }
@@ -205,7 +213,7 @@ public class OrderDao {
             int rows = ps.executeUpdate();
             return rows > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             return false;
         }
     }
