@@ -1,28 +1,32 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.OrderDTO;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.AddressService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.OrderService;
-import java.io.IOException;
-import java.io.PrintWriter;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
-
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
-import java.util.List;
 
 @WebServlet(name = "CheckoutController", value = "/checkout")
 public class CheckoutController extends HttpServlet {
@@ -39,7 +43,6 @@ public class CheckoutController extends HttpServlet {
         try {
             // 1. Parse JSON
             String jsonInput = ReadJsonUtil.read(request);
-            // System.out.println(jsonInput);
 
             Gson gson = new Gson();
             OrderDTO orderDTO = gson.fromJson(jsonInput, OrderDTO.class);
@@ -68,10 +71,39 @@ public class CheckoutController extends HttpServlet {
                 return;
             }
 
-            // 4. Lưu đơn hàng
+            // 4. Áp dụng coupon discount lên chi tiết đơn hàng
+            Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
+            if (appliedCoupon != null) {
+                // Tính tổng tiền đơn hàng
+                double orderTotal = 0;
+                for (OrderDetail detail : details) {
+                    orderTotal += detail.getTotalMoney();
+                }
+
+                int discountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, orderTotal);
+                int discountPercentage = appliedCoupon.getType() == 1 ? appliedCoupon.getDiscountValue() : 0;
+
+                // Phân bổ discount cho từng detail theo tỷ lệ
+                int remainingDiscount = discountAmount;
+                for (int i = 0; i < details.size(); i++) {
+                    OrderDetail detail = details.get(i);
+                    detail.setDiscountPercentage(discountPercentage);
+
+                    if (i == details.size() - 1) {
+                        // Dòng cuối nhận phần còn lại để tránh sai lệch do làm tròn
+                        detail.setDiscountAmount(remainingDiscount);
+                    } else {
+                        int detailDiscount = (int) ((double) detail.getTotalMoney() / orderTotal * discountAmount);
+                        detail.setDiscountAmount(detailDiscount);
+                        remainingDiscount -= detailDiscount;
+                    }
+                }
+            }
+
+            // 5. Lưu đơn hàng
             orderService.addOrder(order, details);
 
-            // 5. Trừ kho
+            // 6. Trừ kho
             for (OrderDetail detail : details) {
                 System.out.println("Exporting productId=" + detail.getProductId() + ", quantity="
                         + detail.getQuantity() + ", userId=" + orderDTO.getUserId());
@@ -87,6 +119,9 @@ public class CheckoutController extends HttpServlet {
             for (OrderDetail detail : details) {
                 cart.remove(detail.getProductId());
             }
+
+            // 7. Xóa coupon khỏi session sau khi đặt hàng thành công
+            session.removeAttribute("appliedCoupon");
 
             out.print("{\"success\": true}");
 
@@ -127,6 +162,18 @@ public class CheckoutController extends HttpServlet {
         // Truyền lại thông tin người nhận
         request.setAttribute("cart", cart);
         request.setAttribute("isCartEmpty", false);
+
+        CartService cartService = (CartService) cart;
+        double selectedTotal = cartService.getSelectedTotalWithDiscount();
+        int discountAmount = 0;
+
+        Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
+        if (appliedCoupon != null) {
+            discountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, selectedTotal);
+        }
+
+        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("finalTotal", selectedTotal - discountAmount);
 
         request.getRequestDispatcher("/checkout.jsp").forward(request, response);
     }
