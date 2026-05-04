@@ -139,7 +139,34 @@
             </c:forEach>
             </tbody>
         </table>
-        <div class="pagination"></div>
+        <div class="server-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0;">
+
+            <c:if test="${currentPage > 1}">
+                <a href="?page=${currentPage - 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
+                   class="btn-page">&lt;</a>
+            </c:if>
+
+            <c:forEach begin="1" end="${totalPages}" var="i">
+                <c:choose>
+                    <c:when test="${i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1) || (currentPage == 1 && i <= 3) || (currentPage == totalPages && i >= totalPages - 2)}">
+                        <a href="?page=${i}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
+                           class="btn-page ${i == currentPage ? 'active' : ''}">
+                                ${i}
+                        </a>
+                    </c:when>
+
+                    <c:when test="${(i == 2 && currentPage > 3) || (i == totalPages - 1 && currentPage < totalPages - 2)}">
+                        <span style="padding: 8px 4px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;">...</span>
+                    </c:when>
+                </c:choose>
+            </c:forEach>
+
+            <c:if test="${currentPage < totalPages}">
+                <a href="?page=${currentPage + 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
+                   class="btn-page">&gt;</a>
+            </c:if>
+
+        </div>
     </section>
 
 

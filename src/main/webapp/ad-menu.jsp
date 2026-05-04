@@ -16,6 +16,7 @@
         <li><a href="adminCategorys">Quản lý Danh Mục</a>
         <li><a href="adminMaterials">Quản lý Chất Liệu Sản Phẩm</a>
         <li><a href="adminOrders">Quản Lý Đơn Hàng</a></li>
+        <li><a href="adminInventory">Quản Lý Xuất Nhập Sản Phẩm</a></li>
         <li><a href="adminUsers">Quản Lý Tài Khoản</a>
         <li><a href="adminComments">Quản Lý Đánh Giá</a>
         <li><a href="logout" class="btn-logout">Đăng Xuất</a></li>

@@ -47,7 +47,7 @@ public class ProductDao {
                     p.setImg(rs.getString("img"));
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
-                    // p.setStock(rs.getInt("stock"));
+                    p.setStock(rs.getInt("stock"));
                     p.setMaterials(new ArrayList<>());
                     productMap.put(productId, p);
                 }
@@ -463,6 +463,73 @@ public class ProductDao {
             e.printStackTrace();
         }
         return products;
+    }
+    //Lấy danh sách sản phẩm có Phân trang.
+    public List<Product> getProductsPaged(boolean isAdmin, Integer categoryId, int offset, int size) {
+        List<Product> products = new ArrayList<>();
+        // Sử dụng LinkedHashMap để giữ thứ tự và tránh trùng lặp do Join với Materials
+        Map<Integer, Product> productMap = new LinkedHashMap<>();
+        //JOIN với bảng inventory để lấy cột stock (tồn kho) thực tế
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, " +
+                        "COALESCE(i.quantity, 0) AS stock " +
+                        "FROM products p " +
+                        "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 "
+        );
+
+        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
+        if (!isAdmin) sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
+
+        sql.append(" ORDER BY p.id DESC LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (categoryId != null) stmt.setInt(paramIndex++, categoryId);
+            stmt.setInt(paramIndex++, size);
+            stmt.setInt(paramIndex++, offset);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getInt("price"));
+                p.setDiscount(rs.getInt("discount"));
+                p.setView(rs.getInt("view"));
+                p.setImg(rs.getString("img"));
+                p.setCatalog_id(rs.getInt("catalog_id"));
+                p.setStock(rs.getInt("stock"));
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi phân trang sản phẩm: " + e.getMessage());
+        }
+        return products;
+    }
+    //Tính tổng số lượng sản phẩm thỏa mãn
+    public int getTotalCount(boolean isAdmin, Integer categoryId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
+        if (!isAdmin) {
+            sql.append(" LEFT JOIN inventory i ON p.id = i.product_id WHERE COALESCE(i.quantity, 0) > 0 ");
+        } else {
+            sql.append(" WHERE 1=1 ");
+        }
+
+        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            if (categoryId != null) stmt.setInt(1, categoryId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 }
