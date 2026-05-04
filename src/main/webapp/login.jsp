@@ -102,7 +102,7 @@
 
             <div class="login__field">
                 <i class="login__icon fas fa-user"></i>
-                <input type="text" class="login__input" name="username" placeholder="Tên đăng nhập" required value="${username}">
+                <input type="text" class="login__input" name="username" placeholder="Tên đăng nhập hoặc Email" required value="${username}">
             </div>
 
             <div class="login__field">
@@ -129,7 +129,7 @@
             </button>
 
             <div class="login__options">
-                <a href="${pageContext.request.contextPath}/forget-password.jsp" class="login__link">Quên mật khẩu?</a>
+                <a href="${pageContext.request.contextPath}/forgot-password" class="login__link">Quên mật khẩu?</a>
                 <a href="${pageContext.request.contextPath}/register.jsp" class="login__link">Bạn chưa có tài khoản? Đăng ký</a>
             </div>
 
