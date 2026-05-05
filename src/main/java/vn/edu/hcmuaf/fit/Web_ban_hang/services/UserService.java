@@ -27,6 +27,9 @@ public class UserService {
             return "Email không hợp lệ.";
         }
         if (StringUtils.isBlank(password)) return "Mật khẩu không được để trống.";
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$")) {
+            return "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+        }
         if (!password.equals(confirmPassword)) return "Mật khẩu và xác nhận mật khẩu không khớp.";
         if (isEmailExists(email)) return "Email đã được sử dụng";
         if (isUsernameExists(username)) return "Tên đăng nhập đã tồn tại.";

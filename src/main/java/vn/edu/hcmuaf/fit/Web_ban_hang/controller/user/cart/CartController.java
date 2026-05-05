@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
@@ -46,6 +48,19 @@ public class CartController extends HttpServlet {
         CartService cart = (CartService) session.getAttribute("cart");
         if (cart != null) {
             cart.refreshStock();
+            
+            double subtotal = cart.getSelectedTotalWithDiscount();
+            double finalTotal = subtotal;
+            int discount = 0;
+            Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
+            if (appliedCoupon != null) {
+                if (subtotal >= appliedCoupon.getMinOrderAmount()) {
+                    discount = ApplyCouponController.getDiscountAmount(appliedCoupon, subtotal);
+                    finalTotal = subtotal - discount;
+                }
+            }
+            request.setAttribute("finalTotal", finalTotal);
+            request.setAttribute("discountAmount", discount);
         } else {
             request.setAttribute("isCartEmpty", true);
             request.setAttribute("message", "Giỏ hàng của bạn đang trống.");
@@ -159,7 +174,17 @@ public class CartController extends HttpServlet {
             }
 
             result.put("cartSize", cart.getTotalQuantityAll());
-            result.put("total", cart.getSelectedTotalWithDiscount());
+            
+            double subtotal = cart.getSelectedTotalWithDiscount();
+            double finalTotal = subtotal;
+            vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon appliedCoupon = (vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon) session.getAttribute("appliedCoupon");
+            if (appliedCoupon != null) {
+                if (subtotal >= appliedCoupon.getMinOrderAmount()) {
+                    int discount = vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController.getDiscountAmount(appliedCoupon, subtotal);
+                    finalTotal = subtotal - discount;
+                }
+            }
+            result.put("total", finalTotal);
 
             out.print(gson.toJson(result));
 

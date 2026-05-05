@@ -30,9 +30,9 @@ public class OrderService {
             orderDetail.setProductId(dto.getProductId());
             orderDetail.setPrice(dto.getPrice());
             orderDetail.setQuantity(dto.getQuantity());
-            orderDetail.setTotalMoney(dto.getPrice() * dto.getQuantity()); //THÊM DÒNG NÀY
-            orderDetail.setDiscountAmount(0); // Nếu bạn chưa dùng chiết khấu
-            orderDetail.setDiscountPercentage(0); // Nếu bạn chưa dùng phần trăm chiết khấu
+            orderDetail.setTotalMoney(dto.getPrice() * dto.getQuantity());
+            orderDetail.setDiscountAmount(dto.getDiscountAmount());
+            orderDetail.setDiscountPercentage(dto.getDiscountPercentage());
             result.add(orderDetail);
         }
         return result;

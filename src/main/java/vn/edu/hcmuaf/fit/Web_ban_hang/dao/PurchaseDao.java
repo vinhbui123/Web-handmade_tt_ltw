@@ -1,16 +1,19 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.OrderDTO;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.PurchaseItem;
-import vn.edu.hcmuaf.fit.Web_ban_hang.utils.SettingDAO;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.OrderDTO;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.PurchaseItem;
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.SettingDAO;
 
 public class PurchaseDao {
 
@@ -74,6 +77,7 @@ public class PurchaseDao {
                 item.setName(rs.getString("product_name"));
                 item.setQuantity(rs.getInt("quantity"));
                 item.setDiscount(rs.getInt("discount_percentage"));
+                item.setDiscountAmount(rs.getInt("discount_amount"));
                 item.setTotal(rs.getInt("total_money"));
                 item.setStatus(order.getStatus()); // gán theo order
                 item.setStatusString(order.getStatusString());

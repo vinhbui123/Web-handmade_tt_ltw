@@ -10,6 +10,7 @@ public class PurchaseItem {
     private String name;
     private int quantity;
     private int discount;
+    private int discountAmount;
     private int total;
     private int status;
     private String statusString;
@@ -55,6 +56,14 @@ public class PurchaseItem {
 
     public int getDiscount() {
         return discount;
+    }
+
+    public int getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(int discountAmount) {
+        this.discountAmount = discountAmount;
     }
 
     public int getTotal() {

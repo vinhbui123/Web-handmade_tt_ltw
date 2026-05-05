@@ -1,4 +1,4 @@
-package vn.edu.hcmuaf.fit.Web_ban_hang.model;
+package vn.edu.hcmuaf.fit.Web_ban_hang.dao.session;
 
 import java.io.Serializable;
 

@@ -1,25 +1,32 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order;
 
 
+import java.io.IOException;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.OrderDTO;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.PurchaseService;
 
-import java.io.IOException;
-import java.util.List;
-
 @WebServlet(urlPatterns = "/purchase")
 public class PurchaseController extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(PurchaseController.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -35,18 +42,15 @@ public class PurchaseController extends HttpServlet {
             PurchaseService purchaseService = new PurchaseService();
 
             List<OrderDTO> orders = purchaseService.getAllPurchaseByUserID(user.getId());
-            System.out.println(orders);
-            request.setAttribute("orders", orders);  // thay vì PurchaseItems
+            request.setAttribute("orders", orders);
             request.getRequestDispatcher("purchase.jsp").forward(request, response);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println(" doPost đã được gọi!");
-
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -58,7 +62,17 @@ public class PurchaseController extends HttpServlet {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
             int price = Integer.parseInt(request.getParameter("price"));
-            int total = quantity * price;
+            int discount = Integer.parseInt(request.getParameter("discount"));
+            int total = (quantity * price) - (discount * price);
+
+            // Tính discount từ coupon trong session
+            int couponDiscountAmount = 0;
+            int couponDiscountPercentage = 0;
+            Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
+            if (appliedCoupon != null) {
+                couponDiscountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, (double) total);
+                couponDiscountPercentage = appliedCoupon.getType() == 1 ? appliedCoupon.getDiscountValue() : 0;
+            }
 
             // Tạo đơn hàng
             Order order = new Order();
@@ -71,9 +85,12 @@ public class PurchaseController extends HttpServlet {
             detail.setProductId(productId);
             detail.setPrice(price);
             detail.setQuantity(quantity);
+            detail.setDiscountAmount(couponDiscountAmount);
+            detail.setDiscountPercentage(couponDiscountPercentage);
             detail.setTotalMoney(total);
-            detail.setDiscountPercentage(0);
-            detail.setDiscountAmount(0);
+
+            detail.setDiscountPercentage(couponDiscountPercentage);
+            detail.setDiscountAmount(couponDiscountAmount);
 
             List<OrderDetail> details = List.of(detail);
 
@@ -89,21 +106,24 @@ public class PurchaseController extends HttpServlet {
             // 2. Lưu đơn hàng nếu đủ hàng
             OrderDao orderDAO = new OrderDao();
             orderDAO.addOrder(order, details);
-            System.out.println(" Đã thêm đơn hàng!");
+            log.info("Đã thêm đơn hàng!");
 
             // 3. Xuất kho
             boolean success = inventoryDao.exportProduct(productId, quantity, user.getId(),"Đặt hàng");
-            System.out.println(" export result: " + success);
+            log.error(" export result: {}", success);
             if (!success) {
                 request.setAttribute("error", " Xuất kho thất bại sau khi tạo đơn hàng!");
                 request.getRequestDispatcher("/purchase.jsp").forward(request, response);
                 return;
             }
 
+            // 4. Xóa coupon khỏi session sau khi đặt hàng thành công
+            session.removeAttribute("appliedCoupon");
+
             response.sendRedirect("purchase");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             request.setAttribute("error", " Lỗi khi đặt hàng");
             request.getRequestDispatcher("/purchase.jsp").forward(request, response);
         }

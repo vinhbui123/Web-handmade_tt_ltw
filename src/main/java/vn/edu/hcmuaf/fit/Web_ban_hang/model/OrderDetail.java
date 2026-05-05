@@ -51,7 +51,7 @@ public class OrderDetail implements Serializable {
         this.quantity = quantity;
     }
 
-    public int getTotalMoney() { return this.price * this.quantity; }
+    public int getTotalMoney() { return this.price * this.quantity - this.discountAmount - ( this.discountPercentage * this.price); }
 
     public void setTotalMoney(int totalMoney) {
         this.totalMoney = totalMoney;
@@ -67,7 +67,7 @@ public class OrderDetail implements Serializable {
         this.discountAmount = discountAmount;
         this.status = status;
 
-        this.totalMoney = price * quantity;
+        this.totalMoney = price * quantity - discountAmount - ( discountPercentage * price );
     }
 
     @Override

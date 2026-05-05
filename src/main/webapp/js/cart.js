@@ -46,7 +46,7 @@ function updateCartCount(count) {
 function addToCart(productId, quantity = 1) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function updateSelection(productId, isSelected) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -166,7 +166,7 @@ function updateSelection(productId, isSelected) {
 function selectAll(isSelected) {
     const contextPath = document.body.dataset.contextPath || '';
 
-    fetch(`${contextPath}/api/cart`, {
+    fetch(contextPath + "/api/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -200,3 +200,4 @@ function selectAll(isSelected) {
             console.error("Lỗi select all:", error);
         });
 }
+
