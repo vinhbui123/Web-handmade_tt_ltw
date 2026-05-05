@@ -13,8 +13,8 @@ public class UserService {
     private final UserDao userDao = new UserDao();
 
     // Xác thực đăng nhập
-    public User authenticateUser(String username, String password) {// mã hóa SHA-256
-        return userDao.authenticateUser(username, password); // truyền hash vào DAO
+    public User authenticateUser(String usernameOrEmail, String password) {// mã hóa SHA-256
+        return userDao.authenticateUser(usernameOrEmail, password); // truyền hash vào DAO
     }
 
     //input filter

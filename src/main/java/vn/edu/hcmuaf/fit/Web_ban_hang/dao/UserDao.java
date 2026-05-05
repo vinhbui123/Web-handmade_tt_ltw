@@ -8,6 +8,7 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HashUtil;
 
 import java.sql.*;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,13 +144,14 @@ public class UserDao {
         return user;
     }
 
-    public User authenticateUser(String username, String currentPassword) {
-        String query = "SELECT * FROM users WHERE username = ?";
+    public User authenticateUser(String usernameOrEmail, String currentPassword) {
+        String query = "SELECT * FROM users WHERE username = ? OR email = ?";
 
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
-            statement.setString(1, username);
+            statement.setString(1, usernameOrEmail);
+            statement.setString(2, usernameOrEmail);
 
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -168,7 +170,7 @@ public class UserDao {
             log.error("Error during authentication: {}", e.getMessage(), e);
         }
 
-        log.info("Authentication failed for: {}", username);
+        log.info("Authentication failed for: {}", usernameOrEmail);
         return null;
     }
 
@@ -381,5 +383,79 @@ public class UserDao {
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    // ======= FORGOT PASSWORD TOKEN METHODS =======
+
+    /**
+     * Lưu token đặt lại mật khẩu (UUID) cùng thời hạn hết hạn vào DB.
+     * Yêu cầu bảng users có 2 cột: reset_token (VARCHAR), reset_token_expiry (DATETIME).
+     */
+    public boolean saveResetToken(String email, String token, Timestamp expiryTime) {
+        String sql = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, token);
+            stmt.setTimestamp(2, expiryTime);
+            stmt.setString(3, email.trim().toLowerCase());
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            log.error("saveResetToken error: {}", e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Tìm user theo token đặt lại mật khẩu (chỉ trả về nếu token còn hạn).
+     */
+    public User getUserByResetToken(String token) {
+        String sql = "SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, token);
+            return fetchSingleUser(stmt);
+
+        } catch (SQLException e) {
+            log.error("getUserByResetToken error: {}", e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * Xóa token sau khi đã đặt lại mật khẩu thành công.
+     */
+    public boolean clearResetToken(String email) {
+        String sql = "UPDATE users SET reset_token = NULL, reset_token_expiry = NULL WHERE email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email.trim().toLowerCase());
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            log.error("clearResetToken error: {}", e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Cập nhật mật khẩu theo email (dùng sau khi xác thực token).
+     */
+    public boolean updatePasswordByEmail(String email, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE email = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, HashUtil.toSHA256(newPassword));
+            stmt.setString(2, email.trim().toLowerCase());
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            log.error("updatePasswordByEmail error: {}", e.getMessage(), e);
+        }
+        return false;
     }
 }
