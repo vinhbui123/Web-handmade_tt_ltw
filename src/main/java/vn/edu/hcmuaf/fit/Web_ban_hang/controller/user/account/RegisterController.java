@@ -1,14 +1,17 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.account;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
+import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.session.Cart;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-
-import java.io.IOException;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 
 @WebServlet(name = "RegisterController", urlPatterns = {"/register"})
 public class RegisterController extends HttpServlet {
@@ -27,10 +30,10 @@ public class RegisterController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Quan trọng: Xử lý tiếng Việt cho dữ liệu nhập vào
+        // Xử lý tiếng Việt cho dữ liệu nhập vào
         request.setCharacterEncoding("UTF-8");
 
-        // 1. Lấy dữ liệu từ form
+        // Lấy dữ liệu từ form
         String firstName = request.getParameter("firstName");
         String lastName = request.getParameter("lastName");
         String username = request.getParameter("username");
@@ -42,10 +45,10 @@ public class RegisterController extends HttpServlet {
         String address = request.getParameter("address");
         String bio = request.getParameter("bio");
 
-        // 2. Kiểm tra tính hợp lệ của input (Basic Validation)
+        // Kiểm tra tính hợp lệ của input (Basic Validation)
         String errorMessage = userService.validateInputs(firstName, lastName, username, email, password, confirmPassword);
 
-        // trả về giá trì sai in ra màn hình
+        // trả về giá trị sai in ra màn hình
         if (errorMessage != null) {
             handleRegisterError(request, response, errorMessage);
             return;
@@ -64,13 +67,21 @@ public class RegisterController extends HttpServlet {
         user.setRole(0);
         user.setStatus(1);
 
-        // 5. Gọi Service để lưu
+        // Gọi Service để lưu
         boolean success = userService.registerUser(user);
 
         if (success) {
-            // Đăng ký thành công -> Chuyển sang trang login
-            request.setAttribute("success", "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            // Đăng ký thành công → Auto-login: lấy user vừa tạo từ DB, khởi tạo session
+            UserDao userDao = new UserDao();
+            User registeredUser = userDao.getUserByUsername(username);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("user", registeredUser);
+            session.setAttribute("cart", new Cart());
+            // Flag để trang chủ hiển thị popup chào mừng
+            session.setAttribute("welcomeNewUser", true);
+
+            response.sendRedirect(request.getContextPath() + "/home");
         } else {
             // Lỗi hệ thống hoặc lỗi không xác định
             handleRegisterError(request, response, "Đăng ký thất bại. Vui lòng thử lại sau.");
