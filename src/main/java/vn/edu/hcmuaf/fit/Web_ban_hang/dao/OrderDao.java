@@ -79,9 +79,8 @@ public class OrderDao {
                 statement.setInt(3, detail.getPrice());
                 statement.setInt(4, detail.getQuantity());
                 statement.setInt(5, detail.getTotalMoney());
-                statement.setInt(6, detail.getDiscountPercentage());
-                statement.setInt(7, detail.getDiscountAmount());
-                statement.setInt(8, status);
+                statement.setInt(6, detail.getDiscountAmount());
+                statement.setInt(7, status);
                 statement.addBatch();
             }
             statement.executeBatch();

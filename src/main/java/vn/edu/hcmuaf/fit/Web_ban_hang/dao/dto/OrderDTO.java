@@ -97,8 +97,6 @@ public class OrderDTO {
         return this.details.remove(detail);
     }
 
-
-
     public OrderDTO() {}
 
     public OrderDTO(int uid, int status, int freeShipping, int paymentTypeId, List<DetailOrderDTO> details) {
