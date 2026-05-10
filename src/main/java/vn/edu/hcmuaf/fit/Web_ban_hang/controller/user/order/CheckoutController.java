@@ -65,13 +65,17 @@ public class CheckoutController extends HttpServlet {
 
             // 3. Kiểm tra địa chỉ giao hàng
             HttpSession session = request.getSession(false);
+            if (session == null) {
+                out.print("{\"success\": false, \"message\": \"Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.\"}");
+                return;
+            }
             Address address = (Address) session.getAttribute("addressDefault");
             if (address == null) {
                 out.print("{\"success\": false, \"message\": \"Cập nhật địa chỉ đơn hàng trước khi đặt hàng.\"}");
                 return;
             }
 
-            // 4. Áp dụng coupon discount lên chi tiết đơn hàng
+            // Áp dụng coupon discount lên chi tiết đơn hàng
             Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
             if (appliedCoupon != null) {
                 // Tính tổng tiền đơn hàng
@@ -81,13 +85,11 @@ public class CheckoutController extends HttpServlet {
                 }
 
                 int discountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, orderTotal);
-                int discountPercentage = appliedCoupon.getType() == 1 ? appliedCoupon.getDiscountValue() : 0;
 
                 // Phân bổ discount cho từng detail theo tỷ lệ
                 int remainingDiscount = discountAmount;
                 for (int i = 0; i < details.size(); i++) {
                     OrderDetail detail = details.get(i);
-                    detail.setDiscountPercentage(discountPercentage);
 
                     if (i == details.size() - 1) {
                         // Dòng cuối nhận phần còn lại để tránh sai lệch do làm tròn
@@ -98,6 +100,11 @@ public class CheckoutController extends HttpServlet {
                         remainingDiscount -= detailDiscount;
                     }
                 }
+            }
+
+            // log for orderDetail
+            for (OrderDetail orderDetail : details) {
+                log.info("{}: {}", orderDetail.getProductId(), orderDetail.getPrice());
             }
 
             // 5. Lưu đơn hàng
@@ -116,8 +123,10 @@ public class CheckoutController extends HttpServlet {
                 }
             }
             CartService cart = (CartService) session.getAttribute("cart");
-            for (OrderDetail detail : details) {
-                cart.remove(detail.getProductId());
+            if (cart != null) {
+                for (OrderDetail detail : details) {
+                    cart.remove(detail.getProductId());
+                }
             }
 
             // 7. Xóa coupon khỏi session sau khi đặt hàng thành công
@@ -126,8 +135,11 @@ public class CheckoutController extends HttpServlet {
             out.print("{\"success\": true}");
 
         } catch (Exception e) {
-            log.error(e.getMessage());
-            out.print("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
+            log.error("Checkout failed", e);
+            java.util.Map<String, Object> errorMap = new java.util.HashMap<>();
+            errorMap.put("success", false);
+            errorMap.put("message", e.getMessage() != null ? e.getMessage() : "Lỗi hệ thống");
+            out.print(new Gson().toJson(errorMap));
         } finally {
             out.flush();
             out.close();

@@ -32,7 +32,6 @@ public class OrderService {
             orderDetail.setQuantity(dto.getQuantity());
             orderDetail.setTotalMoney(dto.getPrice() * dto.getQuantity());
             orderDetail.setDiscountAmount(dto.getDiscountAmount());
-            orderDetail.setDiscountPercentage(dto.getDiscountPercentage());
             result.add(orderDetail);
         }
         return result;
