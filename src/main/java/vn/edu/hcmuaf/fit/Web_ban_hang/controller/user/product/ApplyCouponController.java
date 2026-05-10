@@ -82,7 +82,8 @@ public class ApplyCouponController extends HttpServlet {
         if (matchedCoupon.getType() == 0) { // Giảm tiền mặt
             discountAmount = matchedCoupon.getDiscountValue();
         } else if (matchedCoupon.getType() == 1) { // Giảm theo phần trăm
-            discountAmount = (int) (total * matchedCoupon.getDiscountValue() / 100.0);
+            int discountPercent = matchedCoupon.getDiscountPercent();
+            discountAmount = (int) (total * discountPercent / 100.0);
 
             // Áp dụng giới hạn số tiền giảm tối đa nếu có
             if (matchedCoupon.getMaxDiscountValue() != null && discountAmount > matchedCoupon.getMaxDiscountValue()) {
