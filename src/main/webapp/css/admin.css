@@ -576,7 +576,6 @@ section.charts {
     letter-spacing: 0.5px;
 }
 
-/* Optional: scrollbar custom (Chrome) */
 .stat-row::-webkit-scrollbar {
     height: 8px;
 }
@@ -585,10 +584,31 @@ section.charts {
     background: #aaa;
     border-radius: 10px;
 }
-.status-pending { color: #f39c12; font-weight: bold; }     /* Đang chờ xác nhận - cam */
-.status-confirmed { color: #3498db; font-weight: bold; }   /* Đã xác nhận - xanh dương */
-.status-shipping { color: #e67e22; font-weight: bold; }    /* Đang giao hàng - cam đậm */
-.status-done { color: #27ae60; font-weight: bold; }        /* Đã hoàn thành - xanh lá */
-.status-cancelled { color: red; font-weight: bold; }       /* Đã huỷ - đỏ */
-.status-unknown { color: #7f8c8d; font-style: italic; }     /* Không rõ - xám */
+.status-pending { color: #f39c12; font-weight: bold; }
+.status-confirmed { color: #3498db; font-weight: bold; }
+.status-shipping { color: #e67e22; font-weight: bold; }
+.status-done { color: #27ae60; font-weight: bold; }
+.status-cancelled { color: red; font-weight: bold; }
+.status-unknown { color: #7f8c8d; font-style: italic; }
 
+.server-pagination .btn-page {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.server-pagination .btn-page.active {
+    background-color: #0097a7;
+    color: white;
+    border-color: #0097a7;
+}
+
+.server-pagination .btn-page:hover:not(.active) {
+    background-color: #f1f1f1;
+}
