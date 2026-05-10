@@ -7,9 +7,6 @@
             <script src="${pageContext.request.contextPath}/js/purchase-detail.js"></script>
 
 
-            <i class="fa-solid fa-list-ul status-list-icon" onclick="openPurchaseDetailPopup()"
-                style="cursor: pointer; margin-left: 5px;"></i>
-
             <!-- Popup (ẩn khi chưa mở) -->
             <div id="purchaseModal" class="modal">
                 <div class="modal-content">

@@ -70,7 +70,7 @@ public class OrderDao {
     }
 
     private void addDetailsOrder(Connection connection, List<OrderDetail> details, int orderId, int status) {
-        String query = "INSERT INTO order_details(order_id, product_id, price, quantity, total_money, discount_percentage, discount_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO order_details(order_id, product_id, price, quantity, total_money, discount_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             for (OrderDetail detail : details) {
@@ -100,7 +100,6 @@ public class OrderDao {
                 p.name AS product_name,
                 od.quantity,
                 od.total_money,
-                od.discount_percentage,
                 od.discount_amount,
                 o.status,
                 o.create_at,
@@ -127,7 +126,6 @@ public class OrderDao {
                 row.put("product_name", rs.getString("product_name"));
                 row.put("quantity", rs.getInt("quantity"));
                 row.put("total_money", rs.getInt("total_money"));
-                row.put("discount_percentage", rs.getInt("discount_percentage"));
                 row.put("discount_amount", rs.getInt("discount_amount"));
                 row.put("status", rs.getByte("status"));
                 row.put("create_at", rs.getTimestamp("create_at"));
