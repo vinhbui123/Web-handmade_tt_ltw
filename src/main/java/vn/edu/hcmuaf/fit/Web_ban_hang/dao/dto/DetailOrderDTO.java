@@ -12,7 +12,6 @@ public class DetailOrderDTO {
         return productId;
     }
 
-
     public int getDiscountAmount() {
         return discountAmount;
     }
