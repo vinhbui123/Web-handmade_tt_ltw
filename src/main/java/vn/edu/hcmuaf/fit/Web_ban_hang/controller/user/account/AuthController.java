@@ -58,7 +58,7 @@ public class AuthController extends HttpServlet {
 
         // Validate CAPTCHA
         String sessionCaptcha = (String) session.getAttribute("captcha");
-        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equalsIgnoreCase(captchaInput)) {
+        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
             failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
             session.setAttribute("failedAttempts", failedAttempts);
 
