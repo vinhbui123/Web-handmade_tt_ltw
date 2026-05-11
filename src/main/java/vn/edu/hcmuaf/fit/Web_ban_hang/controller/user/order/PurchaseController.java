@@ -38,13 +38,11 @@ public class PurchaseController extends HttpServlet {
         }
 
         try {
-            // Giả sử user là một đối tượng và có phương thức getId để lấy ID của người dùng
             PurchaseService purchaseService = new PurchaseService();
-
             List<OrderDTO> orders = purchaseService.getAllPurchaseByUserID(user.getId());
             request.setAttribute("orders", orders);
             request.getRequestDispatcher("purchase.jsp").forward(request, response);
-        } catch (Exception e) {
+        } catch (ServletException | IOException e) {
             log.error(e.getMessage());
         }
     }
@@ -60,18 +58,17 @@ public class PurchaseController extends HttpServlet {
 
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
             int price = Integer.parseInt(request.getParameter("price"));
-            int discount = Integer.parseInt(request.getParameter("discount"));
-            int total = (quantity * price) - (discount * price);
+            int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+            log.info("productId:{}, quantity:{}, price:{}", productId, quantity, price);
+            int total = quantity * price;
 
             // Tính discount từ coupon trong session
             int couponDiscountAmount = 0;
-            int couponDiscountPercentage = 0;
             Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
             if (appliedCoupon != null) {
                 couponDiscountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, (double) total);
-                couponDiscountPercentage = appliedCoupon.getType() == 1 ? appliedCoupon.getDiscountValue() : 0;
             }
 
             // Tạo đơn hàng
@@ -86,11 +83,7 @@ public class PurchaseController extends HttpServlet {
             detail.setPrice(price);
             detail.setQuantity(quantity);
             detail.setDiscountAmount(couponDiscountAmount);
-            detail.setDiscountPercentage(couponDiscountPercentage);
             detail.setTotalMoney(total);
-
-            detail.setDiscountPercentage(couponDiscountPercentage);
-            detail.setDiscountAmount(couponDiscountAmount);
 
             List<OrderDetail> details = List.of(detail);
 

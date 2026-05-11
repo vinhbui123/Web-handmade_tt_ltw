@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.CaptchaUtil;
 
 import javax.imageio.ImageIO;
@@ -16,9 +17,27 @@ import java.io.IOException;
 @WebServlet("/captcha")
 public class CaptchaController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 1. Kiểm tra Referer để tránh request từ bên ngoài (hotlinking/spam từ domain khác)
+        String referer = request.getHeader("Referer");
+        if (referer == null || !referer.contains(request.getServerName())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+            return;
+        }
+
+        // 2. Giới hạn tần suất gọi API (Rate limiting): 1 giây / 1 lần / 1 session
+        HttpSession session = request.getSession();
+        Long lastCaptchaTime = (Long) session.getAttribute("lastCaptchaTime");
+        long currentTime = System.currentTimeMillis();
+        
+        if (lastCaptchaTime != null && (currentTime - lastCaptchaTime) < 1000) {
+            response.sendError(429, "Too Many Requests");
+            return;
+        }
+        session.setAttribute("lastCaptchaTime", currentTime);
+
         // Sinh mã CAPTCHA
         String captchaText = CaptchaUtil.generateCaptcha();
-        request.getSession().setAttribute("captcha", captchaText);
+        session.setAttribute("captcha", captchaText);
 
         // Tạo ảnh CAPTCHA
         BufferedImage captchaImage = CaptchaUtil.generateCaptchaImage(captchaText);
@@ -34,6 +53,7 @@ public class CaptchaController extends HttpServlet {
 
         // Gửi ảnh CAPTCHA về client
         response.setContentType("image/png");
+        System.out.print(captchaText);
         ImageIO.write(captchaImage, "png", response.getOutputStream());
     }
 }

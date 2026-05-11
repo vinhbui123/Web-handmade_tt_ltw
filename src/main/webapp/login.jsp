@@ -19,6 +19,37 @@
             margin-bottom: 10px;
         }
 
+        /* --- Show/Hide Password Toggle --- */
+        .password-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper .login__input {
+            width: 100%;
+            padding-right: 42px; /* room for the eye icon */
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 16px;
+            padding: 0;
+            line-height: 1;
+            display: none;          /* hidden until user types */
+            transition: color 0.2s ease;
+        }
+
+        .toggle-password:hover {
+            color: #333;
+        }
+
         /* --- Custom UI for Social Login --- */
         .social-divider {
             display: flex;
@@ -102,12 +133,17 @@
 
             <div class="login__field">
                 <i class="login__icon fas fa-user"></i>
-                <input type="text" class="login__input" name="username" placeholder="Tên đăng nhập" required value="${username}">
+                <input type="text" class="login__input" name="username" placeholder="Tên đăng nhập hoặc Email" required value="${username}">
             </div>
 
             <div class="login__field">
                 <i class="login__icon fas fa-lock"></i>
-                <input type="password" class="login__input" name="password" placeholder="Mật khẩu" required>
+                <div class="password-wrapper">
+                    <input type="password" class="login__input" id="passwordInput" name="password" placeholder="Mật khẩu" required>
+                    <button type="button" class="toggle-password" id="togglePassword" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu">
+                        <i class="fas fa-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="login__field captcha-group" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px;">
@@ -129,7 +165,7 @@
             </button>
 
             <div class="login__options">
-                <a href="${pageContext.request.contextPath}/forget-password.jsp" class="login__link">Quên mật khẩu?</a>
+                <a href="${pageContext.request.contextPath}/forgot-password" class="login__link">Quên mật khẩu?</a>
                 <a href="${pageContext.request.contextPath}/register.jsp" class="login__link">Bạn chưa có tài khoản? Đăng ký</a>
             </div>
 
@@ -148,6 +184,27 @@
     </div>
 </div>
 <%@ include file="footer.jsp" %>
+
+<script>
+    (function () {
+        var passwordInput = document.getElementById('passwordInput');
+        var toggleBtn    = document.getElementById('togglePassword');
+        var toggleIcon   = document.getElementById('toggleIcon');
+
+        // Show the eye button only when the user has typed something
+        passwordInput.addEventListener('input', function () {
+            toggleBtn.style.display = passwordInput.value.length > 0 ? 'block' : 'none';
+        });
+
+        // Toggle between password and text
+        toggleBtn.addEventListener('click', function () {
+            var isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleIcon.classList.toggle('fa-eye',      !isPassword);
+            toggleIcon.classList.toggle('fa-eye-slash', isPassword);
+        });
+    })();
+</script>
 
 </body>
 </html>

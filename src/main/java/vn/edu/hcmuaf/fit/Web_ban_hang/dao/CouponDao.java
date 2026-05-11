@@ -57,7 +57,10 @@ public class CouponDao {
         c.setId(rs.getInt("id"));
         c.setCode(rs.getString("code"));
         c.setType(rs.getInt("type"));
-        c.setDiscountValue(rs.getInt("discount_value"));
+        int discountValue = rs.getInt("discount_value");
+        c.setDiscountValue(rs.wasNull() ? null : discountValue);
+        int discountPercent = rs.getInt("discount_percent");
+        c.setDiscountPercent(rs.wasNull() ? null : discountPercent);
         c.setMinOrderAmount(rs.getInt("min_order_amount"));
 
         // Xử lý cột max_discount_value có thể bị NULL

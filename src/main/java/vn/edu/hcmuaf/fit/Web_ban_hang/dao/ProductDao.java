@@ -6,6 +6,8 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Color;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.BKTree;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.VietnameseTextUtils;
 
 import java.sql.*;
 import java.util.*;
@@ -30,8 +32,8 @@ public class ProductDao {
                 "HAVING stock > 0 " + // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
                 "ORDER BY p.id";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query);
-                ResultSet rs = statement.executeQuery()) {
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet rs = statement.executeQuery()) {
 
             while (rs.next()) {
                 int productId = rs.getInt("product_id");
@@ -76,7 +78,7 @@ public class ProductDao {
     public static Product getById(int id) {
         String query = "SELECT * FROM products WHERE id = ?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
 
             try (ResultSet rs = statement.executeQuery()) {
@@ -118,7 +120,7 @@ public class ProductDao {
                 "ORDER BY p.id ASC";
 
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, categoryId);
             ResultSet rs = statement.executeQuery();
@@ -165,7 +167,7 @@ public class ProductDao {
         List<Color> colors = new ArrayList<>();
         String query = "SELECT pc.color_id, c.name FROM product_color pc JOIN colors c ON c.id = pc.color_id WHERE pc.product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)) {
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -183,7 +185,7 @@ public class ProductDao {
         List<Material> materials = new ArrayList<>();
         String query = "SELECT pm.material_id, m.name FROM product_materials pm JOIN materials m ON m.id = pm.material_id WHERE product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)) {
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -201,7 +203,7 @@ public class ProductDao {
         List<String> subImages = new ArrayList<>();
         String query = "SELECT img_path FROM images WHERE product_id = ?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)) {
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -214,7 +216,7 @@ public class ProductDao {
     public void increaseView(int productId) {
         String query = "UPDATE products SET view = view + 1 WHERE id=?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)) {
+             PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, productId);
             stmt.executeUpdate();
             Product p = getById(productId);
@@ -224,82 +226,182 @@ public class ProductDao {
         }
     }
 
+    /**
+     * Chiến lược 3 bước (mỗi bước chỉ chạy nếu bước trước không có kết quả):
+     * search stage 1
+     * Tìm kiếm sản phẩm theo từ khoá với hỗ trợ Fuzzy Search tiếng Việt.
+     */
     public List<Product> searchProducts(String keyword) {
-        List<Product> re = new ArrayList();
-        String query = "SELECT id, name, price, discount,view, img FROM products WHERE name LIKE ? ORDER BY RAND()";
+        if (keyword == null)
+            keyword = "";
 
-        try {
-            Connection connection = DBConnect.getConnection();
-
-            try {
-                PreparedStatement statement = connection.prepareStatement(query);
-
-                try {
-                    statement.setString(1, "%" + keyword + "%");
-                    ResultSet rs = statement.executeQuery();
-
-                    try {
-                        while (rs.next()) {
-                            Product p = new Product();
-                            p.setId(rs.getInt("id"));
-                            p.setName(rs.getString("name"));
-                            p.setPrice(rs.getInt("price"));
-                            p.setDiscount(rs.getInt("discount"));
-                            p.setView(rs.getInt("view"));
-                            p.setImg(rs.getString("img"));
-                            re.add(p);
-                        }
-                    } catch (Throwable var12) {
-                        if (rs != null) {
-                            try {
-                                rs.close();
-                            } catch (Throwable var11) {
-                                var12.addSuppressed(var11);
-                            }
-                        }
-
-                        throw var12;
-                    }
-
-                    if (rs != null) {
-                        rs.close();
-                    }
-                } catch (Throwable var13) {
-                    if (statement != null) {
-                        try {
-                            statement.close();
-                        } catch (Throwable var10) {
-                            var13.addSuppressed(var10);
-                        }
-                    }
-
-                    throw var13;
-                }
-
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (Throwable var14) {
-                if (connection != null) {
-                    try {
-                        connection.close();
-                    } catch (Throwable var9) {
-                        var14.addSuppressed(var9);
-                    }
-                }
-
-                throw var14;
-            }
-
-            if (connection != null) {
-                connection.close();
-            }
-        } catch (SQLException var15) {
-            SQLException e = var15;
-            e.printStackTrace();
+        // --- Bước 1: Tìm chính xác bằng SQL LIKE ---
+        List<Product> exactResults = searchByLike(keyword);
+        if (!exactResults.isEmpty()) {
+            return exactResults;
         }
 
-        return re;
+        if (keyword.isEmpty())
+            return exactResults;
+
+        // --- Bước 2: Normalize + contains (xoá dấu) ---
+        List<Product> normalizedResults = searchNormalized(keyword);
+        if (!normalizedResults.isEmpty()) {
+            return normalizedResults;
+        }
+
+        // --- Bước 3: BK-Tree token fuzzy (chịu được sai chính tả) ---
+        return searchBKTree(keyword);
+    }
+
+    /**
+     * Tìm kiếm sản phẩm bằng SQL LIKE (có phân biệt dấu, tùy collation DB).
+     */
+    private List<Product> searchByLike(String keyword) {
+        List<Product> result = new ArrayList<>();
+        String query = "SELECT id, name, price, discount, view, img FROM products WHERE name LIKE ? ORDER BY RAND()";
+        try (Connection connection = DBConnect.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, "%" + keyword + "%");
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapBasicProduct(rs));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi tìm kiếm LIKE '{}': {}", keyword, e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Normalize + contains.
+     * Xoá dấu cả hai vế rồi kiểm tra substring.
+     * "dong ho" tìm được "đồng hồ", "bong hong" tìm được "bông hồng", v.v.
+     */
+    private List<Product> searchNormalized(String keyword) {
+        List<Product> result = new ArrayList<>();
+        String sql = "SELECT id, name, price, discount, view, img FROM products";
+        try (Connection connection = DBConnect.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                String productName = rs.getString("name");
+                if (VietnameseTextUtils.fuzzyContains(productName, keyword)) {
+                    result.add(mapBasicProduct(rs));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi normalized search '{}': {}", keyword, e.getMessage(), e);
+        }
+        return result;
+    }
+
+    // use BK-Tree token fuzzy matching.
+    private List<Product> searchBKTree(String keyword) {
+        // --- 1. Fetch all products ---
+        List<Product> allProducts = new ArrayList<>();
+        String sql = "SELECT id, name, price, discount, view, img FROM products";
+        try (Connection connection = DBConnect.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                allProducts.add(mapBasicProduct(rs));
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi BK-Tree fetch '{}': {}", keyword, e.getMessage(), e);
+            return allProducts;
+        }
+
+        if (allProducts.isEmpty())
+            return allProducts;
+
+        // --- 2. Build BK-Tree from all unique normalised product-name tokens ---
+        BKTree bkTree = new BKTree();
+        // token → set of product IDs that contain this token
+        Map<String, Set<Integer>> tokenToProductIds = new HashMap<>();
+
+        for (Product p : allProducts) {
+            String normalizedName = VietnameseTextUtils.removeDiacritics(p.getName());
+            String[] tokens = normalizedName.trim().split("\\s+");
+            for (String token : tokens) {
+                if (token.isEmpty())
+                    continue;
+                bkTree.add(token);
+                tokenToProductIds
+                        .computeIfAbsent(token, k -> new HashSet<>())
+                        .add(p.getId());
+            }
+        }
+
+        // --- 3. Query BK-Tree for each query token ---
+        String normalizedKeyword = VietnameseTextUtils.removeDiacritics(keyword);
+        String[] queryTokens = normalizedKeyword.trim().split("\\s+");
+
+        // Start with all product IDs; intersect down per token
+        Set<Integer> matchingIds = null;
+
+        for (String queryToken : queryTokens) {
+            if (queryToken.isEmpty())
+                continue;
+
+            int threshold = getThreshold(queryToken);
+            List<String> matchedTokens = bkTree.search(queryToken, threshold);
+
+            // Union of product IDs from all matched tokens
+            Set<Integer> tokenMatches = new HashSet<>();
+            for (String matched : matchedTokens) {
+                Set<Integer> ids = tokenToProductIds.get(matched);
+                if (ids != null)
+                    tokenMatches.addAll(ids);
+            }
+
+            if (matchingIds == null) {
+                matchingIds = tokenMatches;
+            } else {
+                matchingIds.retainAll(tokenMatches); // intersection: ALL tokens must match
+            }
+        }
+
+        if (matchingIds == null || matchingIds.isEmpty())
+            return new ArrayList<>();
+
+        // --- 4. Filter and return matched products ---
+        final Set<Integer> finalIds = matchingIds;
+        List<Product> result = new ArrayList<>();
+        for (Product p : allProducts) {
+            if (finalIds.contains(p.getId()))
+                result.add(p);
+        }
+        return result;
+    }
+
+    /**
+     * Returns the Levenshtein edit-distance threshold for a given token.
+     * Short tokens require exact matches to avoid false positives;
+     * longer tokens tolerate more typos.
+     * len ≤ 3 → 0 (exact match only, e.g. "bo", "la")
+     * len ≤ 5 → 1 (1 typo allowed, e.g. "bong" → "hong")
+     * len > 5 → 2 (2 typos allowed, e.g. "Handmann" → "Handmade")
+     */
+    private int getThreshold(String token) {
+        int len = token.length();
+        if (len <= 3)
+            return 0;
+        if (len <= 5)
+            return 1;
+        return 2;
+    }
+
+    private Product mapBasicProduct(ResultSet rs) throws SQLException {
+        Product p = new Product();
+        p.setId(rs.getInt("id"));
+        p.setName(rs.getString("name"));
+        p.setPrice(rs.getInt("price"));
+        p.setDiscount(rs.getInt("discount"));
+        p.setView(rs.getInt("view"));
+        p.setImg(rs.getString("img"));
+        return p;
     }
 
     public List<Product> getProductViewest(int limit) {
@@ -312,7 +414,7 @@ public class ProductDao {
                 "HAVING stock > 0 " +
                 "ORDER BY p.view DESC LIMIT ?";
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, limit);
             ResultSet rs = statement.executeQuery();
 
@@ -328,7 +430,7 @@ public class ProductDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return re;
     }
@@ -338,7 +440,7 @@ public class ProductDao {
         String sql = "SELECT id, name, price, discount, view, img, quantity FROM products LIMIT ?, ?";
 
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, offset);
             stmt.setInt(2, size);
             ResultSet rs = stmt.executeQuery();
@@ -356,7 +458,7 @@ public class ProductDao {
                 products.add(p);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return products;
     }
@@ -364,13 +466,13 @@ public class ProductDao {
     public int countProducts() {
         String sql = "SELECT COUNT(*) FROM products";
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return 0;
     }
@@ -384,7 +486,7 @@ public class ProductDao {
                 "WHERE i.quantity > 0";
 
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)) {
+             PreparedStatement stmt = connection.prepareStatement(query)) {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -401,7 +503,7 @@ public class ProductDao {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
 
         return products;
@@ -413,8 +515,7 @@ public class ProductDao {
         String query = "SELECT id, name, price, discount, view, img FROM products WHERE view >= ? ORDER BY view DESC";
 
         try (Connection connection = DBConnect.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, minView);
             ResultSet rs = statement.executeQuery();
 
@@ -430,7 +531,7 @@ public class ProductDao {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
 
         return products;
@@ -447,8 +548,8 @@ public class ProductDao {
 
         List<Product> products = new ArrayList<>();
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query);
-                ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Product p = new Product();
                 p.setId(rs.getInt("id"));
@@ -460,25 +561,27 @@ public class ProductDao {
                 products.add(p);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return products;
     }
-    //Lấy danh sách sản phẩm có Phân trang.
+
+    // Lấy danh sách sản phẩm có Phân trang.
     public List<Product> getProductsPaged(boolean isAdmin, Integer categoryId, int offset, int size) {
         List<Product> products = new ArrayList<>();
         // Sử dụng LinkedHashMap để giữ thứ tự và tránh trùng lặp do Join với Materials
         Map<Integer, Product> productMap = new LinkedHashMap<>();
-        //JOIN với bảng inventory để lấy cột stock (tồn kho) thực tế
+        // JOIN với bảng inventory để lấy cột stock (tồn kho) thực tế
         StringBuilder sql = new StringBuilder(
                 "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, " +
                         "COALESCE(i.quantity, 0) AS stock " +
                         "FROM products p " +
-                        "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 "
-        );
+                        "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 ");
 
-        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
-        if (!isAdmin) sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
+        if (categoryId != null)
+            sql.append(" AND p.catalog_id = ? ");
+        if (!isAdmin)
+            sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
 
         sql.append(" ORDER BY p.id DESC LIMIT ? OFFSET ?");
 
@@ -486,7 +589,8 @@ public class ProductDao {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
-            if (categoryId != null) stmt.setInt(paramIndex++, categoryId);
+            if (categoryId != null)
+                stmt.setInt(paramIndex++, categoryId);
             stmt.setInt(paramIndex++, size);
             stmt.setInt(paramIndex++, offset);
 
@@ -504,11 +608,12 @@ public class ProductDao {
                 products.add(p);
             }
         } catch (SQLException e) {
-            log.error("Lỗi phân trang sản phẩm: " + e.getMessage());
+            log.error("Lỗi phân trang sản phẩm: {}", e.getMessage());
         }
         return products;
     }
-    //Tính tổng số lượng sản phẩm thỏa mãn
+
+    // Tính tổng số lượng sản phẩm thỏa mãn
     public int getTotalCount(boolean isAdmin, Integer categoryId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
         if (!isAdmin) {
@@ -517,17 +622,20 @@ public class ProductDao {
             sql.append(" WHERE 1=1 ");
         }
 
-        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
+        if (categoryId != null)
+            sql.append(" AND p.catalog_id = ? ");
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
-            if (categoryId != null) stmt.setInt(1, categoryId);
+            if (categoryId != null)
+                stmt.setInt(1, categoryId);
 
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next())
+                return rs.getInt(1);
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
         return 0;
     }
