@@ -11,6 +11,11 @@ function showPayment(method) {
     document.querySelector(`.tab[onclick="showPayment('${method}')"]`).classList.add('active');
 }
 
+function parseNumber(value) {
+    const digits = String(value || '').replace(/[^\d]/g, '');
+    return parseInt(digits || '0', 10);
+}
+
 function placeOrder() {
     // --- BƯỚC KIỂM TRA ĐỊA CHỈ TRƯỚC KHI ĐẶT HÀNG ---
     const addressIdCheck = document.getElementById('address-id-check');
@@ -32,13 +37,14 @@ function placeOrder() {
 
     let details = [];
     document.querySelectorAll('.product-item').forEach((item) => {
-        let productId = item.querySelector('.product-id').innerText;
-        let price = item.querySelector('.price-info').innerText.replace("₫", "").trim();
-        let quantity = item.querySelector('.quantity-info').innerText;
+        const productId = parseNumber(item.dataset.productId || item.querySelector('.product-id')?.innerText);
+        let price = parseNumber(item.querySelector('.current-price').innerText.replace("₫", "").trim());
+        const quantity = parseNumber(item.dataset.quantity || item.querySelector('.quantity-info')?.innerText);
+
         details.push({
-            productId: parseInt(productId),
-            price: parseInt(price),
-            quantity: parseInt(quantity)
+            productId: productId,
+            price: price,
+            quantity: quantity
         });
     });
 

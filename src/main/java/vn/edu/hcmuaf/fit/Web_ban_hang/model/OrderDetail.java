@@ -9,7 +9,6 @@ public class OrderDetail implements Serializable {
     private int price;
     private int quantity;
     private int totalMoney;
-    private int discountPercentage;
     private int discountAmount;
     private int status;
     private String dateAllocated;
@@ -30,9 +29,6 @@ public class OrderDetail implements Serializable {
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
 
-    public int getDiscountPercentage() { return discountPercentage; }
-    public void setDiscountPercentage(int discountPercentage) { this.discountPercentage = discountPercentage; }
-
     public int getDiscountAmount() { return discountAmount; }
     public void setDiscountAmount(int discountAmount) { this.discountAmount = discountAmount; }
 
@@ -51,23 +47,26 @@ public class OrderDetail implements Serializable {
         this.quantity = quantity;
     }
 
-    public int getTotalMoney() { return this.price * this.quantity - this.discountAmount - ( this.discountPercentage * this.price); }
+    public int getTotalMoney() {
+        if (this.totalMoney > 0) {
+            return this.totalMoney;
+        }
+        return this.price * this.quantity;
+    }
 
     public void setTotalMoney(int totalMoney) {
         this.totalMoney = totalMoney;
     }
 
     // Constuctor to get info from web to DB
-    public OrderDetail(int productId, int price, int quantity,
-                       int discountPercentage, int discountAmount, int status) {
+    public OrderDetail(int productId, int price, int quantity, int discountAmount, int status) {
         this.productId = productId;
         this.price = price;
         this.quantity = quantity;
-        this.discountPercentage = discountPercentage;
         this.discountAmount = discountAmount;
         this.status = status;
 
-        this.totalMoney = price * quantity - discountAmount - ( discountPercentage * price );
+        this.totalMoney = price * quantity;
     }
 
     @Override
@@ -79,7 +78,6 @@ public class OrderDetail implements Serializable {
                 ", price=" + price +
                 ", quantity=" + quantity +
                 ", totalMoney=" + totalMoney +
-                ", discountPercentage=" + discountPercentage +
                 ", discountAmount=" + discountAmount +
                 ", status=" + status +
                 ", dateAllocated='" + dateAllocated + '\'' +

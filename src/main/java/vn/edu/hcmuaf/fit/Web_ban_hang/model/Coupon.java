@@ -10,7 +10,8 @@ public class Coupon implements Serializable {
     private int id;
     private String code;
     private int type; // 0: Tiền mặt, 1: Phần trăm
-    private int discountValue;
+    private Integer discountValue;
+    private Integer discountPercent;
     private Integer maxDiscountValue; // Dùng Integer để có thể nhận giá trị null
     private int minOrderAmount;
     private LocalDateTime startDate;
@@ -28,6 +29,7 @@ public class Coupon implements Serializable {
         this.code = code;
         this.type = type;
         this.discountValue = discountValue;
+        this.discountPercent = discountValue;
         this.minOrderAmount = minOrderAmount;
         this.maxDiscountValue = maxDiscountValue;
         this.startDate = startDate;
@@ -60,11 +62,23 @@ public class Coupon implements Serializable {
     }
 
     public int getDiscountValue() {
-        return discountValue;
+        return discountValue != null ? discountValue : 0;
     }
 
-    public void setDiscountValue(int discountValue) {
+    public void setDiscountValue(Integer discountValue) {
         this.discountValue = discountValue;
+    }
+
+    public int getdiscountPercent() {
+        return discountPercent != null ? discountPercent : 0;
+    }
+
+    public int getDiscountPercent() {
+        return getdiscountPercent();
+    }
+
+    public void setDiscountPercent(Integer discountPercent) {
+        this.discountPercent = discountPercent;
     }
 
     public int getMinOrderAmount() {
@@ -109,7 +123,7 @@ public class Coupon implements Serializable {
 
     public String getFormattedDiscountValue() {
         NumberFormat nf = NumberFormat.getInstance(new Locale("vi", "VN"));
-        return nf.format(this.discountValue) + "đ";
+        return nf.format(getDiscountValue()) + "đ";
     }
 
     public String getFormattedExpiredDate() {

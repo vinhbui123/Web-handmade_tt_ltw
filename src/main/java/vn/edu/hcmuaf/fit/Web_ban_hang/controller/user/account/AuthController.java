@@ -39,7 +39,7 @@ public class AuthController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Post is usually only for the Login form submission
-        String username = request.getParameter("username");
+        String usernameOrEmail = request.getParameter("username");
         String password = request.getParameter("password");
         String captchaInput = request.getParameter("captcha");
 
@@ -51,14 +51,14 @@ public class AuthController extends HttpServlet {
 
         if (lockTime != null && Instant.now().toEpochMilli() - lockTime < LOCK_TIME) {
             request.setAttribute("errorMessage", "Bạn đã nhập sai quá 5 lần. Vui lòng thử lại sau 5 phút.");
-            request.setAttribute("username", username);
+            request.setAttribute("username", usernameOrEmail);
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
         }
 
         // Validate CAPTCHA
         String sessionCaptcha = (String) session.getAttribute("captcha");
-        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equalsIgnoreCase(captchaInput)) {
+        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
             failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
             session.setAttribute("failedAttempts", failedAttempts);
 
@@ -69,7 +69,7 @@ public class AuthController extends HttpServlet {
                 request.setAttribute("errorMessage", "Mã CAPTCHA không chính xác. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
             }
 
-            request.setAttribute("username", username);
+            request.setAttribute("username", usernameOrEmail);
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
         }
@@ -78,7 +78,7 @@ public class AuthController extends HttpServlet {
         UserService userService = new UserService();
         session.removeAttribute("user"); // Clear previous user if any
 
-        User user = userService.authenticateUser(username, password);
+        User user = userService.authenticateUser(usernameOrEmail, password);
 
         if (user != null) {
             // Reset attempts on successful login
@@ -102,10 +102,10 @@ public class AuthController extends HttpServlet {
             session.setAttribute("lockTime", Instant.now().toEpochMilli());
             request.setAttribute("errorMessage", "Bạn đã nhập sai quá 5 lần. Vui lòng thử lại sau 5 phút.");
         } else {
-            request.setAttribute("errorMessage", "Tài khoản hoặc mật khẩu không đúng. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
+            request.setAttribute("errorMessage", "Tài khoản, email hoặc mật khẩu không đúng. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
         }
 
-        request.setAttribute("username", username);
+        request.setAttribute("username", usernameOrEmail);
         request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 

@@ -35,7 +35,6 @@ public class PurchaseDao {
                         od.price,
                         od.quantity,
                         od.total_money,
-                        od.discount_percentage,
                         od.discount_amount,
                 
                         p.name AS product_name,
@@ -76,7 +75,6 @@ public class PurchaseDao {
                 item.setImg(rs.getString("product_img"));
                 item.setName(rs.getString("product_name"));
                 item.setQuantity(rs.getInt("quantity"));
-                item.setDiscount(rs.getInt("discount_percentage"));
                 item.setDiscountAmount(rs.getInt("discount_amount"));
                 item.setTotal(rs.getInt("total_money"));
                 item.setStatus(order.getStatus()); // gán theo order

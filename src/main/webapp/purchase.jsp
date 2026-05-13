@@ -46,7 +46,7 @@
                                                 <span class="status-label">Trạng thái:</span>
                                                 <span class="status">${order.statusString}</span>
                                             </div>
-                                            <%@include file="purchase-detail.jsp" %>
+                                            <i class="fa-solid fa-list-ul status-list-icon" onclick="openPurchaseDetailPopup()" style="cursor: pointer; margin-left: 5px;"></i>
                                         </div>
 
                                         <!-- Danh sách sản phẩm -->
@@ -61,7 +61,9 @@
                                                             <p>Giảm giá: ${item.discount}%</p>
                                                         </c:if>
                                                         <p>Số lượng: ${item.quantity}</p>
-                                                        <p>Thành tiền: ${item.total} VND</p>
+                                                        <p>Thành tiền:
+                                                            <f:formatNumber value="${item.total}" pattern="#,##0" /> đ
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </c:forEach>
@@ -92,16 +94,21 @@
                                                     value="${totalDiscount + item.discountAmount}" />
                                             </c:forEach>
 
-                                            <p>Phí vận chuyển: ${order.freeShipping} VND</p>
+                                            <p>Phí vận chuyển: 
+                                                <c:choose>
+                                                    <c:when test="${order.freeShipping == 1}">Miễn phí (0 đ)</c:when>
+                                                    <c:otherwise>Không miễn phí</c:otherwise>
+                                                </c:choose>
+                                            </p>
                                             <c:if test="${totalDiscount > 0}">
                                                 <p style="color: #e74c3c;">Giảm giá coupon: <strong>-
-                                                        <f:formatNumber value="${totalDiscount}" type="number" /> VND
+                                                        <f:formatNumber value="${totalDiscount}" type="number" /> đ
                                                     </strong></p>
                                             </c:if>
                                             <p><strong>Tổng cộng: <span class="price">
                                                         <f:formatNumber
-                                                            value="${subtotal + order.freeShipping - totalDiscount}"
-                                                            type="number" /> VND
+                                                            value="${subtotal - totalDiscount}"
+                                                            type="number" /> đ
                                                     </span></strong>
                                             </p>
                                         </div>
@@ -110,7 +117,11 @@
                             </div>
                         </div>
 
+                        <%@include file="purchase-detail.jsp" %>
                         <%@include file="footer.jsp" %>
+                            <script>
+                                const contextPath = "${pageContext.request.contextPath}";
+                            </script>
                             <script src="${pageContext.request.contextPath}/js/purchase.js"></script>
 
                 </body>

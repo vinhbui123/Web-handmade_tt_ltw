@@ -12,4 +12,18 @@
     <session-config>
         <session-timeout>30</session-timeout> <!-- Tính bằng phút -->
     </session-config>
+
+    <!-- ===== CẤU HÌNH EMAIL GỬI OTP ===== -->
+    <!-- Mỗi thành viên tự điền email Gmail và App Password của mình vào đây -->
+    <!-- Tạo App Password tại: https://myaccount.google.com/apppasswords       -->
+    <context-param>
+        <param-name>MAIL_FROM</param-name>
+        <param-value>qvzero123@gmail.com</param-value>
+    </context-param>
+    <context-param>
+        <param-name>MAIL_PASSWORD</param-name>
+        <param-value>ivqd ijnw fwvu osoz</param-value>
+    </context-param>
+    <!-- ===================================== -->
+
 </web-app>
