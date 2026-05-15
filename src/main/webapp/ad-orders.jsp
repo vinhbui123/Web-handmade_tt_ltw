@@ -68,18 +68,22 @@
                     <td>
                         <c:set var="subTotal" value="0"/>
                         <c:set var="totalDiscount" value="0"/>
-
+                        <c:set var="shippingFee" value="${firstRow.free_shipping != null ? firstRow.free_shipping : 0}"/>
                         <c:forEach var="p" items="${products}">
                             <c:set var="subTotal" value="${subTotal + p.total_money}"/>
                             <c:set var="discountForProduct" value="${p.discount_amount + (p.total_money * p.discount_percentage / 100)}"/>
                             <c:set var="totalDiscount" value="${totalDiscount + discountForProduct}"/>
                         </c:forEach>
 
-                        <c:set var="finalTotal" value="${subTotal - totalDiscount}"/>
+                        <c:set var="finalTotal" value="${subTotal + shippingFee - totalDiscount}"/>
 
                         <div style="line-height: 1.6; font-size: 0.95em;">
                             <div style="color: #555;">
                                 Tổng gốc: <fmt:formatNumber value="${subTotal}" type="number"/> đ
+                            </div>
+
+                            <div style="color: #3498db;">
+                                Phí ship: <fmt:formatNumber value="${shippingFee}" type="number"/> đ
                             </div>
 
                             <c:if test="${totalDiscount > 0}">

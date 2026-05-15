@@ -65,8 +65,8 @@
                     <option value="" disabled selected>Chọn Tỉnh/Thành phố</option>
                 </select>
             </div>
-            <div class="form-row" style="display: none;">
-                <select id="district" class="form-control-api" onchange="onDistrictChange()" disabled required style="display: none;">
+            <div class="form-row">
+                <select id="district" class="form-control-api" onchange="onDistrictChange()" required>
                     <option value="" disabled selected>Chọn Quận/Huyện</option>
                 </select>
             </div>

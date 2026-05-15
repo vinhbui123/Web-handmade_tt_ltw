@@ -94,10 +94,12 @@
                                                     value="${totalDiscount + item.discountAmount}" />
                                             </c:forEach>
 
-                                            <p>Phí vận chuyển: 
+                                            <p>Phí vận chuyển:
                                                 <c:choose>
-                                                    <c:when test="${order.freeShipping == 1}">Miễn phí (0 đ)</c:when>
-                                                    <c:otherwise>Không miễn phí</c:otherwise>
+                                                    <c:when test="${order.freeShipping == 0}">Miễn phí (0 đ)</c:when>
+                                                    <c:otherwise>
+                                                        <f:formatNumber value="${order.freeShipping}" pattern="#,##0" /> đ
+                                                    </c:otherwise>
                                                 </c:choose>
                                             </p>
                                             <c:if test="${totalDiscount > 0}">
@@ -107,7 +109,7 @@
                                             </c:if>
                                             <p><strong>Tổng cộng: <span class="price">
                                                         <f:formatNumber
-                                                            value="${subtotal - totalDiscount}"
+                                                            value="${subtotal + order.freeShipping - totalDiscount}"
                                                             type="number" /> đ
                                                     </span></strong>
                                             </p>
