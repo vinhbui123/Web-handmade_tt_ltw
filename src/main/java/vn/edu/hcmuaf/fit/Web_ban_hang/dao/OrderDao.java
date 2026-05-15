@@ -70,7 +70,7 @@ public class OrderDao {
     }
 
     private void addDetailsOrder(Connection connection, List<OrderDetail> details, int orderId, int status) {
-        String query = "INSERT INTO order_details(order_id, product_id, price, quantity, total_money, discount_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO order_details(order_id, product_id, price, quantity, total_money, discount_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             for (OrderDetail detail : details) {
