@@ -43,7 +43,6 @@ public class CheckoutController extends HttpServlet {
         try {
             // 1. Parse JSON
             String jsonInput = ReadJsonUtil.read(request);
-
             Gson gson = new Gson();
             OrderDTO orderDTO = gson.fromJson(jsonInput, OrderDTO.class);
 

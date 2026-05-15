@@ -317,3 +317,224 @@ body {
         flex-shrink: 0;
     }
 }
+
+/* ================= SEARCH SUGGESTIONS DROPDOWN ================= */
+
+.search-box {
+    position: relative;
+}
+
+.search-suggestions {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 9999;
+    max-height: 420px;
+    overflow-y: auto;
+    animation: suggestionSlideDown 0.2s ease-out;
+}
+
+@keyframes suggestionSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar styling */
+.search-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+.search-suggestions::-webkit-scrollbar-track {
+    background: transparent;
+}
+.search-suggestions::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+.search-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* Mỗi item gợi ý */
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f2f2f2;
+    gap: 12px;
+}
+
+.suggestion-item:last-of-type {
+    border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+    background-color: #f5f0eb;
+}
+
+/* Ảnh sản phẩm — kích thước cố định 48x48 */
+.suggestion-img {
+    flex-shrink: 0;
+    flex-grow: 0;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+}
+
+.suggestion-img img {
+    display: block;
+    width: 48px;
+    height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+    object-fit: cover;
+}
+
+/* Thông tin sản phẩm */
+.suggestion-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.suggestion-name {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Highlight keyword */
+.suggestion-name mark {
+    background-color: #fff3cd;
+    color: #333;
+    padding: 0 1px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+/* Giá sản phẩm */
+.suggestion-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.suggestion-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #d4380d;
+}
+
+.suggestion-price-old {
+    font-size: 12px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+.suggestion-discount {
+    font-size: 11px;
+    color: #fff;
+    background: #d4380d;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* Không tìm thấy */
+.suggestion-empty {
+    padding: 20px 14px;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+}
+
+.suggestion-empty i {
+    margin-right: 6px;
+    color: #aaa;
+}
+
+/* Nút "Xem tất cả kết quả" */
+.suggestion-view-all {
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 13px;
+    color: #8B7D6B;
+    cursor: pointer;
+    border-top: 1px solid #eee;
+    transition: background-color 0.15s ease;
+    font-weight: 500;
+}
+
+.suggestion-view-all:hover {
+    background-color: #f5f0eb;
+    color: #6a5d4e;
+}
+
+.suggestion-view-all i {
+    margin-right: 6px;
+}
+
+/* ================= SUGGESTION RESPONSIVE ================= */
+@media screen and (max-width: 768px) {
+    .search-suggestions {
+        max-height: 300px;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .suggestion-item {
+        padding: 8px 10px;
+        gap: 10px;
+    }
+
+    .suggestion-img {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+    }
+
+    .suggestion-img img {
+        width: 40px;
+        height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+    }
+
+    .suggestion-name {
+        font-size: 13px;
+    }
+
+    .suggestion-price {
+        font-size: 13px;
+    }
+}
