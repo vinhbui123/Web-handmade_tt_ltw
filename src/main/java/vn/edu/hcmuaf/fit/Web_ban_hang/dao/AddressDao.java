@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
 import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Dimension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,13 +10,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class AddressDao {
 
     public Address getAddressById(int id) {
         String sql = "SELECT * FROM user_addresses WHERE id = ?";
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -47,7 +49,7 @@ public class AddressDao {
         String sql = "SELECT * FROM user_addresses WHERE user_id = ?";
 
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
@@ -81,7 +83,7 @@ public class AddressDao {
                 "WHERE id = ?";
 
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, address.getFullName());
             stmt.setString(2, address.getPhone());
@@ -113,7 +115,7 @@ public class AddressDao {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, address.getUserId());
             stmt.setString(2, address.getFullName());
@@ -152,7 +154,7 @@ public class AddressDao {
         String sql = "DELETE FROM user_addresses WHERE id = ?";
 
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, addressId);
             int rowsAffected = stmt.executeUpdate();
@@ -195,7 +197,7 @@ public class AddressDao {
     public Address getAddressDefault(int userId) {
         String sql = "SELECT * FROM user_addresses WHERE user_id = ? AND is_default = 1";
         try (Connection conn = DBConnect.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
@@ -219,5 +221,47 @@ public class AddressDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Dimension calculateTotalDimension(Map<Integer, Integer> productQuantityMap) {
+        String query = """
+                    SELECT csd.weight, csd.length, csd.width, csd.height
+                    FROM products p
+                    JOIN category_shipping_defaults csd ON p.catalog_id = csd.category_id
+                    WHERE p.id = ?
+                """;
+
+        Dimension totalDimension = new Dimension(0, 0, 0, 0);
+
+        try (Connection connection = DBConnect.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            for (Map.Entry<Integer, Integer> entry : productQuantityMap.entrySet()) {
+                int productId = entry.getKey();
+                int quantity = entry.getValue();
+
+                statement.setInt(1, productId);
+                try (ResultSet rs = statement.executeQuery()) {
+                    if (rs.next()) {
+                        int weight = rs.getInt("weight");
+                        int length = rs.getInt("length");
+                        int width = rs.getInt("width");
+                        int height = rs.getInt("height");
+
+                        totalDimension.add(
+                                weight * quantity,
+                                length * quantity,
+                                width * quantity,
+                                height * quantity
+                        );
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalDimension;
     }
 }

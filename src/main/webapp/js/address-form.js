@@ -1,52 +1,75 @@
-// ==================== LOGIC API 34 TỈNH (ESGOO) - BỎ QUA QUẬN/HUYỆN ====================
 
+// Tải danh sách Tỉnh/Thành
 async function fetchProvinces() {
     const pSelect = document.getElementById('province');
     if (!pSelect) return;
     try {
-        const res = await fetch('https://esgoo.net/api-tinhthanh-new/1/0.htm');
+        const res = await fetch(`${contextPath}/provinces`);
         const result = await res.json();
 
         pSelect.innerHTML = '<option value="" disabled selected>Chọn Tỉnh/Thành phố</option>';
-        if (result.error === 0) {
+        if (result.code === 200) {
             result.data.forEach(p => {
-                pSelect.options[pSelect.options.length] = new Option(p.full_name, p.id);
+                // Lưu ID vào value, lưu Tên vào text hiển thị
+                const nameLower = p.name.toLowerCase();
+                if (!nameLower.includes("test") && !nameLower.includes("alert") && nameLower !== "hà nội 02") {
+                    pSelect.options[pSelect.options.length] = new Option(p.name, p.id);
+                }
             });
         }
     } catch (err) { console.error("Lỗi tải API Tỉnh:", err); }
 }
 
+// Khi chọn Tỉnh -> Tải Quận/Huyện
 async function onProvinceChange() {
-    const pCode = document.getElementById('province').value;
+    const pId = document.getElementById('province').value;
     const dSelect = document.getElementById('district');
     const wSelect = document.getElementById('ward');
-    if (dSelect) dSelect.style.display = "none";
-    // Khóa và làm mờ ô Quận/Huyện
-    dSelect.innerHTML = '<option value="" selected>--- Bỏ qua Quận/Huyện ---</option>';
+
+    // Reset dropdown cấp dưới
+    dSelect.innerHTML = '<option value="" disabled selected>Chọn Quận/Huyện</option>';
     dSelect.disabled = true;
-    dSelect.style.opacity = "0.5";
+    wSelect.innerHTML = '<option value="" disabled selected>Chọn Phường/Xã</option>';
+    wSelect.disabled = true;
+
+    if (!pId) return;
+    try {
+        const res = await fetch(`${contextPath}/districts?province_id=${pId}`);
+        const result = await res.json();
+
+        if (result.code === 200) {
+            result.data.forEach(d => {
+                dSelect.options[dSelect.options.length] = new Option(d.name, d.id);
+            });
+            dSelect.disabled = false;
+        }
+    } catch (err) { console.error("Lỗi tải API Quận/Huyện:", err); }
+}
+
+// Khi chọn Quận -> Tải Phường/Xã
+async function onDistrictChange() {
+    const dId = document.getElementById('district').value;
+    const wSelect = document.getElementById('ward');
 
     wSelect.innerHTML = '<option value="" disabled selected>Chọn Phường/Xã</option>';
     wSelect.disabled = true;
 
-    if (!pCode) return;
+    if (!dId) return;
     try {
-        // Lấy dữ liệu Phường/Xã (Cấp 2 của Esgoo)
-        const res = await fetch(`https://esgoo.net/api-tinhthanh-new/2/${pCode}.htm`);
+        const res = await fetch(`${contextPath}/wards?district_id=${dId}`);
         const result = await res.json();
 
-        if (result.error === 0) {
+        if (result.code === 200) {
             result.data.forEach(w => {
-                wSelect.options[wSelect.options.length] = new Option(w.full_name, w.id);
+                wSelect.options[wSelect.options.length] = new Option(w.name, w.id);
             });
             wSelect.disabled = false;
         }
     } catch (err) { console.error("Lỗi tải API Phường/Xã:", err); }
 }
 
-async function onDistrictChange() {
-}
 // ==================== ĐIỀU KHIỂN POPUP VÀ GIAO DIỆN ====================
+
 async function openAddressPopup() {
     document.getElementById("addressModal").style.display = "block";
     document.getElementById('addressListView').style.display = 'block';
@@ -72,24 +95,25 @@ function clearAddressForm() {
     document.getElementById("addressId").value = "";
     document.getElementById("fullName").value = "";
     document.getElementById("phone").value = "";
+    document.getElementById("addressDetail").value = "";
+
     document.getElementById("province").innerHTML = '<option value="" disabled selected>Chọn Tỉnh/Thành phố</option>';
+
     const dSelect = document.getElementById("district");
-    if (dSelect) {
-        dSelect.innerHTML = '';
-        dSelect.style.display = "none";
-    }
     dSelect.innerHTML = '<option value="" disabled selected>Chọn Quận/Huyện</option>';
     dSelect.disabled = true;
-    dSelect.style.opacity = "1";
 
-    document.getElementById("ward").innerHTML = '<option value="" disabled selected>Chọn Phường/Xã</option>';
-    document.getElementById("ward").disabled = true;
-    document.getElementById("addressDetail").value = "";
+    const wSelect = document.getElementById("ward");
+    wSelect.innerHTML = '<option value="" disabled selected>Chọn Phường/Xã</option>';
+    wSelect.disabled = true;
+
     document.querySelectorAll('input[name="addressType"]').forEach(r => r.checked = false);
     document.getElementById("isDefault").checked = false;
 }
 
-// Đổ dữ liệu khi bấm nút Sửa
+// ==================== XỬ LÝ CHỈNH SỬA & LƯU ĐỊA CHỈ ====================
+
+// Đổ dữ liệu khi bấm nút Sửa (Có chờ await để load xong data)
 async function editAddress(data) {
     clearAddressForm();
 
@@ -98,15 +122,17 @@ async function editAddress(data) {
     document.getElementById("phone").value = data.phone || "";
     document.getElementById("addressDetail").value = data.addressDetail || "";
 
-    // 1. Tải Tỉnh và chọn đúng Tỉnh
+    // 1. Tải Tỉnh và chọn
     await fetchProvinces();
-    const pSelect = document.getElementById('province');
-    selectOptionByText(pSelect, data.province);
+    selectOptionByText(document.getElementById('province'), data.province);
 
-    // 2. Tải Xã và chọn đúng Xã (Huyện đã bị khóa)
+    // 2. Tải Quận và chọn
     await onProvinceChange();
-    const wSelect = document.getElementById('ward');
-    selectOptionByText(wSelect, data.ward);
+    selectOptionByText(document.getElementById('district'), data.district);
+
+    // 3. Tải Phường và chọn
+    await onDistrictChange();
+    selectOptionByText(document.getElementById('ward'), data.ward);
 
     document.querySelectorAll('input[name="addressType"]').forEach(radio => {
         radio.checked = (radio.value === data.addressType ||
@@ -135,7 +161,8 @@ async function handleEditButton(btn) {
         fullName: btn.dataset.fullname,
         phone: btn.dataset.phone,
         province: btn.dataset.province.trim(),
-        district: "", // Không lấy huyện cũ nữa
+        district: btn.dataset.district.trim(),
+        district: btn.dataset.district.trim(),
         ward: btn.dataset.ward.trim(),
         addressDetail: btn.dataset.detail,
         addressType: btn.dataset.type,
@@ -154,45 +181,30 @@ function addNewAddress() {
 function submitForm() {
     const fullName = document.getElementById('fullName').value.trim();
     const pSelect = document.getElementById('province');
+    const dSelect = document.getElementById('district');
     const wSelect = document.getElementById('ward');
     const phone = document.getElementById('phone').value.trim();
     const addressTypeInput = document.querySelector('input[name="addressType"]:checked');
     const addressDetail = document.getElementById('addressDetail').value.trim();
 
-    if (fullName === "") {
-        alert("Vui lòng nhập Họ và tên.");
-        document.getElementById('fullName').focus();
-        return;
+    if (fullName === "") return alert("Vui lòng nhập Họ và tên.");
+    if (!/^0\d{9}$/.test(phone)) return alert("Số điện thoại phải 10 số và bắt đầu bằng 0.");
+
+    // Bắt buộc chọn cả 3 cấp
+    if (pSelect.selectedIndex <= 0 || dSelect.selectedIndex <= 0 || wSelect.selectedIndex <= 0) {
+        return alert("Vui lòng chọn đầy đủ Tỉnh, Quận/Huyện và Phường/Xã.");
     }
 
-    if (!/^0\d{9}$/.test(phone)) {
-        alert("Số điện thoại phải bao gồm đúng 10 chữ số và bắt đầu bằng số 0.");
-        return;
-    }
-
-    // Chỉ bắt buộc chọn Tỉnh và Xã
-    if (pSelect.selectedIndex <= 0 || wSelect.selectedIndex <= 0) {
-        alert("Vui lòng chọn đầy đủ Tỉnh/Thành phố và Phường/Xã");
-        return;
-    }
-
-    if (addressDetail === "") {
-        alert("Vui lòng nhập Địa chỉ cụ thể (Số nhà, tên đường...).");
-        document.getElementById('addressDetail').focus();
-        return;
-    }
-
-    if (!addressTypeInput) {
-        alert("Vui lòng chọn Loại địa chỉ (Nhà riêng hoặc Văn phòng).");
-        return;
-    }
+    if (addressDetail === "") return alert("Vui lòng nhập Địa chỉ cụ thể.");
+    if (!addressTypeInput) return alert("Vui lòng chọn Loại địa chỉ.");
 
     const data = {
         id: parseInt(document.getElementById('addressId').value) || null,
         fullName: fullName,
         phone: phone,
+        // Gửi TÊN ĐỊA CHỈ (text) về DB, không phải ID
         province: pSelect.options[pSelect.selectedIndex].text,
-        district: "", // Gửi chuỗi rỗng đi
+        district: dSelect.options[dSelect.selectedIndex].text,
         ward: wSelect.options[wSelect.selectedIndex].text,
         addressDetail: addressDetail,
         addressType: addressTypeInput.value === 'Nhà riêng' ? 'HOME' : 'OFFICE',
@@ -208,7 +220,12 @@ function submitForm() {
         .then(response => {
             if (response.status) {
                 alert("Lưu địa chỉ thành công!");
-                if (response.addressDefault) updateAddressDetails(response.addressDefault);
+                if (response.addressDefault) {
+                    updateAddressDetails(response.addressDefault);
+                    if(typeof loadShippingMethods === "function") {
+                        loadShippingMethods();
+                    }
+                }
                 closeAddressPopup();
                 reloadAddressList();
             } else {
@@ -221,8 +238,6 @@ function submitForm() {
         });
 }
 
-// ==================== API DANH SÁCH ĐỊA CHỈ (GET/DELETE/SET-DEFAULT) ====================
-
 async function reloadAddressList() {
     try {
         const res = await fetch(`${contextPath}/get-address-list`);
@@ -231,37 +246,27 @@ async function reloadAddressList() {
 
         const addressListContainer = document.querySelector('.address-list');
         addressListContainer.innerHTML = '';
-
         data.addressList.forEach(address => {
-            const addressCard = createAddressCard(address);
-            addressListContainer.appendChild(addressCard);
+            addressListContainer.appendChild(createAddressCard(address));
         });
-    } catch (error) {
-        console.error('Lỗi khi load danh sách địa chỉ:', error);
-    }
+    } catch (error) { console.error('Lỗi khi load ds địa chỉ:', error); }
 }
 
 function createAddressCard(address) {
     const div = document.createElement('div');
     div.className = 'address-card';
     div.setAttribute('data-address-id', address.id);
-
     div.innerHTML = `
         <p><strong>${address.fullName}</strong> - ${address.phone}</p>
         <p>${address.addressDetail}, ${address.ward}, ${address.district}, ${address.province}</p>
-        <p>
-            Loại: ${address.addressType === 'HOME' ? 'Nhà riêng' : 'Văn phòng'}
+        <p>Loại: ${address.addressType === 'HOME' ? 'Nhà riêng' : 'Văn phòng'}
             ${address.isDefault ? '<span class="default-badge">Mặc định</span>' : ''}
         </p>
-
         <div class="address-actions">
             <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
-                <input type="checkbox" name="defaultAddress"
-                       ${address.isDefault ? 'checked disabled' : ''}
-                       onchange="setDefaultAddress(${address.id})" style="margin-right: 6px;">
-                Đặt làm mặc định
+                <input type="checkbox" name="defaultAddress" ${address.isDefault ? 'checked disabled' : ''} 
+                       onchange="setDefaultAddress(${address.id})" style="margin-right: 6px;"> Đặt làm mặc định
             </label>
-
             <div class="button-group">
                 <button type="button" class="edit-btn"
                     data-id="${address.id}" data-fullname="${address.fullName}"
@@ -269,21 +274,15 @@ function createAddressCard(address) {
                     data-district="${address.district}" data-ward="${address.ward}"
                     data-detail="${address.addressDetail}" data-type="${address.addressType}"
                     data-default="${address.isDefault ? 'true' : 'false'}"
-                    onclick="handleEditButton(this)">Chỉnh sửa
-                </button>
-
+                    onclick="handleEditButton(this)">Chỉnh sửa</button>
                 <button type="button" class="delete-btn" onclick="deleteAddress(${address.id}, ${address.isDefault});">Xóa</button>
             </div>
-        </div>
-    `;
+        </div>`;
     return div;
 }
 
 function deleteAddress(addressId, isDefault) {
-    if (isDefault) {
-        alert('Không thể xóa địa chỉ mặc định.');
-        return;
-    }
+    if (isDefault) return alert('Không thể xóa địa chỉ mặc định.');
     if(!confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) return;
 
     fetch(`${contextPath}/delete-address`, {
@@ -291,16 +290,12 @@ function deleteAddress(addressId, isDefault) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ addressId: addressId })
     })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.status) {
-                const addressElement = document.querySelector(`[data-address-id="${addressId}"]`);
-                if (addressElement) addressElement.remove();
-            } else {
-                alert(data.message || 'Có lỗi xảy ra khi xóa địa chỉ.');
-            }
-        })
-        .catch(() => alert('Có lỗi xảy ra khi xóa địa chỉ.'));
+                document.querySelector(`[data-address-id="${addressId}"]`).remove();
+            } else alert(data.message);
+        });
 }
 
 function setDefaultAddress(addressId) {
@@ -312,24 +307,24 @@ function setDefaultAddress(addressId) {
         .then(res => res.json())
         .then(data => {
             if (data.status) {
-                if (data.addressDefault) updateAddressDetails(data.addressDefault);
+                if (data.addressDefault) {
+                    updateAddressDetails(data.addressDefault);
+                    if(typeof loadShippingMethods === "function") {
+                        loadShippingMethods();
+                    }
+                }
                 reloadAddressList();
                 alert("Đặt địa chỉ mặc định thành công!");
-            } else {
-                alert(data.message || "Không thể đặt mặc định. Đã xảy ra lỗi.");
-            }
-        })
-        .catch(error => alert("Không thể đặt mặc định. Lỗi kết nối server."));
+            } else alert(data.message);
+        });
 }
 
 function updateAddressDetails(address) {
     const addressDetails = document.querySelector('.address-details');
     if (!addressDetails) return;
-
     addressDetails.innerHTML = `
         <span class="address-info-text" style="font-weight: bold">${address.fullName}, SĐT: ${address.phone}</span><br>
         <span class="address-string">${address.addressDetail}, ${address.ward}, ${address.district}, ${address.province}</span>
         <input type="hidden" id="address-id-check" value="${address.id}" />
     `;
-
 }

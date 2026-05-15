@@ -48,6 +48,7 @@ public class DefaultAddressController extends HttpServlet {
                     resp.addProperty("status", true);
                     // Trả về địa chỉ mặc định mới để cập nhật UI Checkout
                     Address defaultAddr = service.getAddressDefault(user.getId());
+                    session.setAttribute("addressDefault", defaultAddr);
                     resp.add("addressDefault", gson.toJsonTree(defaultAddr));
                 } else {
                     resp.addProperty("status", false);
