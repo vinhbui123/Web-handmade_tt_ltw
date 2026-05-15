@@ -1,17 +1,20 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order.apiGHN;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.GHNProvinceResponse;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.GHNAddressResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.Province;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.GHNService;
 
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +31,11 @@ public class ProvincesGHN extends HttpServlet {
 
         PrintWriter out = response.getWriter();
 
-        String jsonProvinces = ghnService.getProvices();
+        String jsonProvinces = ghnService.getProvinces();
         Gson gson = new Gson();
-        GHNProvinceResponse provinceResponse = gson.fromJson(jsonProvinces, GHNProvinceResponse.class);
+        Type provinceType = new TypeToken<GHNAddressResponse<Province>>() {
+        }.getType();
+        GHNAddressResponse<Province> provinceResponse = gson.fromJson(jsonProvinces, provinceType);
 
         // Chỉ lấy ProvinceID và ProvinceName
         List<Map<String, Object>> filtered = new ArrayList<>();

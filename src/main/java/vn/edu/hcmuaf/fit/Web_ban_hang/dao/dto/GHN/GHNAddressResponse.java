@@ -2,10 +2,10 @@ package vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN;
 
 import java.util.List;
 
-public class GHNProvinceResponse {
+public class GHNAddressResponse<T> {
     private int code;
     private String message;
-    private List<Province> data;
+    private List<T> data;
 
     public int getCode() {
         return code;
@@ -23,14 +23,14 @@ public class GHNProvinceResponse {
         this.message = message;
     }
 
-    public List<Province> getData() {
+    public List<T> getData() {
         return data;
     }
 
-    public void setData(List<Province> data) {
+    public void setData(List<T> data) {
         this.data = data;
     }
 
-    public GHNProvinceResponse() {
+    public GHNAddressResponse() {
     }
 }
