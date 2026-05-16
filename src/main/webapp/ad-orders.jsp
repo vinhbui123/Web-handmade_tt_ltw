@@ -68,7 +68,7 @@
                     <td>
                         <c:set var="subTotal" value="0"/>
                         <c:set var="totalDiscount" value="0"/>
-                        <c:set var="shippingFee" value="${firstRow.free_shipping != null ? firstRow.free_shipping : 0}"/>
+                        <c:set var="shippingFee" value="${firstRow.shipping_fee != null ? firstRow.shipping_fee : 0}"/>
                         <c:forEach var="p" items="${products}">
                             <c:set var="subTotal" value="${subTotal + p.total_money}"/>
                             <c:set var="discountForProduct" value="${p.discount_amount + (p.total_money * p.discount_percentage / 100)}"/>

@@ -29,10 +29,10 @@ function placeOrder() {
     let paymentMethod = activePayment ? activePayment.id : "unknown";
 
     const status = 0;
-    let freeShipping = 0;
+    let shippingFee = 0;
     let shippingFeeElem = document.querySelector('.shipping-fee');
     if (shippingFeeElem) {
-        freeShipping = parseInt(shippingFeeElem.textContent.replace(/[^\d]/g, '')) || 0;
+        shippingFee = parseInt(shippingFeeElem.textContent.replace(/[^\d]/g, '')) || 0;
     }
 
     let details = [];
@@ -48,12 +48,17 @@ function placeOrder() {
         });
     });
 
+    // Kiểm tra mode Mua Ngay
+    const isBuyNowElem = document.getElementById('isBuyNow');
+    const isBuyNow = isBuyNowElem && isBuyNowElem.value === 'true';
+
     let orderData = {
         userId: parseInt(userId),
         status: status,
-        freeShipping: parseInt(freeShipping),
+        shippingFee: parseInt(shippingFee),
         paymentTypeId: paymentMethod === 'cod' ? 1 : 2,
-        details: details
+        details: details,
+        buyNow: isBuyNow
     };
 
     fetch(`${contextPath}/checkout`, {

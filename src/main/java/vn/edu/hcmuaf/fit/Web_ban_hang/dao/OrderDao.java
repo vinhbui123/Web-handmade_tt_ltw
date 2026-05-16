@@ -30,7 +30,7 @@ public class OrderDao {
                 o.setId(rs.getInt("id"));
                 o.setStatus(rs.getByte("status"));
                 o.setUserId(rs.getInt("user_id"));
-                o.setShippingFee(rs.getInt("free_shipping"));
+                o.setShippingFee(rs.getInt("shipping_fee"));
                 o.setPaymentTypeId(rs.getInt("payment_type_id"));
                 orders.add(o);
             }
@@ -93,13 +93,14 @@ public class OrderDao {
         List<Map<String, Object>> result = new ArrayList<>();
 
         String query = """
-            SELECT 
+            SELECT
                 o.id AS order_id,
                 u.username,
                 p.id AS product_id,
                 p.name AS product_name,
                 od.quantity,
                 od.total_money,
+                o.shipping_fee,
                 od.discount_amount,
                 o.status,
                 o.create_at,
@@ -126,6 +127,7 @@ public class OrderDao {
                 row.put("product_name", rs.getString("product_name"));
                 row.put("quantity", rs.getInt("quantity"));
                 row.put("total_money", rs.getInt("total_money"));
+                row.put("shipping_fee", rs.getInt("shipping_fee"));
                 row.put("discount_amount", rs.getInt("discount_amount"));
                 row.put("status", rs.getByte("status"));
                 row.put("create_at", rs.getTimestamp("create_at"));
