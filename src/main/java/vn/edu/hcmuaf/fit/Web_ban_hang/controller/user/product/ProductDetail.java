@@ -5,9 +5,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CommentDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 
@@ -31,9 +30,8 @@ public class ProductDetail extends HttpServlet {
                 InventoryDao inventoryDao = new InventoryDao();
                 product.setStock(inventoryDao.getStock(product.getId()));
                 List<Product> products = productService.getRelatetByCategory(product.getCatalog_id(), id, 5);
-                CommentDao commentDao = new CommentDao();
-                List<Comment> comments = commentDao.getCommentsByProductId(id);
-                double avgRating = commentDao.getAverageRatingByProductId(id);
+                List<Comment> comments = productService.getCommentsByProductId(id);
+                double avgRating = productService.getAverageRatingByProductId(id);
 
                 System.out.println("Tổng số comment: " + comments.size());
                 for (Comment c : comments) {
