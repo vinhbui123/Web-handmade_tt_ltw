@@ -21,6 +21,8 @@ public class Product implements Serializable {
     private int quantity;
     private int stock;
 
+    private int weight;
+
     // Default constructor
     public Product() {}
 
@@ -144,7 +146,8 @@ public class Product implements Serializable {
     public void setStock(int stock) {
         this.stock = stock;
     }
-
+    public int getWeight() { return weight; }
+    public void setWeight(int weight) { this.weight = weight; }
     @Override
     public String toString() {
         return "Product{" +
@@ -161,6 +164,7 @@ public class Product implements Serializable {
                 ", subImg=" + subImg +
                 ", colors=" + colors +
                 ", materials=" + materials +
+                ", weight=" + weight +
                 '}';
     }
 }

@@ -20,7 +20,7 @@ public class ProductDao {
     public List<Product> getAll() {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
         String query = "SELECT " +
-                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, " +
+                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, p.weight," +
                 "p.catalog_id, p.description, p.created_at, p.updated_at, " +
                 "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock, " +
                 "m.id AS material_id, m.name AS material_name " +
@@ -47,6 +47,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
+                    p.setWeight(rs.getInt("weight"));
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
                     p.setStock(rs.getInt("stock"));
@@ -91,6 +92,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
+                    p.setWeight(rs.getInt("weight"));
                     p.setDescription(rs.getString("description"));
                     p.setColors(getColorsByProductId(p.getId()));
                     p.setMaterials(getMaterialsByProductId(p.getId()));
@@ -108,7 +110,7 @@ public class ProductDao {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
 
         String query = "SELECT " +
-                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, " +
+                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img,  p.weight," +
                 "p.catalog_id, p.description, p.created_at, p.updated_at, " +
                 "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock, " +
                 "m.id AS material_id, m.name AS material_name " +
@@ -137,6 +139,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
+                    p.setWeight(rs.getInt("weight"));
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
                     p.setStock(rs.getInt("stock"));
@@ -259,7 +262,7 @@ public class ProductDao {
      */
     private List<Product> searchByLike(String keyword) {
         List<Product> result = new ArrayList<>();
-        String query = "SELECT id, name, price, discount, view, img FROM products WHERE name LIKE ? ORDER BY RAND()";
+        String query = "SELECT id, name, price, discount, view, img, weight FROM products WHERE name LIKE ? ORDER BY RAND()";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, "%" + keyword + "%");
@@ -281,7 +284,7 @@ public class ProductDao {
      */
     private List<Product> searchNormalized(String keyword) {
         List<Product> result = new ArrayList<>();
-        String sql = "SELECT id, name, price, discount, view, img FROM products";
+        String sql = "SELECT id, name, price, discount, view, img, weight FROM products";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet rs = statement.executeQuery()) {
@@ -301,7 +304,7 @@ public class ProductDao {
     private List<Product> searchBKTree(String keyword) {
         // --- 1. Fetch all products ---
         List<Product> allProducts = new ArrayList<>();
-        String sql = "SELECT id, name, price, discount, view, img FROM products";
+        String sql = "SELECT id, name, price, discount, view, img, weight FROM products";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet rs = statement.executeQuery()) {
@@ -401,12 +404,13 @@ public class ProductDao {
         p.setDiscount(rs.getInt("discount"));
         p.setView(rs.getInt("view"));
         p.setImg(rs.getString("img"));
+        p.setWeight(rs.getInt("weight"));
         return p;
     }
 
     public List<Product> getProductViewest(int limit) {
         List<Product> re = new ArrayList<>();
-        String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, " +
+        String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.weight, " +
                 "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock " +
                 "FROM products p " +
                 "LEFT JOIN inventory i ON p.id = i.product_id " +
@@ -426,6 +430,7 @@ public class ProductDao {
                 p.setDiscount(rs.getInt("discount"));
                 p.setView(rs.getInt("view"));
                 p.setImg(rs.getString("img"));
+                p.setWeight(rs.getInt("weight"));
                 re.add(p);
             }
 
@@ -437,7 +442,7 @@ public class ProductDao {
 
     public List<Product> getProductsByLimit(int offset, int size) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT id, name, price, discount, view, img, quantity FROM products LIMIT ?, ?";
+        String sql = "SELECT id, name, price, discount, view, img, weight quantity FROM products LIMIT ?, ?";
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -454,6 +459,7 @@ public class ProductDao {
                 p.setView(rs.getInt("view"));
                 p.setImg(rs.getString("img"));
                 p.setQuantity(rs.getInt("quantity"));
+                p.setWeight(rs.getInt("weight"));
 
                 products.add(p);
             }
@@ -479,7 +485,7 @@ public class ProductDao {
 
     public List<Product> getProductsInStock() {
         List<Product> products = new ArrayList<>();
-        String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, " +
+        String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
                 "COALESCE(i.quantity, 0) as stock " +
                 "FROM products p " +
                 "LEFT JOIN inventory i ON p.id = i.product_id " +
@@ -499,6 +505,7 @@ public class ProductDao {
                     product.setImg(rs.getString("img"));
                     product.setCatalog_id(rs.getInt("catalog_id"));
                     product.setStock(rs.getInt("stock"));
+                    product.setWeight(rs.getInt("weight"));
                     products.add(product);
                 }
             }
@@ -512,7 +519,7 @@ public class ProductDao {
     // Lấy các sản phẩm có lượt xem lớn hơn một ngưỡng nhất định (ví dụ 200)
     public List<Product> getProductsViewedAbove(int minView) {
         List<Product> products = new ArrayList<>();
-        String query = "SELECT id, name, price, discount, view, img FROM products WHERE view >= ? ORDER BY view DESC";
+        String query = "SELECT id, name, price, discount, view, img, weight FROM products WHERE view >= ? ORDER BY view DESC";
 
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
@@ -527,6 +534,7 @@ public class ProductDao {
                 p.setDiscount(rs.getInt("discount"));
                 p.setView(rs.getInt("view"));
                 p.setImg(rs.getString("img"));
+                p.setWeight(rs.getInt("weight"));
                 products.add(p);
             }
 
@@ -538,7 +546,7 @@ public class ProductDao {
     }
 
     public List<Product> getTopRatedProducts() {
-        String query = "SELECT p.id, p.name, p.price, p.discount, p.img, p.view, " +
+        String query = "SELECT p.id, p.name, p.price, p.discount, p.img, p.view, p.weight, " +
                 "AVG(c.rating) AS avg_rating " +
                 "FROM products p " +
                 "JOIN comments c ON p.id = c.product_id " +
@@ -558,6 +566,7 @@ public class ProductDao {
                 p.setDiscount(rs.getInt("discount"));
                 p.setImg(rs.getString("img"));
                 p.setView(rs.getInt("view"));
+                p.setWeight(rs.getInt("weight"));
                 products.add(p);
             }
         } catch (SQLException e) {
@@ -573,7 +582,7 @@ public class ProductDao {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
         // JOIN với bảng inventory để lấy cột stock (tồn kho) thực tế
         StringBuilder sql = new StringBuilder(
-                "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, " +
+                "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
                         "COALESCE(i.quantity, 0) AS stock " +
                         "FROM products p " +
                         "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 ");
@@ -605,6 +614,7 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
+                p.setWeight(rs.getInt("weight"));
                 products.add(p);
             }
         } catch (SQLException e) {
