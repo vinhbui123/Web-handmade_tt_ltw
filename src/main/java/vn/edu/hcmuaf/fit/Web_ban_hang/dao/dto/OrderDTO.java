@@ -10,7 +10,7 @@ public class OrderDTO {
     private int id;
     private int userId;
     private int status;
-    private int freeShipping;
+    private int shippingFee;
     private int paymentTypeId;
     private List<DetailOrderDTO> details;
 
@@ -61,8 +61,8 @@ public class OrderDTO {
         return userId;
     }
 
-    public int getFreeShipping() {
-        return freeShipping;
+    public int getShippingFee() {
+        return shippingFee;
     }
 
     public int getStatus() {
@@ -81,8 +81,8 @@ public class OrderDTO {
         this.userId = userId;
     }
 
-    public void setFreeShipping(int freeShipping) {
-        this.freeShipping = freeShipping;
+    public void setShippingFee(int shippingFee) {
+        this.shippingFee = shippingFee;
     }
 
     public void setPaymentTypeId(int paymentTypeId) {
@@ -99,19 +99,19 @@ public class OrderDTO {
 
     public OrderDTO() {}
 
-    public OrderDTO(int uid, int status, int freeShipping, int paymentTypeId, List<DetailOrderDTO> details) {
+    public OrderDTO(int uid, int status, int shippingFee, int paymentTypeId, List<DetailOrderDTO> details) {
         this.userId = uid;
         this.paymentTypeId = paymentTypeId;
-        this.freeShipping = freeShipping;
+        this.shippingFee = shippingFee;
         this.status = status;
         this.details = details;
         statusString = SettingDAO.toStatusDetails(status);
     }
 
-    public OrderDTO(int uid, int status, int freeShipping, int paymentTypeId) {
+    public OrderDTO(int uid, int status, int shippingFee, int paymentTypeId) {
         this.userId = uid;
         this.paymentTypeId = paymentTypeId;
-        this.freeShipping = freeShipping;
+        this.shippingFee = shippingFee;
         this.status = status;
         this.details = new ArrayList<DetailOrderDTO>();
         statusString = SettingDAO.toStatusDetails(status);
@@ -122,7 +122,7 @@ public class OrderDTO {
         return "OrderDTO{" +
                 "userId=" + userId +
                 ", status=" + status +
-                ", freeShipping=" + freeShipping +
+                ", shippingFee=" + shippingFee +
                 ", paymentTypeId=" + paymentTypeId +
                 ", details=" + details +
                 '}';

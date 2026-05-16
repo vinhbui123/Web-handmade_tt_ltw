@@ -47,7 +47,7 @@ public class CheckoutController extends HttpServlet {
             OrderDTO orderDTO = gson.fromJson(jsonInput, OrderDTO.class);
 
             OrderService orderService = new OrderService();
-            Order order = new Order(orderDTO.getStatus(), orderDTO.getUserId(), orderDTO.getFreeShipping(),
+            Order order = new Order(orderDTO.getStatus(), orderDTO.getUserId(), orderDTO.getShippingFee(),
                     orderDTO.getPaymentTypeId());
             List<OrderDetail> details = orderService.toDetailOrder(orderDTO.getDetails());
 

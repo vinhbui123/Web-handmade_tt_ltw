@@ -75,7 +75,6 @@ public class PurchaseController extends HttpServlet {
             Order order = new Order();
             order.setStatus(0);
             order.setUserId(user.getId());
-            order.setFreeShipping(1);
             order.setPaymentTypeId(1);
 
             OrderDetail detail = new OrderDetail();
