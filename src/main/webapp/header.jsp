@@ -15,6 +15,7 @@
     <script>
         window.contextPath = "${pageContext.request.contextPath}";
     </script>
+    <script src="${pageContext.request.contextPath}/js/search-suggestion.js" defer></script>
 </head>
 
 <body>

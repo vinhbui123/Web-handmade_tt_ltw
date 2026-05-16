@@ -112,7 +112,6 @@ public class PurchaseController extends HttpServlet {
 
             // 4. Xóa coupon khỏi session sau khi đặt hàng thành công
             session.removeAttribute("appliedCoupon");
-
             response.sendRedirect("purchase");
 
         } catch (Exception e) {
@@ -121,6 +120,4 @@ public class PurchaseController extends HttpServlet {
             request.getRequestDispatcher("/purchase.jsp").forward(request, response);
         }
     }
-
-
 }
