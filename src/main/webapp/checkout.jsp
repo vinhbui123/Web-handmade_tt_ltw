@@ -159,7 +159,7 @@
                                     <div class="total-info total-order-value" id="total-order-value"
                                         style="display: flex;justify-content: flex-end;margin: 8px 0;font-size: 1em;">
                                         <span>Tổng cộng:</span>
-                                        <f:formatNumber value="${sessionScope.cart.selectedTotalWithDiscount}"
+                                        <f:formatNumber value="${cart.selectedTotalWithDiscount}"
                                             pattern="#,##0" />₫
                                     </div>
                                     <p>Phí vận chuyển: <span class="shipping-fee">0đ</span></p>
@@ -189,6 +189,7 @@
                                             </span></strong></p>
                                     <input type="hidden" id="selectedCouponCode"
                                         value="${sessionScope.appliedCoupon != null ? sessionScope.appliedCoupon.code : ''}" />
+                                    <input type="hidden" id="isBuyNow" value="${isBuyNow == true ? 'true' : 'false'}" />
                                 </div>
                                 <button class="submit-order" onclick="placeOrder()">Đặt hàng</button>
                             </section>

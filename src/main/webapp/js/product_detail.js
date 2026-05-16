@@ -113,31 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Thêm vào giỏ hàng rồi chuyển thẳng sang trang checkout
-            fetch(`${contextPath}/api/cart`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ productId: productId, quantity: quantity })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status) {
-                        // Chuyển thẳng đến trang checkout để đặt hàng
-                        window.location.href = `${contextPath}/checkout`;
-                    } else {
-                        if (data.redirect) {
-                            window.location.href = `${contextPath}/${data.redirect}`;
-                        } else {
-                            showPopup(data.message);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error("Lỗi:", error.message);
-                    alert("Có lỗi xảy ra: " + error.message);
-                });
+            // Chuyển thẳng đến trang checkout với thông tin sản phẩm (không qua giỏ hàng)
+            window.location.href = `${contextPath}/checkout?buyNow=true&productId=${productId}&quantity=${quantity}`;
         });
     }
 });

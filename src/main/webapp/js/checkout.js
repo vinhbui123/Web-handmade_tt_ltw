@@ -48,12 +48,17 @@ function placeOrder() {
         });
     });
 
+    // Kiểm tra mode Mua Ngay
+    const isBuyNowElem = document.getElementById('isBuyNow');
+    const isBuyNow = isBuyNowElem && isBuyNowElem.value === 'true';
+
     let orderData = {
         userId: parseInt(userId),
         status: status,
         shippingFee: parseInt(shippingFee),
         paymentTypeId: paymentMethod === 'cod' ? 1 : 2,
-        details: details
+        details: details,
+        buyNow: isBuyNow
     };
 
     fetch(`${contextPath}/checkout`, {

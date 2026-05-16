@@ -13,6 +13,7 @@ public class OrderDTO {
     private int shippingFee;
     private int paymentTypeId;
     private List<DetailOrderDTO> details;
+    private boolean buyNow;
 
     private String statusString;
     private List<PurchaseItem> purchaseItems;
@@ -95,6 +96,14 @@ public class OrderDTO {
     }
     public boolean removeDetail(DetailOrderDTO detail) {
         return this.details.remove(detail);
+    }
+
+    public boolean isBuyNow() {
+        return buyNow;
+    }
+
+    public void setBuyNow(boolean buyNow) {
+        this.buyNow = buyNow;
     }
 
     public OrderDTO() {}
