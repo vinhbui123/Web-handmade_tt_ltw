@@ -13,7 +13,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateVisibility(selectedStatus) {
         orderBlocks.forEach(orderBlock => {
             const status = orderBlock.getAttribute('data-index');
-            const shouldShow = (selectedStatus === 'all' || status === selectedStatus);
+
+            // Tab "review" hiển thị đơn hàng status == 3 (đã hoàn thành)
+            let shouldShow;
+            if (selectedStatus === 'review') {
+                shouldShow = (status === '3');
+            } else {
+                shouldShow = (selectedStatus === 'all' || status === selectedStatus);
+            }
 
             // Hiện/ẩn đơn hàng
             orderBlock.style.display = shouldShow ? 'block' : 'none';
@@ -22,7 +29,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const buttons = orderBlock.querySelectorAll('.order-actions button');
             buttons.forEach(button => {
                 const classList = Array.from(button.classList);
-                const match = buttonVisibility[status]?.find(cls => classList.includes(cls));
+
+                // Với tab review, chỉ hiện nút đánh giá
+                let visibleButtons;
+                if (selectedStatus === 'review') {
+                    visibleButtons = ['ratting'];
+                } else {
+                    visibleButtons = buttonVisibility[status] || [];
+                }
+
+                const match = visibleButtons.find(cls => classList.includes(cls));
                 if (shouldShow && match) {
                     button.style.display = 'inline-block';
                 } else {
