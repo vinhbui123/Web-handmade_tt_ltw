@@ -113,30 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            fetch(`${contextPath}/api/cart`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ productId: productId, quantity: quantity })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status) {
-                        // Redirect to cart page after successful addition to cart
-                        window.location.href = `${contextPath}/cart`;
-                    } else {
-                        if (data.redirect) {
-                            window.location.href = `${contextPath}/${data.redirect}`;
-                        } else {
-                            showPopup(data.message);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error("Lỗi:", error.message);
-                    alert("Có lỗi xảy ra khi thêm vào giỏ hàng: " + error.message);
-                });
+            // Chuyển thẳng đến trang checkout với thông tin sản phẩm (không qua giỏ hàng)
+            window.location.href = `${contextPath}/checkout?buyNow=true&productId=${productId}&quantity=${quantity}`;
         });
     }
 });

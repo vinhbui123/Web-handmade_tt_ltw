@@ -1,5 +1,6 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.DetailOrderDTO;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
@@ -35,6 +36,12 @@ public class OrderService {
             result.add(orderDetail);
         }
         return result;
+    }
+
+    public boolean CheckStock(int productId, int quantity) {
+        InventoryDao inventoryDao = new InventoryDao();
+        int stock = inventoryDao.getStock(productId);
+        return stock < quantity;
     }
 
     public boolean cancelOrder(int orderId, int userId) {

@@ -26,6 +26,8 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.AddressService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.OrderService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
 
 @WebServlet(name = "CheckoutController", value = "/checkout")
@@ -42,9 +44,7 @@ public class CheckoutController extends HttpServlet {
 
         try {
             // 1. Parse JSON
-            String jsonInput = ReadJsonUtil.read(request);
-            Gson gson = new Gson();
-            OrderDTO orderDTO = gson.fromJson(jsonInput, OrderDTO.class);
+            OrderDTO orderDTO = ReadJsonUtil.parseJson(request, OrderDTO.class);
 
             OrderService orderService = new OrderService();
             Order order = new Order(orderDTO.getStatus(), orderDTO.getUserId(), orderDTO.getShippingFee(),
@@ -101,11 +101,6 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
-            // log for orderDetail
-            for (OrderDetail orderDetail : details) {
-                log.info("{}: {}", orderDetail.getProductId(), orderDetail.getPrice());
-            }
-
             // 5. Lưu đơn hàng
             orderService.addOrder(order, details);
 
@@ -121,10 +116,13 @@ public class CheckoutController extends HttpServlet {
                     return;
                 }
             }
-            CartService cart = (CartService) session.getAttribute("cart");
-            if (cart != null) {
-                for (OrderDetail detail : details) {
-                    cart.remove(detail.getProductId());
+            // Chỉ xóa sản phẩm khỏi giỏ hàng thật khi không phải Mua Ngay
+            if (!orderDTO.isBuyNow()) {
+                CartService cart = (CartService) session.getAttribute("cart");
+                if (cart != null) {
+                    for (OrderDetail detail : details) {
+                        cart.remove(detail.getProductId());
+                    }
                 }
             }
 
@@ -145,36 +143,80 @@ public class CheckoutController extends HttpServlet {
         }
     }
 
-    // Nếu bạn dùng GET để hiển thị trang checkout
+    // Hiển thị trang checkout
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        Object cart = session.getAttribute("cart");
         User user = (User) session.getAttribute("user");
 
+        // Kiểm tra đăng nhập
         if (user == null || user.getUsername() == null) {
             request.setAttribute("message", "Cần đăng nhập để thực hiện thao tác này.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }
 
+        // Lấy địa chỉ mặc định nếu chưa có
+        if (session.getAttribute("addressDefault") == null) {
+            AddressService addressService = new AddressService();
+            Address defaultAddress = addressService.getAddressDefault(user.getId());
+            session.setAttribute("addressDefault", defaultAddress);
+        }
+
+        // ===== Phần mua ngay (buyNow) =====
+        String buyNow = request.getParameter("buyNow");
+        if ("true".equals(buyNow)) {
+            try {
+                int productId = Integer.parseInt(request.getParameter("productId"));
+                int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+                // Lấy sản phẩm từ DB
+                ProductService productService = new ProductService();
+                Product product = productService.getById(productId);
+                if (product == null) {
+                    request.setAttribute("message", "Không tìm thấy sản phẩm!");
+                    request.getRequestDispatcher("/cart.jsp").forward(request, response);
+                    return;
+                }
+
+                // Tạo giỏ hàng tạm chỉ chứa sản phẩm "Mua Ngay"
+                CartService buyNowCart = new CartService();
+                buyNowCart.add(product, quantity);
+
+                // Truyền dữ liệu cho checkout.jsp
+                request.setAttribute("cart", buyNowCart);
+                request.setAttribute("isCartEmpty", false);
+                request.setAttribute("isBuyNow", true); // Đánh dấu mode Mua Ngay
+
+                addTocart(request, response, session, buyNowCart);
+                return;
+
+            } catch (NumberFormatException e) {
+                log.error("Mua ngay - Dữ liệu không hợp lệ", e);
+                request.setAttribute("message", "Dữ liệu sản phẩm không hợp lệ!");
+                request.getRequestDispatcher("/cart.jsp").forward(request, response);
+                return;
+            }
+        }
+
+        // ===== Phần cart (giỏ hàng) =====
+        Object cart = session.getAttribute("cart");
         if (cart == null || ((CartService) cart).getList().isEmpty()) {
             request.setAttribute("isCartEmpty", true);
             request.setAttribute("message", "Giỏ hàng của bạn đang trống.");
             request.getRequestDispatcher("/cart.jsp").forward(request, response);
             return;
         }
-        if (session.getAttribute("addressDefault") == null) {
-            AddressService addressService = new AddressService();
-            Address defaultAddress = addressService.getAddressDefault(user.getId());
-            session.setAttribute("addressDefault", defaultAddress);
-        }
-        // Truyền lại thông tin người nhận
+
         request.setAttribute("cart", cart);
         request.setAttribute("isCartEmpty", false);
 
         CartService cartService = (CartService) cart;
+        addTocart(request, response, session, cartService);
+    }
+
+    private void addTocart(HttpServletRequest request, HttpServletResponse response, HttpSession session, CartService cartService) throws ServletException, IOException {
         double selectedTotal = cartService.getSelectedTotalWithDiscount();
         int discountAmount = 0;
 

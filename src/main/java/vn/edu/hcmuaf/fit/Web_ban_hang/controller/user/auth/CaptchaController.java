@@ -53,7 +53,6 @@ public class CaptchaController extends HttpServlet {
 
         // Gửi ảnh CAPTCHA về client
         response.setContentType("image/png");
-        System.out.print(captchaText);
         ImageIO.write(captchaImage, "png", response.getOutputStream());
     }
 }
