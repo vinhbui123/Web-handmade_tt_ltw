@@ -1,14 +1,14 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.session.CartProduct;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.session.CartProduct;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 
 public class CartService implements Serializable {
     private Map<Integer, CartProduct> data = new HashMap<>();
@@ -17,14 +17,8 @@ public class CartService implements Serializable {
         if (data.containsKey(p.getId())) {
             return update(p.getId(), data.get(p.getId()).getQuantity() + quantity);
         } else {
-            InventoryDao inventoryDao = new InventoryDao();
-            int stock = inventoryDao.getStock(p.getId());
-            if (quantity > stock) {
-                return false;
-            }
             CartProduct cartProduct = convert(p);
             cartProduct.setQuantity(quantity);
-            cartProduct.setStock(stock);
             data.put(p.getId(), cartProduct);
         }
         return true;
@@ -34,20 +28,13 @@ public class CartService implements Serializable {
         if (!data.containsKey(id))
             return false;
 
-        InventoryDao inventoryDao = new InventoryDao();
-        int stock = inventoryDao.getStock(id);
-
         if (quantity <= 0) {
             remove(id);
             return true;
         }
-        if (quantity > stock) {
-            return false;
-        }
 
         CartProduct cp = data.get(id);
         cp.setQuantity(quantity);
-        cp.setStock(stock);
         return true;
     }
 

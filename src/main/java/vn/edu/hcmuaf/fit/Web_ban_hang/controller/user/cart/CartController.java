@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.OrderService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class CartController extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(CartController.class);
     private final ProductService productService = new ProductService();
+    private final OrderService orderService = new OrderService();
     private final Gson gson = new Gson();
 
     @Override
@@ -125,19 +127,32 @@ public class CartController extends HttpServlet {
 
             Map<String, Object> result = new HashMap<>();
 
-            if ("add".equals(action) || !jsonObject.has("action")) { // Default add implied by cart.js body
+            if ("add".equals(action) || !jsonObject.has("action")) {
+                // Default add implied by cart.js body
                 int productId = jsonObject.get("productId").getAsInt();
                 int quantity = jsonObject.has("quantity") ? jsonObject.get("quantity").getAsInt() : 1;
 
                 Product product = productService.getById(productId);
                 if (product != null) {
-                    boolean success = cart.add(product, quantity);
-                    if (success) {
-                        result.put("status", true);
-                        result.put("message", "Đã thêm vào giỏ hàng!");
-                    } else {
+                    // Kiểm tra tồn kho trước khi thêm vào giỏ
+                    int totalQuantity = quantity;
+                    CartService existingCart = (CartService) session.getAttribute("cart");
+                    if (existingCart != null) {
+                        var existingItems = existingCart.getList();
+                        for (var item : existingItems) {
+                            if (item.getId() == productId) {
+                                totalQuantity += item.getQuantity();
+                                break;
+                            }
+                        }
+                    }
+                    if (orderService.CheckStock(productId, totalQuantity)) {
                         result.put("status", false);
                         result.put("message", "Sản phẩm đã hết hàng hoặc không đủ số lượng!");
+                    } else {
+                        cart.add(product, quantity);
+                        result.put("status", true);
+                        result.put("message", "Đã thêm vào giỏ hàng!");
                     }
                 } else {
                     result.put("status", false);
@@ -146,13 +161,13 @@ public class CartController extends HttpServlet {
             } else if ("update".equals(action)) {
                 int productId = jsonObject.get("id").getAsInt();
                 int quantity = jsonObject.get("quantity").getAsInt();
-                boolean success = cart.update(productId, quantity);
-                if (success) {
-                    result.put("status", true);
-                    result.put("message", "Cập nhật thành công!");
-                } else {
+                if (quantity > 0 && orderService.CheckStock(productId, quantity)) {
                     result.put("status", false);
                     result.put("message", "Không đủ hàng trong kho!");
+                } else {
+                    cart.update(productId, quantity);
+                    result.put("status", true);
+                    result.put("message", "Cập nhật thành công!");
                 }
 
             } else if ("updateSelection".equals(action)) {
