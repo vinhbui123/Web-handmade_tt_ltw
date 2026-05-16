@@ -30,12 +30,13 @@
                                     hàng</button>
                                 <button class="tab" data-status="completed" data-index="3">Đã hoàn thành</button>
                                 <button class="tab" data-status="cancelled" data-index="4">Đã hủy</button>
+                                <button class="tab" data-status="review" data-index="review">Đánh giá</button>
                             </div>
 
                             <div class="order-list">
                                 <c:forEach var="order" items="${orders}">
                                     <!-- Gán data-index cho toàn bộ order-block -->
-                                    <div class="order-block" data-index="${order.status}">
+                                    <div class="order-block" data-index="${order.status}" data-order-id="${order.id}">
                                         <!-- Header -->
                                         <div class="order-header">
                                             <div class="header-left">
@@ -115,11 +116,13 @@
                         </div>
 
                         <%@include file="purchase-detail.jsp" %>
+                        <%@include file="review-modal.jsp" %>
                         <%@include file="footer.jsp" %>
                             <script>
                                 const contextPath = "${pageContext.request.contextPath}";
                             </script>
                             <script src="${pageContext.request.contextPath}/js/purchase.js"></script>
+                            <script src="${pageContext.request.contextPath}/js/review.js"></script>
 
                 </body>
 

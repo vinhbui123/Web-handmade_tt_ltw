@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // Thêm vào giỏ hàng rồi chuyển thẳng sang trang checkout
             fetch(`${contextPath}/api/cart`, {
                 method: "POST",
                 headers: {
@@ -123,8 +124,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status) {
-                        // Redirect to cart page after successful addition to cart
-                        window.location.href = `${contextPath}/cart`;
+                        // Chuyển thẳng đến trang checkout để đặt hàng
+                        window.location.href = `${contextPath}/checkout`;
                     } else {
                         if (data.redirect) {
                             window.location.href = `${contextPath}/${data.redirect}`;
@@ -135,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(error => {
                     console.error("Lỗi:", error.message);
-                    alert("Có lỗi xảy ra khi thêm vào giỏ hàng: " + error.message);
+                    alert("Có lỗi xảy ra: " + error.message);
                 });
         });
     }
