@@ -42,9 +42,7 @@ public class CheckoutController extends HttpServlet {
 
         try {
             // 1. Parse JSON
-            String jsonInput = ReadJsonUtil.read(request);
-            Gson gson = new Gson();
-            OrderDTO orderDTO = gson.fromJson(jsonInput, OrderDTO.class);
+            OrderDTO orderDTO = ReadJsonUtil.parseJson(request, OrderDTO.class);
 
             OrderService orderService = new OrderService();
             Order order = new Order(orderDTO.getStatus(), orderDTO.getUserId(), orderDTO.getShippingFee(),
@@ -99,11 +97,6 @@ public class CheckoutController extends HttpServlet {
                         remainingDiscount -= detailDiscount;
                     }
                 }
-            }
-
-            // log for orderDetail
-            for (OrderDetail orderDetail : details) {
-                log.info("{}: {}", orderDetail.getProductId(), orderDetail.getPrice());
             }
 
             // 5. Lưu đơn hàng
