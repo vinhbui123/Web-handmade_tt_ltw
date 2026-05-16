@@ -29,10 +29,10 @@ function placeOrder() {
     let paymentMethod = activePayment ? activePayment.id : "unknown";
 
     const status = 0;
-    let freeShipping = 0;
+    let shippingFee = 0;
     let shippingFeeElem = document.querySelector('.shipping-fee');
     if (shippingFeeElem) {
-        freeShipping = parseInt(shippingFeeElem.textContent.replace(/[^\d]/g, '')) || 0;
+        shippingFee = parseInt(shippingFeeElem.textContent.replace(/[^\d]/g, '')) || 0;
     }
 
     let details = [];
@@ -51,7 +51,7 @@ function placeOrder() {
     let orderData = {
         userId: parseInt(userId),
         status: status,
-        freeShipping: parseInt(freeShipping),
+        shippingFee: parseInt(shippingFee),
         paymentTypeId: paymentMethod === 'cod' ? 1 : 2,
         details: details
     };
