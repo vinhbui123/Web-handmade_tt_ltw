@@ -39,7 +39,7 @@
                                     <c:when test="${not empty user.avatar}">
                                         <img src="${pageContext.request.contextPath}/${user.avatar}"
                                              alt="Avatar"
-                                             style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; vertical-align: middle;"
+                                             class="header-avatar"
                                              onerror="this.src='${pageContext.request.contextPath}/images/default-avatar.png';">
                                     </c:when>
                                     <c:otherwise>

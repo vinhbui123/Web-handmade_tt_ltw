@@ -27,7 +27,7 @@ public class PurchaseDao {
                         o.status,
                         o.create_at,
                         o.updated_at,
-                        o.free_shipping,
+                        o.shipping_fee,
                         o.payment_type_id,
                        \s
                         od.id AS detail_id,
@@ -62,7 +62,7 @@ public class PurchaseDao {
                     order.setUserId(userId);
                     order.setStatus(rs.getInt("status"));
                     order.setStatusString(SettingDAO.toStatusDetails(order.getStatus()));
-                    order.setFreeShipping(rs.getInt("free_shipping"));
+                    order.setShippingFee(rs.getInt("shipping_fee"));
                     order.setCreatedAt(rs.getTimestamp("create_at"));
                     order.setPurchaseItems(new ArrayList<>());
 
