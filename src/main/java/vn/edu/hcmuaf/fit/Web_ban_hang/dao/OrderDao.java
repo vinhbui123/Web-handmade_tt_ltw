@@ -30,7 +30,7 @@ public class OrderDao {
                 o.setId(rs.getInt("id"));
                 o.setStatus(rs.getByte("status"));
                 o.setUserId(rs.getInt("user_id"));
-                o.setFreeShipping(rs.getInt("free_shipping"));
+                o.setShippingFee(rs.getInt("free_shipping"));
                 o.setPaymentTypeId(rs.getInt("payment_type_id"));
                 orders.add(o);
             }
@@ -42,13 +42,13 @@ public class OrderDao {
 
     // Thêm đơn hàng và chi tiết vào database
     public void addOrder(Order order, List<OrderDetail> details) {
-        String query = "INSERT INTO orders (status, user_id, free_shipping, payment_type_id) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DBConnect.getConnection()) { // chỉ mở 1 connection
             try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, order.getStatus());
                 statement.setInt(2, order.getUserId());
-                statement.setInt(3, order.getFreeShipping());
+                statement.setInt(3, order.getShippingFee());
                 statement.setInt(4, order.getPaymentTypeId());
                 statement.executeUpdate();
 

@@ -6,9 +6,8 @@ public class Order implements Serializable {
     private int id;
     private int status;
     private int userId;
-    private int freeShipping;
+    private int shippingFee;
     private int paymentTypeId;
-    private int totalAmount;
     private String createdAt;
     private String updatedAt;
 
@@ -17,10 +16,10 @@ public class Order implements Serializable {
     }
 
     // Constuctor to get info from web to DB
-    public Order(int status, int userId, int freeShipping, int paymentTypeId) {
+    public Order(int status, int userId, int shippingFee, int paymentTypeId) {
         this.status = status;
         this.userId = userId;
-        this.freeShipping = freeShipping;
+        this.shippingFee = shippingFee;
         this.paymentTypeId = paymentTypeId;
     }
 
@@ -34,8 +33,8 @@ public class Order implements Serializable {
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
 
-    public int getFreeShipping() { return freeShipping; }
-    public void setFreeShipping(int freeShipping) { this.freeShipping = freeShipping; }
+    public int getShippingFee() { return shippingFee; }
+    public void setShippingFee(int shippingFee) { this.shippingFee = shippingFee; }
 
     public int getPaymentTypeId() { return paymentTypeId; }
     public void setPaymentTypeId(int paymentTypeId) { this.paymentTypeId = paymentTypeId; }
@@ -52,7 +51,7 @@ public class Order implements Serializable {
                 "id=" + id +
                 ", status=" + status +
                 ", userId=" + userId +
-                ", freeShipping=" + freeShipping +
+                ", shippingFee=" + shippingFee +
                 ", paymentTypeId=" + paymentTypeId +
                 ", createdAt='" + createdAt + '\'' +
                 ", updatedAt='" + updatedAt + '\'' +
