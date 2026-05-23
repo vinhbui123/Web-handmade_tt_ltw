@@ -42,7 +42,14 @@ public class GoogleCallbackServlet extends HttpServlet {
                 HttpTransport httpTransport = new NetHttpTransport();
                 JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-                String redirectUri = "http://localhost:8080/Web_ban_hang/google/callback";
+                // Tự động chọn redirect URI dựa trên domain hiện tại
+                String redirectUri;
+                String serverName = request.getServerName();
+                if (serverName.contains("ttltwtnkiet.id.vn")) {
+                    redirectUri = "https://shophandmade.ttltwtnkiet.id.vn/google/callback";
+                } else {
+                    redirectUri = "http://localhost:8080/Web_ban_hang/google/callback";
+                }
 
                 System.out.println("Redirect URI sent to Google: " + redirectUri);
 
