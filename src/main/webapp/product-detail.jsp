@@ -7,8 +7,9 @@
 
                 <head>
                     <title>Chi tiết sản phẩm</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap&subset=vietnamese"
-                        rel="stylesheet">
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
                     <link rel="stylesheet"
                         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
                     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/index.css">
@@ -49,21 +50,37 @@
                                     </ul>
                                 </div>
                                 <div class="name">${product.name}</div>
-                                <div class="rating-stars">
-                                    <c:forEach begin="1" end="5" var="i">
+                                <div class="rating-overview-top" style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+
+                                    <div class="rating-stars" style="color: #f27a24; font-size: 14px;">
+                                        <c:forEach begin="1" end="5" var="i">
+                                            <c:choose>
+                                                <c:when test="${i <= averageRating}">
+                                                    <i class="fas fa-star"></i>
+                                                </c:when>
+                                                <c:when test="${i - 0.5 <= averageRating}">
+                                                    <i class="fas fa-star-half-alt"></i>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <i class="far fa-star"></i>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                    </div>
+
+                                    <div class="review-count" style="font-size: 14px; color: #767676; padding-left: 12px; border-left: 1px solid #e0e0e0;">
                                         <c:choose>
-                                            <c:when test="${i <= averageRating}">
-                                                <i class="fas fa-star"></i>
-                                            </c:when>
-                                            <c:when test="${i - 0.5 <= averageRating}">
-                                                <i class="fas fa-star-half-alt"></i>
+                                            <c:when test="${commentCount > 0}">
+                                                ${commentCount} Đánh Giá
                                             </c:when>
                                             <c:otherwise>
-                                                <i class="far fa-star"></i>
+                                                Chưa có đánh giá
                                             </c:otherwise>
                                         </c:choose>
-                                    </c:forEach>
+                                    </div>
                                 </div>
+
+
                                 <p class="price">
                                     <c:choose>
                                         <c:when test="${product.discount > 0}">
