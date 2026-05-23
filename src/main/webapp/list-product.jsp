@@ -43,6 +43,15 @@
                                 </div>
 
                                 <div class="filter-group">
+                                    <label>Sắp xếp:</label>
+                                    <select name="sort">
+                                        <option value="default" ${currentSort == 'default' || empty currentSort ? 'selected' : ''}>Mặc định</option>
+                                        <option value="priceAsc" ${currentSort == 'priceAsc' ? 'selected' : ''}>Giá tăng dần</option>
+                                        <option value="priceDesc" ${currentSort == 'priceDesc' ? 'selected' : ''}>Giá giảm dần</option>
+                                    </select>
+                                </div>
+
+                                <div class="filter-group">
                                     <label>Giá tối thiểu:</label>
                                     <input type="number" name="minPrice" value="${param.minPrice}"
                                         placeholder="VD: 10000" min="0" step="1000" />
