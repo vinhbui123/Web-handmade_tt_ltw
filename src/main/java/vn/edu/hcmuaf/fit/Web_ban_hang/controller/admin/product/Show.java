@@ -11,7 +11,7 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,7 +28,9 @@ public class Show extends HttpServlet {
         request.setAttribute("materials", materials);
 
         // Khai báo ProductDao để gọi 2 hàm phân trang thần thánh
-        vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao productDao = new vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao();
+        ProductDao productDao = new ProductDao();
+
+        String searchKeyword = request.getParameter("search");
 
         //  Tính toán phân trang
         int page = 1;
@@ -38,23 +40,38 @@ public class Show extends HttpServlet {
             page = Integer.parseInt(pageParam);
         }
         int offset = (page - 1) * pageSize;
+        List<Product> products;
+        int totalProducts = 0;
 
         // Lấy bộ lọc Danh mục
         String categoryIdStr = request.getParameter("category");
         Integer categoryId = null;
         String categoryName = "Tất cả sản phẩm";
-        if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
-            try {
-                categoryId = Integer.parseInt(categoryIdStr);
-                categoryName = categoryService.getCategoryNameById(categoryId);
-            } catch (NumberFormatException e) {
-                categoryId = null;
-            }
-        }
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            // ---> LUỒNG 1: ADMIN ĐANG DÙNG THANH TÌM KIẾM
+            String keyword = searchKeyword.trim();
+            products = productDao.searchProductsAdminFuzzyPaged(keyword, offset, pageSize);
+            totalProducts = productDao.countSearchProductsAdminFuzzy(keyword);
 
-        // LẤY DỮ LIỆU ĐÃ PHÂN TRANG
-        List<Product> products = productDao.getProductsPaged(true, categoryId, offset, pageSize);
-        int totalProducts = productDao.getTotalCount(true, categoryId);
+            // Đẩy từ khóa ngược lại JSP để hiển thị lên ô input
+            request.setAttribute("searchKeyword", keyword);
+            categoryName = "Kết quả tìm kiếm: '" + keyword + "'";
+
+        } else {
+            if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
+                try {
+                    categoryId = Integer.parseInt(categoryIdStr);
+                    categoryName = categoryService.getCategoryNameById(categoryId);
+                } catch (NumberFormatException e) {
+                    categoryId = null;
+                }
+            }
+
+            // LẤY DỮ LIỆU ĐÃ PHÂN TRANG
+            products = productDao.getProductsPaged(true, categoryId, offset, pageSize);
+            totalProducts = productDao.getTotalCount(true, categoryId);
+            request.setAttribute("selectedCategoryId", categoryId);
+        }
         int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
         request.setAttribute("products", products);

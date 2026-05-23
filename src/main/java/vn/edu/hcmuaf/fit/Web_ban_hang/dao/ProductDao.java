@@ -20,7 +20,7 @@ public class ProductDao {
     public List<Product> getAll() {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
         String query = "SELECT " +
-                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, p.weight," +
+                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, p.weight, " + // [CHỈNH SỬA]: Thêm p.weight
                 "p.catalog_id, p.description, p.created_at, p.updated_at, " +
                 "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock, " +
                 "m.id AS material_id, m.name AS material_name " +
@@ -28,8 +28,8 @@ public class ProductDao {
                 "LEFT JOIN inventory i ON p.id = i.product_id " +
                 "LEFT JOIN product_materials pm ON p.id = pm.product_id " +
                 "LEFT JOIN materials m ON pm.material_id = m.id " +
-                "GROUP BY p.id, m.id " + // gom nhóm để tính toán stock
-                "HAVING stock > 0 " + // chặn tồn kho = 0 hoặc khi sản phẩm không có trong inventory
+                "GROUP BY p.id, m.id " +
+                "HAVING stock > 0 " +
                 "ORDER BY p.id";
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query);
@@ -47,7 +47,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
-                    p.setWeight(rs.getInt("weight"));
+                    p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
                     p.setStock(rs.getInt("stock"));
@@ -68,7 +68,6 @@ public class ProductDao {
 
         } catch (SQLException e) {
             log.error("Lỗi khi lấy danh sách sản phẩm: {}", e.getMessage(), e);
-            // Ném lỗi ra ngoài để Controller hoặc Service phía trên bắt được
             throw new RuntimeException("Không thể lấy dữ liệu sản phẩm từ hệ thống. Chi tiết: " + e.getMessage(), e);
         }
 
@@ -77,7 +76,7 @@ public class ProductDao {
 
     // Phương thức lấy sản phẩm theo id
     public static Product getById(int id) {
-        String query = "SELECT * FROM products WHERE id = ?";
+        String query = "SELECT * FROM products WHERE id = ?"; // Lấy SELECT * nên đã tự có weight
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
@@ -92,7 +91,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
-                    p.setWeight(rs.getInt("weight"));
+                    p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                     p.setDescription(rs.getString("description"));
                     p.setColors(getColorsByProductId(p.getId()));
                     p.setMaterials(getMaterialsByProductId(p.getId()));
@@ -103,14 +102,14 @@ public class ProductDao {
         } catch (SQLException e) {
             log.error(e.getMessage());
         }
-        return null; // Trả về null nếu không tìm thấy sản phẩm
+        return null;
     }
 
     public List<Product> getByCategory(int categoryId) {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
 
         String query = "SELECT " +
-                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img,  p.weight," +
+                "p.id AS product_id, p.name, p.price, p.discount, p.view, p.img, p.weight, " + // [CHỈNH SỬA]: Thêm p.weight
                 "p.catalog_id, p.description, p.created_at, p.updated_at, " +
                 "COALESCE(i.quantity_in + i.quantity_returned - i.quantity_out - i.quantity_damaged, 0) AS stock, " +
                 "m.id AS material_id, m.name AS material_name " +
@@ -139,7 +138,7 @@ public class ProductDao {
                     p.setDiscount(rs.getInt("discount"));
                     p.setView(rs.getInt("view"));
                     p.setImg(rs.getString("img"));
-                    p.setWeight(rs.getInt("weight"));
+                    p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                     p.setCatalog_id(rs.getInt("catalog_id"));
                     p.setDescription(rs.getString("description"));
                     p.setStock(rs.getInt("stock"));
@@ -229,16 +228,10 @@ public class ProductDao {
         }
     }
 
-    /**
-     * Chiến lược 3 bước (mỗi bước chỉ chạy nếu bước trước không có kết quả):
-     * search stage 1
-     * Tìm kiếm sản phẩm theo từ khoá với hỗ trợ Fuzzy Search tiếng Việt.
-     */
     public List<Product> searchProducts(String keyword) {
         if (keyword == null)
             keyword = "";
 
-        // --- Bước 1: Tìm chính xác bằng SQL LIKE ---
         List<Product> exactResults = searchByLike(keyword);
         if (!exactResults.isEmpty()) {
             return exactResults;
@@ -247,19 +240,14 @@ public class ProductDao {
         if (keyword.isEmpty())
             return exactResults;
 
-        // --- Bước 2: Normalize + contains (xoá dấu) ---
         List<Product> normalizedResults = searchNormalized(keyword);
         if (!normalizedResults.isEmpty()) {
             return normalizedResults;
         }
 
-        // --- Bước 3: BK-Tree token fuzzy (chịu được sai chính tả) ---
         return searchBKTree(keyword);
     }
 
-    /**
-     * Tìm kiếm sản phẩm bằng SQL LIKE (có phân biệt dấu, tùy collation DB).
-     */
     private List<Product> searchByLike(String keyword) {
         List<Product> result = new ArrayList<>();
         String query = "SELECT id, name, price, discount, view, img, weight FROM products WHERE name LIKE ? ORDER BY RAND()";
@@ -277,11 +265,6 @@ public class ProductDao {
         return result;
     }
 
-    /**
-     * Normalize + contains.
-     * Xoá dấu cả hai vế rồi kiểm tra substring.
-     * "dong ho" tìm được "đồng hồ", "bong hong" tìm được "bông hồng", v.v.
-     */
     private List<Product> searchNormalized(String keyword) {
         List<Product> result = new ArrayList<>();
         String sql = "SELECT id, name, price, discount, view, img, weight FROM products";
@@ -300,9 +283,7 @@ public class ProductDao {
         return result;
     }
 
-    // use BK-Tree token fuzzy matching.
     private List<Product> searchBKTree(String keyword) {
-        // --- 1. Fetch all products ---
         List<Product> allProducts = new ArrayList<>();
         String sql = "SELECT id, name, price, discount, view, img, weight FROM products";
         try (Connection connection = DBConnect.getConnection();
@@ -316,20 +297,16 @@ public class ProductDao {
             return allProducts;
         }
 
-        if (allProducts.isEmpty())
-            return allProducts;
+        if (allProducts.isEmpty()) return allProducts;
 
-        // --- 2. Build BK-Tree from all unique normalised product-name tokens ---
         BKTree bkTree = new BKTree();
-        // token → set of product IDs that contain this token
         Map<String, Set<Integer>> tokenToProductIds = new HashMap<>();
 
         for (Product p : allProducts) {
             String normalizedName = VietnameseTextUtils.removeDiacritics(p.getName());
             String[] tokens = normalizedName.trim().split("\\s+");
             for (String token : tokens) {
-                if (token.isEmpty())
-                    continue;
+                if (token.isEmpty()) continue;
                 bkTree.add(token);
                 tokenToProductIds
                         .computeIfAbsent(token, k -> new HashSet<>())
@@ -337,62 +314,43 @@ public class ProductDao {
             }
         }
 
-        // --- 3. Query BK-Tree for each query token ---
         String normalizedKeyword = VietnameseTextUtils.removeDiacritics(keyword);
         String[] queryTokens = normalizedKeyword.trim().split("\\s+");
-
-        // Start with all product IDs; intersect down per token
         Set<Integer> matchingIds = null;
 
         for (String queryToken : queryTokens) {
-            if (queryToken.isEmpty())
-                continue;
+            if (queryToken.isEmpty()) continue;
 
             int threshold = getThreshold(queryToken);
             List<String> matchedTokens = bkTree.search(queryToken, threshold);
 
-            // Union of product IDs from all matched tokens
             Set<Integer> tokenMatches = new HashSet<>();
             for (String matched : matchedTokens) {
                 Set<Integer> ids = tokenToProductIds.get(matched);
-                if (ids != null)
-                    tokenMatches.addAll(ids);
+                if (ids != null) tokenMatches.addAll(ids);
             }
 
             if (matchingIds == null) {
                 matchingIds = tokenMatches;
             } else {
-                matchingIds.retainAll(tokenMatches); // intersection: ALL tokens must match
+                matchingIds.retainAll(tokenMatches);
             }
         }
 
-        if (matchingIds == null || matchingIds.isEmpty())
-            return new ArrayList<>();
+        if (matchingIds == null || matchingIds.isEmpty()) return new ArrayList<>();
 
-        // --- 4. Filter and return matched products ---
         final Set<Integer> finalIds = matchingIds;
         List<Product> result = new ArrayList<>();
         for (Product p : allProducts) {
-            if (finalIds.contains(p.getId()))
-                result.add(p);
+            if (finalIds.contains(p.getId())) result.add(p);
         }
         return result;
     }
 
-    /**
-     * Returns the Levenshtein edit-distance threshold for a given token.
-     * Short tokens require exact matches to avoid false positives;
-     * longer tokens tolerate more typos.
-     * len ≤ 3 → 0 (exact match only, e.g. "bo", "la")
-     * len ≤ 5 → 1 (1 typo allowed, e.g. "bong" → "hong")
-     * len > 5 → 2 (2 typos allowed, e.g. "Handmann" → "Handmade")
-     */
     private int getThreshold(String token) {
         int len = token.length();
-        if (len <= 3)
-            return 0;
-        if (len <= 5)
-            return 1;
+        if (len <= 3) return 0;
+        if (len <= 5) return 1;
         return 2;
     }
 
@@ -430,7 +388,7 @@ public class ProductDao {
                 p.setDiscount(rs.getInt("discount"));
                 p.setView(rs.getInt("view"));
                 p.setImg(rs.getString("img"));
-                p.setWeight(rs.getInt("weight"));
+                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                 re.add(p);
             }
 
@@ -442,7 +400,7 @@ public class ProductDao {
 
     public List<Product> getProductsByLimit(int offset, int size) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT id, name, price, discount, view, img, weight quantity FROM products LIMIT ?, ?";
+        String sql = "SELECT id, name, price, discount, view, img, quantity, weight FROM products LIMIT ?, ?";
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -460,7 +418,6 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setQuantity(rs.getInt("quantity"));
                 p.setWeight(rs.getInt("weight"));
-
                 products.add(p);
             }
         } catch (SQLException e) {
@@ -474,9 +431,7 @@ public class ProductDao {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
+            if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
@@ -505,7 +460,7 @@ public class ProductDao {
                     product.setImg(rs.getString("img"));
                     product.setCatalog_id(rs.getInt("catalog_id"));
                     product.setStock(rs.getInt("stock"));
-                    product.setWeight(rs.getInt("weight"));
+                    product.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                     products.add(product);
                 }
             }
@@ -516,7 +471,6 @@ public class ProductDao {
         return products;
     }
 
-    // Lấy các sản phẩm có lượt xem lớn hơn một ngưỡng nhất định (ví dụ 200)
     public List<Product> getProductsViewedAbove(int minView) {
         List<Product> products = new ArrayList<>();
         String query = "SELECT id, name, price, discount, view, img, weight FROM products WHERE view >= ? ORDER BY view DESC";
@@ -546,11 +500,12 @@ public class ProductDao {
     }
 
     public List<Product> getTopRatedProducts() {
+        // [CHỈNH SỬA]: Thêm p.weight
         String query = "SELECT p.id, p.name, p.price, p.discount, p.img, p.view, p.weight, " +
                 "AVG(c.rating) AS avg_rating " +
                 "FROM products p " +
                 "JOIN comments c ON p.id = c.product_id " +
-                "GROUP BY p.id, p.name, p.price, p.discount, p.img, p.view " +
+                "GROUP BY p.id, p.name, p.price, p.discount, p.img, p.view, p.weight " + // Sửa lại GROUP BY cho hợp chuẩn SQL
                 "HAVING AVG(c.rating) > 4 " +
                 "ORDER BY avg_rating DESC";
 
@@ -578,19 +533,16 @@ public class ProductDao {
     // Lấy danh sách sản phẩm có Phân trang.
     public List<Product> getProductsPaged(boolean isAdmin, Integer categoryId, int offset, int size) {
         List<Product> products = new ArrayList<>();
-        // Sử dụng LinkedHashMap để giữ thứ tự và tránh trùng lặp do Join với Materials
         Map<Integer, Product> productMap = new LinkedHashMap<>();
-        // JOIN với bảng inventory để lấy cột stock (tồn kho) thực tế
+
         StringBuilder sql = new StringBuilder(
                 "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
                         "COALESCE(i.quantity, 0) AS stock " +
                         "FROM products p " +
                         "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 ");
 
-        if (categoryId != null)
-            sql.append(" AND p.catalog_id = ? ");
-        if (!isAdmin)
-            sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
+        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
+        if (!isAdmin) sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
 
         sql.append(" ORDER BY p.id DESC LIMIT ? OFFSET ?");
 
@@ -598,8 +550,7 @@ public class ProductDao {
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
-            if (categoryId != null)
-                stmt.setInt(paramIndex++, categoryId);
+            if (categoryId != null) stmt.setInt(paramIndex++, categoryId);
             stmt.setInt(paramIndex++, size);
             stmt.setInt(paramIndex++, offset);
 
@@ -614,7 +565,7 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
-                p.setWeight(rs.getInt("weight"));
+                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
                 products.add(p);
             }
         } catch (SQLException e) {
@@ -623,7 +574,6 @@ public class ProductDao {
         return products;
     }
 
-    // Tính tổng số lượng sản phẩm thỏa mãn
     public int getTotalCount(boolean isAdmin, Integer categoryId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
         if (!isAdmin) {
@@ -632,22 +582,107 @@ public class ProductDao {
             sql.append(" WHERE 1=1 ");
         }
 
-        if (categoryId != null)
-            sql.append(" AND p.catalog_id = ? ");
+        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-
-            if (categoryId != null)
-                stmt.setInt(1, categoryId);
-
+            if (categoryId != null) stmt.setInt(1, categoryId);
             ResultSet rs = stmt.executeQuery();
-            if (rs.next())
-                return rs.getInt(1);
+            if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
         return 0;
     }
 
+    public List<Product> searchProductsAdminFuzzyPaged(String keyword, int offset, int size) {
+        List<Product> fuzzyMatches = searchProducts(keyword);
+
+        if (keyword != null && keyword.matches("\\d+")) {
+            int searchId = Integer.parseInt(keyword);
+            boolean alreadyHasId = fuzzyMatches.stream().anyMatch(p -> p.getId() == searchId);
+            if (!alreadyHasId) {
+                Product exactProduct = getById(searchId);
+                if (exactProduct != null) {
+                    fuzzyMatches.add(0, exactProduct);
+                }
+            }
+        }
+
+        int total = fuzzyMatches.size();
+        if (offset >= total || total == 0) return new ArrayList<>();
+
+        int end = Math.min(offset + size, total);
+        List<Product> pagedList = fuzzyMatches.subList(offset, end);
+
+        List<Integer> idsToFetch = new ArrayList<>();
+        for (Product p : pagedList) {
+            idsToFetch.add(p.getId());
+        }
+
+        return getFullAdminProductsByIds(idsToFetch);
+    }
+
+    public int countSearchProductsAdminFuzzy(String keyword) {
+        List<Product> fuzzyMatches = searchProducts(keyword);
+        if (keyword != null && keyword.matches("\\d+")) {
+            int searchId = Integer.parseInt(keyword);
+            boolean alreadyHasId = fuzzyMatches.stream().anyMatch(p -> p.getId() == searchId);
+            if (!alreadyHasId && getById(searchId) != null) {
+                return fuzzyMatches.size() + 1;
+            }
+        }
+        return fuzzyMatches.size();
+    }
+
+    private List<Product> getFullAdminProductsByIds(List<Integer> ids) {
+        List<Product> result = new ArrayList<>();
+        if (ids == null || ids.isEmpty()) return result;
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            placeholders.append("?");
+            if (i < ids.size() - 1) placeholders.append(",");
+        }
+
+        // [CHỈNH SỬA]: Thêm p.weight
+        String sql = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
+                "COALESCE(i.quantity, 0) AS stock " +
+                "FROM products p " +
+                "LEFT JOIN inventory i ON p.id = i.product_id " +
+                "WHERE p.id IN (" + placeholders.toString() + ")";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < ids.size(); i++) {
+                stmt.setInt(i + 1, ids.get(i));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            Map<Integer, Product> map = new HashMap<>();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getInt("price"));
+                p.setDiscount(rs.getInt("discount"));
+                p.setView(rs.getInt("view"));
+                p.setImg(rs.getString("img"));
+                p.setCatalog_id(rs.getInt("catalog_id"));
+                p.setStock(rs.getInt("stock"));
+                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
+                map.put(p.getId(), p);
+            }
+
+            for (Integer id : ids) {
+                if (map.containsKey(id)) {
+                    result.add(map.get(id));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi khi lấy Full Data cho Admin bằng ID: {}", e.getMessage());
+        }
+        return result;
+    }
 }
