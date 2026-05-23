@@ -574,6 +574,63 @@ public class ProductDao {
         return products;
     }
 
+    public List<Product> getProductsPaged(boolean isAdmin, Integer categoryId, int offset, int size, String sortOption) {
+        List<Product> products = new ArrayList<>();
+        Map<Integer, Product> productMap = new LinkedHashMap<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
+                        "COALESCE(i.quantity, 0) AS stock " +
+                        "FROM products p " +
+                        "LEFT JOIN inventory i ON p.id = i.product_id WHERE 1=1 ");
+
+        if (categoryId != null) sql.append(" AND p.catalog_id = ? ");
+        if (!isAdmin) sql.append(" AND COALESCE(i.quantity, 0) > 0 ");
+
+        if (sortOption != null && !sortOption.isEmpty()) {
+            switch (sortOption) {
+                case "priceAsc":
+                    sql.append(" ORDER BY (p.price * (1 - p.discount / 100.0)) ASC ");
+                    break;
+                case "priceDesc":
+                    sql.append(" ORDER BY (p.price * (1 - p.discount / 100.0)) DESC ");
+                    break;
+                default:
+                    sql.append(" ORDER BY p.id DESC ");
+            }
+        } else {
+            sql.append(" ORDER BY p.id DESC ");
+        }
+
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (categoryId != null) stmt.setInt(paramIndex++, categoryId);
+            stmt.setInt(paramIndex++, size);
+            stmt.setInt(paramIndex++, offset);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getInt("price"));
+                p.setDiscount(rs.getInt("discount"));
+                p.setView(rs.getInt("view"));
+                p.setImg(rs.getString("img"));
+                p.setCatalog_id(rs.getInt("catalog_id"));
+                p.setStock(rs.getInt("stock"));
+                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi phân trang sản phẩm: {}", e.getMessage());
+        }
+        return products;
+    }
     public int getTotalCount(boolean isAdmin, Integer categoryId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
         if (!isAdmin) {
