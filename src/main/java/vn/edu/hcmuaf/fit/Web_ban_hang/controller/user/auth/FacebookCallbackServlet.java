@@ -1,20 +1,23 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.auth;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HttpUtil;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
-import java.io.IOException;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HttpUtil;
 
 @WebServlet("/facebook/callback")
 public class FacebookCallbackServlet extends HttpServlet {
@@ -33,7 +36,14 @@ public class FacebookCallbackServlet extends HttpServlet {
         }
 
         try {
-            String redirectUri = "http://localhost:8080/Web_ban_hang/facebook/callback";
+            // Tự động chọn redirect URI dựa trên domain hiện tại
+            String redirectUri;
+            String serverName = request.getServerName();
+            if (serverName.contains("ttltwtnkiet.id.vn")) {
+                redirectUri = "https://shophandmade.ttltwtnkiet.id.vn/facebook/callback";
+            } else {
+                redirectUri = "http://localhost:8080/Web_ban_hang/facebook/callback";
+            }
 
             String accessTokenUrl = "https://graph.facebook.com/v18.0/oauth/access_token?" +
                     "client_id=" + CLIENT_ID +
