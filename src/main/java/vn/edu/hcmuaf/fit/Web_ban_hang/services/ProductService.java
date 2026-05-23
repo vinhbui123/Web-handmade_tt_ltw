@@ -1,6 +1,8 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CommentDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 
 import java.util.Collections;
@@ -62,6 +64,14 @@ public class ProductService {
 
     public List<Product> getTopRatedProducts() {
         return productDao.getTopRatedProducts();
+    }
+
+    public List<Comment> getCommentsByProductId(int productId) {
+        return new CommentDao().getCommentsByProductId(productId);
+    }
+
+    public double getAverageRatingByProductId(int productId) {
+        return new CommentDao().getAverageRatingByProductId(productId);
     }
 
 }
