@@ -48,3 +48,40 @@
         </div>
     </div>
 </footer>
+
+<%-- ===== AI CHATBOX WIDGET ===== --%>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/chatbox.css">
+
+<!-- Chat Toggle Button -->
+<button class="chatbox-toggle" id="chatbox-toggle" aria-label="Mở chat AI">
+    <span class="chat-icon-open"><i class="fas fa-comments"></i></span>
+    <span class="chat-icon-close"><i class="fas fa-times"></i></span>
+    <span class="chatbox-badge" id="chatbox-badge">1</span>
+</button>
+
+<!-- Chat Window -->
+<div class="chatbox-window" id="chatbox-window">
+    <div class="chatbox-header">
+        <div class="chatbox-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="chatbox-header-info">
+            <div class="chatbox-header-title">HandMade Craft AI</div>
+            <div class="chatbox-header-status">
+                <span class="status-dot"></span> Trực tuyến
+            </div>
+        </div>
+        <button class="chatbox-header-close" id="chatbox-close" aria-label="Đóng chat">
+            <i class="fas fa-minus"></i>
+        </button>
+    </div>
+    <div class="chatbox-messages" id="chatbox-messages"></div>
+    <div class="chatbox-input">
+        <input type="text" id="chatbox-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+        <button class="chatbox-send-btn" id="chatbox-send" aria-label="Gửi">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script src="${pageContext.request.contextPath}/js/chatbox.js" defer></script>
