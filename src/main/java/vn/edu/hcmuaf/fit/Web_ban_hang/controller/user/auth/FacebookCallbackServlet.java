@@ -7,12 +7,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HttpUtil;
-
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import java.io.IOException;
 
 @WebServlet("/facebook/callback")
@@ -54,9 +55,15 @@ public class FacebookCallbackServlet extends HttpServlet {
             User user = getUser(email, facebookId, name);
 
             if (user != null) {
-                request.getSession().setAttribute("user", user);
-            }
+                HttpSession session = request.getSession();
+                session.setAttribute("user", user);
 
+                // Nếu chưa có giỏ hàng trong session thì cấp mới ngay
+                if (session.getAttribute("cart") == null) {
+                    session.setAttribute("cart", new CartService());
+                    //log.info("Khởi tạo giỏ hàng thành công cho người dùng FB: {}", user.getUsername());
+                }
+            }
             response.sendRedirect(request.getContextPath() + "/home");
 
         } catch (Exception e) {

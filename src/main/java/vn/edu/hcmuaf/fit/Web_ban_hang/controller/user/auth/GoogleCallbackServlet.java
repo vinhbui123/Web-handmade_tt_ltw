@@ -20,8 +20,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 
 
 @WebServlet("/google/callback")
@@ -98,7 +100,13 @@ public class GoogleCallbackServlet extends HttpServlet {
             log.info("{} Đăng nhập Google thành công", user.getFirstName() + " " + user.getLastName());
         }
 
-        request.getSession().setAttribute("user", user);
+        HttpSession session = request.getSession();
+        session.setAttribute("user", user);
+
+        if (session.getAttribute("cart") == null) {
+            session.setAttribute("cart", new CartService());
+            //log.info("Khởi tạo giỏ hàng thành công cho người dùng Google: {}", user.getUsername());
+        }
         response.sendRedirect(request.getContextPath() + "/home");
     }
 }

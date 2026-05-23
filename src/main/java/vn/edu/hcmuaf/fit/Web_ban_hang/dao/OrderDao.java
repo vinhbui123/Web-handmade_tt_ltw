@@ -93,15 +93,15 @@ public class OrderDao {
         List<Map<String, Object>> result = new ArrayList<>();
 
         String query = """
-            SELECT
+            SELECT 
                 o.id AS order_id,
                 u.username,
                 p.id AS product_id,
                 p.name AS product_name,
                 od.quantity,
                 od.total_money,
-                o.shipping_fee,
                 od.discount_amount,
+                o.shipping_fee,
                 o.status,
                 o.create_at,
                 o.updated_at,
@@ -127,8 +127,8 @@ public class OrderDao {
                 row.put("product_name", rs.getString("product_name"));
                 row.put("quantity", rs.getInt("quantity"));
                 row.put("total_money", rs.getInt("total_money"));
-                row.put("shipping_fee", rs.getInt("shipping_fee"));
                 row.put("discount_amount", rs.getInt("discount_amount"));
+                row.put("shipping_fee", rs.getInt("shipping_fee"));
                 row.put("status", rs.getByte("status"));
                 row.put("create_at", rs.getTimestamp("create_at"));
                 row.put("updated_at", rs.getTimestamp("updated_at"));
