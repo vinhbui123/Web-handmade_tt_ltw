@@ -84,4 +84,113 @@ public class CouponDao {
 
         return c;
     }
+
+
+    //ADMIN
+
+    // 1.Lấy danh sách TOÀN BỘ Coupon (kể cả hết hạn) cho trang Admin
+    public List<Coupon> getAllCoupons() {
+        List<Coupon> coupons = new ArrayList<>();
+        String sql = "SELECT * FROM coupons ORDER BY id DESC"; // Sắp xếp mới nhất lên đầu
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                coupons.add(extractCoupon(rs));
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy toàn bộ danh sách Coupon cho Admin", e);
+        }
+        return coupons;
+    }
+
+    // 2.Thêm mới Coupon
+    public boolean addCoupon(Coupon c) {
+        String sql = "INSERT INTO coupons (code, type, discount_value, discount_percent, max_discount_value, min_order_amount, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, c.getCode());
+            stmt.setInt(2, c.getType());
+
+            // Xử lý logic Type: 0 (Tiền mặt), 1 (Phần trăm)
+            if (c.getType() == 0) {
+                stmt.setInt(3, c.getDiscountValue());
+                stmt.setNull(4, java.sql.Types.INTEGER); // Nếu là tiền thì % bằng null
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+                stmt.setInt(4, c.getDiscountPercent()); // Nếu là % thì tiền bằng null
+            }
+
+            // Xử lý max_discount_value có thể null
+            if (c.getMaxDiscountValue() != null && c.getMaxDiscountValue() > 0) {
+                stmt.setInt(5, c.getMaxDiscountValue());
+            } else {
+                stmt.setNull(5, java.sql.Types.INTEGER);
+            }
+
+            stmt.setInt(6, c.getMinOrderAmount());
+            stmt.setTimestamp(7, Timestamp.valueOf(c.getStartDate()));
+            stmt.setTimestamp(8, Timestamp.valueOf(c.getEndDate()));
+
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            log.error("Lỗi khi thêm Coupon mới", e);
+        }
+        return false;
+    }
+
+    // 3. UPDATE
+    public boolean updateCoupon(Coupon c) {
+        String sql = "UPDATE coupons SET code=?, type=?, discount_value=?, discount_percent=?, max_discount_value=?, min_order_amount=?, start_date=?, end_date=? WHERE id=?";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, c.getCode());
+            stmt.setInt(2, c.getType());
+
+            if (c.getType() == 0) {
+                stmt.setInt(3, c.getDiscountValue());
+                stmt.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+                stmt.setInt(4, c.getDiscountPercent());
+            }
+
+            if (c.getMaxDiscountValue() != null && c.getMaxDiscountValue() > 0) {
+                stmt.setInt(5, c.getMaxDiscountValue());
+            } else {
+                stmt.setNull(5, java.sql.Types.INTEGER);
+            }
+
+            stmt.setInt(6, c.getMinOrderAmount());
+            stmt.setTimestamp(7, Timestamp.valueOf(c.getStartDate()));
+            stmt.setTimestamp(8, Timestamp.valueOf(c.getEndDate()));
+            stmt.setInt(9, c.getId());
+
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            log.error("Lỗi khi cập nhật Coupon ID: " + c.getId(), e);
+        }
+        return false;
+    }
+
+    // 4. DELETE
+    public boolean deleteCoupon(int id) {
+        String sql = "DELETE FROM coupons WHERE id=?";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            log.error("Lỗi khi xóa Coupon ID: " + id, e);
+        }
+        return false;
+    }
 }
