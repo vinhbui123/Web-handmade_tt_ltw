@@ -78,7 +78,7 @@ public class GoogleCallbackServlet extends HttpServlet {
     }
 
     private void authenticateUserWithGoogle(String email, HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException, ServletException {
         UserDao userDao = new UserDao();
         User user = userDao.getUserByEmail(email);
 
@@ -104,6 +104,12 @@ public class GoogleCallbackServlet extends HttpServlet {
                 return;
             }
         } else {
+            if (user.getStatus() == 0) {
+                log.info("Đăng nhập Google thất bại: Tài khoản bị khóa ({})", email);
+                request.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
+            }
             log.info("{} Đăng nhập Google thành công", user.getFirstName() + " " + user.getLastName());
         }
 
