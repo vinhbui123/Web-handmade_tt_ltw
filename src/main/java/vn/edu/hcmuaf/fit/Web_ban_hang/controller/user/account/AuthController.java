@@ -81,6 +81,13 @@ public class AuthController extends HttpServlet {
         User user = userService.authenticateUser(usernameOrEmail, password);
 
         if (user != null) {
+            if (user.getStatus() == 0) {
+                request.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                request.setAttribute("username", usernameOrEmail);
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
+            }
+
             // Reset attempts on successful login
             session.removeAttribute("failedAttempts");
             session.removeAttribute("lockTime");

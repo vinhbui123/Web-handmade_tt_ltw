@@ -1,16 +1,26 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Color;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.BKTree;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.VietnameseTextUtils;
-
-import java.sql.*;
-import java.util.*;
 
 public class ProductDao {
     private static final Logger log = LoggerFactory.getLogger(ProductDao.class);
