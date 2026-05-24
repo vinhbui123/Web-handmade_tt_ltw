@@ -129,8 +129,23 @@ public class CheckoutController extends HttpServlet {
             // 7. Xóa coupon khỏi session sau khi đặt hàng thành công
             session.removeAttribute("appliedCoupon");
 
-            out.print("{\"success\": true}");
+            if (order.getPaymentTypeId() == 2) { // 2 = QR VNPAY
+                System.out.println("========== ĐÃ VÀO ĐƯỢC LUỒNG VNPAY ==========");
+                // Tính tổng tiền cần thanh toán
+                long totalAmount = order.getShippingFee();
+                for (OrderDetail detail : details) {
+                    totalAmount += (detail.getTotalMoney() - detail.getDiscountAmount());
+                }
 
+                // Gọi Config để sinh link VNPAY
+                String vnpayUrl = vn.edu.hcmuaf.fit.Web_ban_hang.utils.VnPayConfig.generatePaymentUrl(String.valueOf(order.getId()), totalAmount, request);
+
+                // Trả URL về cho Javascript chuyển hướng
+                out.print("{\"success\": true, \"redirectUrl\": \"" + vnpayUrl + "\"}");
+            } else {
+                // Thanh toán tiền mặt (COD) - Trả về thành công bình thường
+                out.print("{\"success\": true}");
+            }
         } catch (Exception e) {
             log.error("Checkout failed", e);
             java.util.Map<String, Object> errorMap = new java.util.HashMap<>();
