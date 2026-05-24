@@ -26,6 +26,7 @@ public class ListProductController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
+        String sortParam = request.getParameter("sort");
         // Get all categories for filter dropdown
         List<Category> categories = categoryService.getAll();
         request.setAttribute("categories", categories);
@@ -89,6 +90,26 @@ public class ListProductController extends HttpServlet {
             }
         }
 
+        if (sortParam != null && !sortParam.isEmpty() && !"default".equals(sortParam)) {
+            if ("priceAsc".equals(sortParam)) {
+                products = products.stream()
+                        .sorted((p1, p2) -> {
+                            int finalPrice1 = p1.getPrice() - (p1.getPrice() * p1.getDiscount() / 100);
+                            int finalPrice2 = p2.getPrice() - (p2.getPrice() * p2.getDiscount() / 100);
+                            return Integer.compare(finalPrice1, finalPrice2);
+                        })
+                        .collect(Collectors.toList());
+            } else if ("priceDesc".equals(sortParam)) {
+                products = products.stream()
+                        .sorted((p1, p2) -> {
+                            int finalPrice1 = p1.getPrice() - (p1.getPrice() * p1.getDiscount() / 100);
+                            int finalPrice2 = p2.getPrice() - (p2.getPrice() * p2.getDiscount() / 100);
+                            return Integer.compare(finalPrice2, finalPrice1);
+                        })
+                        .collect(Collectors.toList());
+            }
+        }
+        request.setAttribute("currentSort", sortParam);
         request.setAttribute("products", products);
         request.setAttribute("categoryName", categoryName);
         request.getRequestDispatcher("list-product.jsp").forward(request, response);
