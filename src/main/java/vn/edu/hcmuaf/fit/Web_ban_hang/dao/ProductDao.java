@@ -742,4 +742,110 @@ public class ProductDao {
         }
         return result;
     }
+    // Hàm lấy danh sách có Hỗ trợ Filter (Chất liệu, Danh mục) và Sort (Cột, ASC/DESC)
+    public List<Product> getAdminProductsFilterSort(Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
+                        "COALESCE(i.quantity, 0) AS stock " +
+                        "FROM products p " +
+                        "LEFT JOIN inventory i ON p.id = i.product_id "
+        );
+
+        // Nối bảng nếu có lọc theo chất liệu
+        if (materialId != null && materialId > 0) {
+            sql.append("INNER JOIN product_materials pm ON p.id = pm.product_id AND pm.material_id = ? ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        if (categoryId != null && categoryId > 0) {
+            sql.append("AND p.catalog_id = ? ");
+        }
+
+        // Chống SQL Injection bằng cách chuẩn hóa tên cột Sắp xếp
+        String validSortCol = "p.id"; // Mặc định
+        if ("id".equals(sortBy)) validSortCol = "p.id";
+        else if ("name".equals(sortBy)) validSortCol = "TRIM(p.name)"; // Dùng TRIM để bỏ khoảng trắng thừa ở đầu nếu có
+        else if ("price".equals(sortBy)) validSortCol = "p.price";
+        else if ("stock".equals(sortBy)) validSortCol = "stock"; // Alias của COALESCE
+
+        String validOrder = "DESC";
+        if ("ASC".equalsIgnoreCase(order)) validOrder = "ASC";
+
+        sql.append(" ORDER BY ").append(validSortCol).append(" ").append(validOrder);
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (materialId != null && materialId > 0) stmt.setInt(paramIndex++, materialId);
+            if (categoryId != null && categoryId > 0) stmt.setInt(paramIndex++, categoryId);
+            stmt.setInt(paramIndex++, size);
+            stmt.setInt(paramIndex++, offset);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getInt("price"));
+                p.setDiscount(rs.getInt("discount"));
+                p.setView(rs.getInt("view"));
+                p.setImg(rs.getString("img"));
+                p.setCatalog_id(rs.getInt("catalog_id"));
+                p.setStock(rs.getInt("stock"));
+                p.setWeight(rs.getInt("weight"));
+
+                // Gọi helper lấy chất liệu nhanh
+                p.setMaterials(getMaterialsByProductIdLocal(conn, p.getId()));
+                products.add(p);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi getAdminProductsFilterSort: " + e.getMessage());
+        }
+        return products;
+    }
+
+    // Hàm đếm tổng số lượng (để phân trang chính xác khi Filter)
+    public int getTotalCountFilterSort(Integer categoryId, Integer materialId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
+        if (materialId != null && materialId > 0) {
+            sql.append("INNER JOIN product_materials pm ON p.id = pm.product_id AND pm.material_id = ? ");
+        }
+        sql.append("WHERE 1=1 ");
+        if (categoryId != null && categoryId > 0) {
+            sql.append("AND p.catalog_id = ? ");
+        }
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+            if (materialId != null && materialId > 0) stmt.setInt(paramIndex++, materialId);
+            if (categoryId != null && categoryId > 0) stmt.setInt(paramIndex++, categoryId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+        }
+        return 0;
+    }
+
+    // Hàm helper lấy nhanh material mà không cần mở Connection mới (Tối ưu hiệu năng)
+    private List<Material> getMaterialsByProductIdLocal(Connection conn, int productId) throws SQLException {
+        List<Material> materials = new ArrayList<>();
+        String query = "SELECT m.id, m.name FROM product_materials pm JOIN materials m ON m.id = pm.material_id WHERE pm.product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, productId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Material m = new Material();
+                m.setId(rs.getInt("id"));
+                m.setName(rs.getString("name"));
+                materials.add(m);
+            }
+        }
+        return materials;
+    }
 }

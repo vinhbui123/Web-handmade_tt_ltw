@@ -47,6 +47,14 @@ public class Show extends HttpServlet {
         String categoryIdStr = request.getParameter("category");
         Integer categoryId = null;
         String categoryName = "Tất cả sản phẩm";
+        String sortBy = request.getParameter("sortBy");
+        String order = request.getParameter("order");
+        String materialIdStr = request.getParameter("material");
+        Integer materialId = null;
+        if (materialIdStr != null && !materialIdStr.isEmpty()) {
+            try { materialId = Integer.parseInt(materialIdStr); } catch (Exception e) {}
+        }
+
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
             // ---> LUỒNG 1: ADMIN ĐANG DÙNG THANH TÌM KIẾM
             String keyword = searchKeyword.trim();
@@ -67,10 +75,14 @@ public class Show extends HttpServlet {
                 }
             }
 
-            // LẤY DỮ LIỆU ĐÃ PHÂN TRANG
-            products = productDao.getProductsPaged(true, categoryId, offset, pageSize);
-            totalProducts = productDao.getTotalCount(true, categoryId);
+            products = productDao.getAdminProductsFilterSort(categoryId, materialId, sortBy, order, offset, pageSize);
+            totalProducts = productDao.getTotalCountFilterSort(categoryId, materialId);
+
+            // Set attributes để hiển thị lại UI
             request.setAttribute("selectedCategoryId", categoryId);
+            request.setAttribute("selectedMaterialId", materialId);
+            request.setAttribute("sortBy", sortBy);
+            request.setAttribute("order", order);
         }
         int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
