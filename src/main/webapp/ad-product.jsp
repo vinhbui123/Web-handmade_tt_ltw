@@ -18,7 +18,30 @@
         window.contextPath = "<%= request.getContextPath() %>";
     </script>
     <script src="${pageContext.request.contextPath}/js/product.js"></script>
-
+    <style>
+        th.sortable {
+            cursor: pointer;
+            transition: background 0.3s;
+            position: relative;
+        }
+        th.sortable:hover { background-color: #f1f1f1; }
+        th.active-sort {
+            color: #e74c3c;
+            font-weight: bold;
+            background-color: #fdf5f4;
+        }
+        th select {
+            margin-top: 5px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 100%;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+        .product-table th i { margin-left: 5px; }
+    </style>
 
 </head>
 <body>
@@ -51,38 +74,40 @@
             </c:otherwise>
         </c:choose>
 
-        <div class="category-container">
-            <h3>Danh mục:</h3>
-            <ul class="category-list">
-                <li><a href="${pageContext.request.contextPath}/adminProducts">Tất cả</a></li>
-                <c:forEach var="category" items="${category}">
-                    <li>
-                        <a href="${pageContext.request.contextPath}/adminProducts?category=${category.id}">
-                                ${category.name}
-                        </a>
-                    </li>
-                </c:forEach>
-            </ul>
-        </div>
-
-
         <table class="product-table">
             <thead>
             <tr>
                 <th>Ảnh</th>
                 <th>ID</th>
-                <th>Tên Sản Phẩm</th>
-                <th>Giá</th>
-                <th>Số Lượng</th>
-                <th>Danh Mục</th>
-                <th>Chất Liệu</th><!-- Thêm id để ẩn -->
+                <th class="sortable" data-col="name" onclick="sortData('name')">Tên Sản Phẩm <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="price" onclick="sortData('price')">Giá <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="stock" onclick="sortData('stock')">Số Lượng <i class="fas fa-sort"></i></th>
+
+                <th>
+                    Danh Mục <br>
+                    <select id="filterCategory" onchange="filterData()">
+                        <option value="">-- Tất cả --</option>
+                        <c:forEach var="cat" items="${category}">
+                            <option value="${cat.id}" ${cat.id == selectedCategoryId ? 'selected' : ''}>${cat.name}</option>
+                        </c:forEach>
+                    </select>
+                </th>
+
+                <th>
+                    Chất Liệu <br>
+                    <select id="filterMaterial" onchange="filterData()">
+                        <option value="">-- Tất cả --</option>
+                        <c:forEach var="mat" items="${materials}">
+                            <option value="${mat.id}" ${mat.id == selectedMaterialId ? 'selected' : ''}>${mat.name}</option>
+                        </c:forEach>
+                    </select>
+                </th>
+
                 <th>Hành Động</th>
             </tr>
             </thead>
-            <div class="product-box">
-                <tbody>
-                <c:forEach var="product" items="${products}">
-
+            <tbody>
+            <c:forEach var="product" items="${products}">
                 <tr>
                     <td><img src="${product.img}" alt="${product.name}"
                              style="width: 50px; height: 50px; object-fit: cover;"></td>
@@ -91,9 +116,9 @@
                     <td><f:formatNumber value="${product.price}" pattern="#,##0đ"/></td>
                     <td>${product.stock}</td>
                     <td>
-                        <c:forEach var="category" items="${category}">
-                            <c:if test="${category.id == product.catalog_id}">
-                                ${category.name}
+                        <c:forEach var="cat" items="${category}">
+                            <c:if test="${cat.id == product.catalog_id}">
+                                ${cat.name}
                             </c:if>
                         </c:forEach>
                     </td>
@@ -101,10 +126,8 @@
                         <c:forEach var="m" items="${product.materials}">
                             <li>${m.name}</li>
                         </c:forEach>
-
                     </td>
                     <td>
-                        <!-- Quyền Sửa -->
                         <c:choose>
                             <c:when test="${sessionScope.user.role == 1}">
                                 <i class="fa-solid fa-pen-to-square btn-edit"
@@ -116,7 +139,6 @@
                             </c:otherwise>
                         </c:choose>
 
-                        <!-- Quyền Xoá -->
                         <c:choose>
                             <c:when test="${sessionScope.user.role == 1}">
                                 <form action="${pageContext.request.contextPath}/adminRemove" method="post"
@@ -135,7 +157,6 @@
                         </c:choose>
                     </td>
                 </tr>
-            </div>
             </c:forEach>
             </tbody>
         </table>
@@ -304,5 +325,73 @@
         });
     });
 </script>
+<script>
+    let currentSortBy = '${not empty sortBy ? sortBy : "id"}';
+    let currentOrder = '${not empty order ? order : "DESC"}';
 
+    // Xử lý khi click vào Tiêu đề cột
+    function sortData(column) {
+        if (currentSortBy === column) {
+            currentOrder = (currentOrder === 'ASC') ? 'DESC' : 'ASC'; // Đảo chiều nếu click lại
+        } else {
+            currentSortBy = column;
+            currentOrder = 'ASC'; // Click cột mới mặc định xếp tăng dần
+        }
+        fetchFilteredData();
+    }
+
+    // Xử lý khi chọn Dropdown Lọc
+    function filterData() {
+        // Reset về trang 1 khi đổi bộ lọc để tránh lỗi (tùy chọn)
+        fetchFilteredData();
+    }
+
+    // AJAX - DOMParser (Tải ngầm không cần Load trang)
+    function fetchFilteredData() {
+        const categoryId = document.getElementById("filterCategory").value;
+        const materialId = document.getElementById("filterMaterial").value;
+
+        // Build URL parameters
+        const url = new URL(window.contextPath + '/adminProducts', window.location.origin);
+        if (categoryId) url.searchParams.set("category", categoryId);
+        if (materialId) url.searchParams.set("material", materialId);
+        url.searchParams.set("sortBy", currentSortBy);
+        url.searchParams.set("order", currentOrder);
+
+        // Fetch ngầm dữ liệu HTML
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+
+                // Gỡ nội dung <tbody> và Phân trang mới đắp vào giao diện cũ
+                document.querySelector(".product-table tbody").innerHTML = doc.querySelector(".product-table tbody").innerHTML;
+                document.querySelector(".server-pagination").innerHTML = doc.querySelector(".server-pagination").innerHTML;
+
+                // Update URL trên trình duyệt (để f5 không mất bộ lọc)
+                window.history.pushState({}, '', url);
+
+                // Cập nhật giao diện đậm/nhạt mũi tên
+                updateSortIcons();
+            })
+            .catch(err => console.error("Lỗi AJAX:", err));
+    }
+
+    // Làm nổi bật Cột đang được sắp xếp
+    function updateSortIcons() {
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('active-sort');
+            th.querySelector('i').className = 'fas fa-sort'; // Reset mũi tên
+
+            if (th.getAttribute('data-col') === currentSortBy) {
+                th.classList.add('active-sort');
+                th.querySelector('i').className = (currentOrder === 'ASC') ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            }
+        });
+    }
+
+    // Chạy update icon ngay khi load web lần đầu để hiển thị đúng mũi tên
+    document.addEventListener("DOMContentLoaded", updateSortIcons);
+</script>
 </html>
