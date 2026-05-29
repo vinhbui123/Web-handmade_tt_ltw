@@ -21,14 +21,17 @@
     <style>
         th.sortable {
             cursor: pointer;
-            transition: background 0.3s;
+            transition: color 0.3s;
             position: relative;
+            user-select: none;
+            white-space: nowrap;
         }
-        th.sortable:hover { background-color: #f1f1f1; }
+        th.sortable:hover {
+            color: #f39c12;
+        }
         th.active-sort {
             color: #e74c3c;
             font-weight: bold;
-            background-color: #fdf5f4;
         }
         th select {
             margin-top: 5px;
@@ -39,8 +42,37 @@
             font-size: 13px;
             cursor: pointer;
             outline: none;
+            color: #333;
         }
-        .product-table th i { margin-left: 5px; }
+        .product-table th i {
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .material-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .material-badge {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-weight: 550;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+            white-space: nowrap;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .material-badge:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+        }
     </style>
 
 </head>
@@ -78,7 +110,7 @@
             <thead>
             <tr>
                 <th>Ảnh</th>
-                <th>ID</th>
+                <th class="sortable" data-col="id" onclick="sortData('id')">ID <i class="fas fa-sort"></i></th>
                 <th class="sortable" data-col="name" onclick="sortData('name')">Tên Sản Phẩm <i class="fas fa-sort"></i></th>
                 <th class="sortable" data-col="price" onclick="sortData('price')">Giá <i class="fas fa-sort"></i></th>
                 <th class="sortable" data-col="stock" onclick="sortData('stock')">Số Lượng <i class="fas fa-sort"></i></th>
@@ -123,9 +155,11 @@
                         </c:forEach>
                     </td>
                     <td>
-                        <c:forEach var="m" items="${product.materials}">
-                            <li>${m.name}</li>
-                        </c:forEach>
+                        <div class="material-tags">
+                            <c:forEach var="m" items="${product.materials}">
+                                <span class="material-badge">${m.name}</span>
+                            </c:forEach>
+                        </div>
                     </td>
                     <td>
                         <c:choose>
@@ -161,21 +195,17 @@
             </tbody>
         </table>
         <div class="server-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0;">
-
             <c:if test="${currentPage > 1}">
-                <a href="?page=${currentPage - 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                   class="btn-page">&lt;</a>
+                <a href="javascript:void(0);" onclick="goToPage(${currentPage - 1})" class="btn-page">&lt;</a>
             </c:if>
 
             <c:forEach begin="1" end="${totalPages}" var="i">
                 <c:choose>
                     <c:when test="${i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1) || (currentPage == 1 && i <= 3) || (currentPage == totalPages && i >= totalPages - 2)}">
-                        <a href="?page=${i}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                           class="btn-page ${i == currentPage ? 'active' : ''}">
+                        <a href="javascript:void(0);" onclick="goToPage(${i})" class="btn-page ${i == currentPage ? 'active' : ''}">
                                 ${i}
                         </a>
                     </c:when>
-
                     <c:when test="${(i == 2 && currentPage > 3) || (i == totalPages - 1 && currentPage < totalPages - 2)}">
                         <span style="padding: 8px 4px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;">...</span>
                     </c:when>
@@ -183,10 +213,8 @@
             </c:forEach>
 
             <c:if test="${currentPage < totalPages}">
-                <a href="?page=${currentPage + 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                   class="btn-page">&gt;</a>
+                <a href="javascript:void(0);" onclick="goToPage(${currentPage + 1})" class="btn-page">&gt;</a>
             </c:if>
-
         </div>
     </section>
 
@@ -328,61 +356,65 @@
 <script>
     let currentSortBy = '${not empty sortBy ? sortBy : "id"}';
     let currentOrder = '${not empty order ? order : "DESC"}';
+    let currentPage = ${currentPage != null ? currentPage : 1}; // Khởi tạo trang hiện tại
 
-    // Xử lý khi click vào Tiêu đề cột
+    //  Khi click Sắp xếp
     function sortData(column) {
         if (currentSortBy === column) {
-            currentOrder = (currentOrder === 'ASC') ? 'DESC' : 'ASC'; // Đảo chiều nếu click lại
+            currentOrder = (currentOrder === 'ASC') ? 'DESC' : 'ASC';
         } else {
             currentSortBy = column;
-            currentOrder = 'ASC'; // Click cột mới mặc định xếp tăng dần
+            currentOrder = 'ASC';
         }
+        currentPage = 1; // Sắp xếp lại thì auto đưa về trang 1
         fetchFilteredData();
     }
 
-    // Xử lý khi chọn Dropdown Lọc
+    //  Khi chọn Lọc (Dropdown)
     function filterData() {
-        // Reset về trang 1 khi đổi bộ lọc để tránh lỗi (tùy chọn)
+        currentPage = 1; // Lọc lại cũng đưa về trang 1
         fetchFilteredData();
     }
 
-    // AJAX - DOMParser (Tải ngầm không cần Load trang)
+    //  Khi click Phân trang (Tránh load lại trang)
+    function goToPage(page) {
+        currentPage = page;
+        fetchFilteredData();
+    }
+
+    // Gọi AJAX lấy dữ liệu ngầm
     function fetchFilteredData() {
         const categoryId = document.getElementById("filterCategory").value;
         const materialId = document.getElementById("filterMaterial").value;
 
-        // Build URL parameters
         const url = new URL(window.contextPath + '/adminProducts', window.location.origin);
         if (categoryId) url.searchParams.set("category", categoryId);
         if (materialId) url.searchParams.set("material", materialId);
         url.searchParams.set("sortBy", currentSortBy);
         url.searchParams.set("order", currentOrder);
+        url.searchParams.set("page", currentPage); // Truyền thêm page vào URL
 
-        // Fetch ngầm dữ liệu HTML
         fetch(url)
             .then(response => response.text())
             .then(html => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, "text/html");
 
-                // Gỡ nội dung <tbody> và Phân trang mới đắp vào giao diện cũ
+                // Cập nhật lại Bảng và Thanh phân trang
                 document.querySelector(".product-table tbody").innerHTML = doc.querySelector(".product-table tbody").innerHTML;
                 document.querySelector(".server-pagination").innerHTML = doc.querySelector(".server-pagination").innerHTML;
 
-                // Update URL trên trình duyệt (để f5 không mất bộ lọc)
+                // Lưu lại URL lên trình duyệt cho đẹp và giữ history
                 window.history.pushState({}, '', url);
-
-                // Cập nhật giao diện đậm/nhạt mũi tên
                 updateSortIcons();
             })
             .catch(err => console.error("Lỗi AJAX:", err));
     }
 
-    // Làm nổi bật Cột đang được sắp xếp
     function updateSortIcons() {
         document.querySelectorAll('th.sortable').forEach(th => {
             th.classList.remove('active-sort');
-            th.querySelector('i').className = 'fas fa-sort'; // Reset mũi tên
+            th.querySelector('i').className = 'fas fa-sort';
 
             if (th.getAttribute('data-col') === currentSortBy) {
                 th.classList.add('active-sort');
@@ -391,7 +423,6 @@
         });
     }
 
-    // Chạy update icon ngay khi load web lần đầu để hiển thị đúng mũi tên
     document.addEventListener("DOMContentLoaded", updateSortIcons);
 </script>
 </html>
