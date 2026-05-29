@@ -61,7 +61,26 @@ public class VnPayReturnController extends HttpServlet {
                 // Chuyển hướng về trang lịch sử đơn hàng kèm thông báo
                 response.sendRedirect(request.getContextPath() + "/purchase?msg=payment_success");
             } else {
-                // KHÁCH HỦY GIAO DỊCH
+                // KHÁCH HỦY GIAO DỊCH HOẶC THANH TOÁN LỖI
+                String orderIdStr = request.getParameter("vnp_TxnRef");
+                try {
+                    int orderId = Integer.parseInt(orderIdStr);
+                    OrderDao orderDao = new OrderDao();
+
+                    // Lấy thông tin user từ Session để lấy ID truyền vào hàm hoàn kho
+                    vn.edu.hcmuaf.fit.Web_ban_hang.model.User user = (vn.edu.hcmuaf.fit.Web_ban_hang.model.User) request.getSession().getAttribute("user");
+
+                    if (user != null) {
+                        orderDao.cancelOrder(orderId, user.getId()); // Hủy đơn và hoàn kho
+                    } else {
+                        // Đề phòng trường hợp trình duyệt làm mất Session khi chuyển trang
+                        orderDao.cancelOrder(orderId, 0);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // Chuyển hướng về trang lịch sử đơn hàng kèm thông báo
                 response.sendRedirect(request.getContextPath() + "/purchase?msg=payment_failed");
             }
         } else {
