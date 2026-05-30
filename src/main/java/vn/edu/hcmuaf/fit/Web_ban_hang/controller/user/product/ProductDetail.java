@@ -5,16 +5,20 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
 
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet(name = "ProductDetail", value = "/product-detail")
 public class ProductDetail extends HttpServlet {
+    private final WishlistService wishlistService = new WishlistService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -43,6 +47,17 @@ public class ProductDetail extends HttpServlet {
                 request.setAttribute("commentCount", comments.size());
                 request.setAttribute("product", product);
                 request.setAttribute("products", products);
+
+                // Wishlist check
+                HttpSession session = request.getSession();
+                User user = (User) session.getAttribute("user");
+                if (user != null) {
+                    boolean isInWishlist = wishlistService.exists(user.getId(), id);
+                    request.setAttribute("isInWishlist", isInWishlist);
+                } else {
+                    request.setAttribute("isInWishlist", false);
+                }
+
                 request.getRequestDispatcher("product-detail.jsp").forward(request, response);
             } else {
                 response.sendRedirect("layoutProduct.jsp");
@@ -51,4 +66,4 @@ public class ProductDetail extends HttpServlet {
             response.sendRedirect("layoutProduct.jsp");
         }
     }
-}
+}

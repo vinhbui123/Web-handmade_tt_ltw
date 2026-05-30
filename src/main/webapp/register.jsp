@@ -69,8 +69,9 @@
 
                                     <div class="form-wrapper">
                                         <label for="email">Email</label>
-                                        <input type="email" id="email" name="email" class="form-control"
+                                        <input type="text" id="email" name="email" class="form-control"
                                             value="<%=email%>" required>
+                                        <span id="email-error" class="field-error"></span>
                                     </div>
 
                                     <div class="form-wrapper">
@@ -102,11 +103,55 @@
                                     <div class="btn-register">
                                         <button type="submit">Đăng Kí Ngay</button>
                                     </div>
+
+                                    <div class="register-login-link">
+                                        <a href="${pageContext.request.contextPath}/login.jsp">Đã có tài khoản? Đăng nhập ngay</a>
+                                    </div>
                             </form>
                         </div>
                     </div>
 
                     <%@include file="footer.jsp" %>
+
+            <script>
+                (function () {
+                    var emailInput = document.getElementById('email');
+                    var emailError = document.getElementById('email-error');
+                    var registerForm = emailInput.closest('form');
+                    var emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+                    function validateEmail() {
+                        var value = emailInput.value.trim();
+                        if (value.length === 0) {
+                            emailError.textContent = '';
+                            emailInput.classList.remove('input-error');
+                            emailInput.classList.remove('input-valid');
+                            return false;
+                        }
+                        if (!emailRegex.test(value)) {
+                            emailError.textContent = 'Email không đúng định dạng';
+                            emailInput.classList.add('input-error');
+                            emailInput.classList.remove('input-valid');
+                            return false;
+                        } else {
+                            emailError.textContent = '';
+                            emailInput.classList.remove('input-error');
+                            emailInput.classList.add('input-valid');
+                            return true;
+                        }
+                    }
+
+                    emailInput.addEventListener('input', validateEmail);
+                    emailInput.addEventListener('keyup', validateEmail);
+
+                    registerForm.addEventListener('submit', function (e) {
+                        if (!validateEmail()) {
+                            e.preventDefault();
+                            emailInput.focus();
+                        }
+                    });
+                })();
+            </script>
             </body>
 
             </html>
