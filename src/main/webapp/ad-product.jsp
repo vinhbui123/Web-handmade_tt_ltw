@@ -18,7 +18,62 @@
         window.contextPath = "<%= request.getContextPath() %>";
     </script>
     <script src="${pageContext.request.contextPath}/js/product.js"></script>
+    <style>
+        th.sortable {
+            cursor: pointer;
+            transition: color 0.3s;
+            position: relative;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th.sortable:hover {
+            color: #f39c12;
+        }
+        th.active-sort {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        th select {
+            margin-top: 5px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 100%;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+            color: #333;
+        }
+        .product-table th i {
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .material-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
 
+        .material-badge {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-weight: 550;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+            white-space: nowrap;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .material-badge:hover {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+        }
+    </style>
 
 </head>
 <body>
@@ -36,53 +91,71 @@
         <c:remove var="messageType" scope="session"/>
     </c:if>
 
-    <section class="product-management">
+    <div class="top-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; margin-bottom: 25px; margin-top: 10px;">
+
+        <div class="search-box" style="display: flex; gap: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
+            <div style="background: #fff; padding: 10px 15px; display: flex; align-items: center; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px;">
+                <i class="fas fa-search" style="color: #888;"></i>
+            </div>
+            <input type="text" id="searchInput" placeholder="Nhập ID hoặc Tên sản phẩm..."
+                   value="${searchKeyword}"
+                   onkeypress="if(event.keyCode == 13) executeSearch()"
+                   style="padding: 10px 15px 10px 5px; width: 350px; border: 1px solid #ddd; border-left: none; outline: none; font-size: 14px;">
+            <button onclick="executeSearch()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s;">
+                Tìm kiếm
+            </button>
+        </div>
+
         <c:choose>
             <c:when test="${sessionScope.user.role == 1}">
-                <button class="btn-add" onclick="openModal('add')">
+                <button class="btn-add" onclick="openModal('add')" style="margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm
                 </button>
             </c:when>
             <c:otherwise>
-                <button class="btn-add disabled" style=" opacity: 0.5; cursor: not-allowed; pointer-events: auto;"
+                <button class="btn-add disabled" style="margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 8px; opacity: 0.5; cursor: not-allowed;"
                         onclick="alert('Bạn không có quyền thêm sản phẩm!')">
                     <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm
                 </button>
             </c:otherwise>
         </c:choose>
+    </div>
 
-        <div class="category-container">
-            <h3>Danh mục:</h3>
-            <ul class="category-list">
-                <li><a href="${pageContext.request.contextPath}/adminProducts">Tất cả</a></li>
-                <c:forEach var="category" items="${category}">
-                    <li>
-                        <a href="${pageContext.request.contextPath}/adminProducts?category=${category.id}">
-                                ${category.name}
-                        </a>
-                    </li>
-                </c:forEach>
-            </ul>
-        </div>
-
-
+    <section class="product-management">
         <table class="product-table">
             <thead>
             <tr>
                 <th>Ảnh</th>
-                <th>ID</th>
-                <th>Tên Sản Phẩm</th>
-                <th>Giá</th>
-                <th>Số Lượng</th>
-                <th>Danh Mục</th>
-                <th>Chất Liệu</th><!-- Thêm id để ẩn -->
+                <th class="sortable" data-col="id" onclick="sortData('id')">ID <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="name" onclick="sortData('name')">Tên Sản Phẩm <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="price" onclick="sortData('price')">Giá <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="stock" onclick="sortData('stock')">Số Lượng <i class="fas fa-sort"></i></th>
+
+                <th>
+                    Danh Mục <br>
+                    <select id="filterCategory" onchange="filterData()">
+                        <option value="">-- Tất cả --</option>
+                        <c:forEach var="cat" items="${category}">
+                            <option value="${cat.id}" ${cat.id == selectedCategoryId ? 'selected' : ''}>${cat.name}</option>
+                        </c:forEach>
+                    </select>
+                </th>
+
+                <th>
+                    Chất Liệu <br>
+                    <select id="filterMaterial" onchange="filterData()">
+                        <option value="">-- Tất cả --</option>
+                        <c:forEach var="mat" items="${materials}">
+                            <option value="${mat.id}" ${mat.id == selectedMaterialId ? 'selected' : ''}>${mat.name}</option>
+                        </c:forEach>
+                    </select>
+                </th>
+
                 <th>Hành Động</th>
             </tr>
             </thead>
-            <div class="product-box">
-                <tbody>
-                <c:forEach var="product" items="${products}">
-
+            <tbody>
+            <c:forEach var="product" items="${products}">
                 <tr>
                     <td><img src="${product.img}" alt="${product.name}"
                              style="width: 50px; height: 50px; object-fit: cover;"></td>
@@ -91,20 +164,20 @@
                     <td><f:formatNumber value="${product.price}" pattern="#,##0đ"/></td>
                     <td>${product.stock}</td>
                     <td>
-                        <c:forEach var="category" items="${category}">
-                            <c:if test="${category.id == product.catalog_id}">
-                                ${category.name}
+                        <c:forEach var="cat" items="${category}">
+                            <c:if test="${cat.id == product.catalog_id}">
+                                ${cat.name}
                             </c:if>
                         </c:forEach>
                     </td>
                     <td>
-                        <c:forEach var="m" items="${product.materials}">
-                            <li>${m.name}</li>
-                        </c:forEach>
-
+                        <div class="material-tags">
+                            <c:forEach var="m" items="${product.materials}">
+                                <span class="material-badge">${m.name}</span>
+                            </c:forEach>
+                        </div>
                     </td>
                     <td>
-                        <!-- Quyền Sửa -->
                         <c:choose>
                             <c:when test="${sessionScope.user.role == 1}">
                                 <i class="fa-solid fa-pen-to-square btn-edit"
@@ -116,7 +189,6 @@
                             </c:otherwise>
                         </c:choose>
 
-                        <!-- Quyền Xoá -->
                         <c:choose>
                             <c:when test="${sessionScope.user.role == 1}">
                                 <form action="${pageContext.request.contextPath}/adminRemove" method="post"
@@ -135,26 +207,21 @@
                         </c:choose>
                     </td>
                 </tr>
-            </div>
             </c:forEach>
             </tbody>
         </table>
         <div class="server-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0;">
-
             <c:if test="${currentPage > 1}">
-                <a href="?page=${currentPage - 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                   class="btn-page">&lt;</a>
+                <a href="javascript:void(0);" onclick="goToPage(${currentPage - 1})" class="btn-page">&lt;</a>
             </c:if>
 
             <c:forEach begin="1" end="${totalPages}" var="i">
                 <c:choose>
                     <c:when test="${i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1) || (currentPage == 1 && i <= 3) || (currentPage == totalPages && i >= totalPages - 2)}">
-                        <a href="?page=${i}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                           class="btn-page ${i == currentPage ? 'active' : ''}">
+                        <a href="javascript:void(0);" onclick="goToPage(${i})" class="btn-page ${i == currentPage ? 'active' : ''}">
                                 ${i}
                         </a>
                     </c:when>
-
                     <c:when test="${(i == 2 && currentPage > 3) || (i == totalPages - 1 && currentPage < totalPages - 2)}">
                         <span style="padding: 8px 4px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;">...</span>
                     </c:when>
@@ -162,10 +229,8 @@
             </c:forEach>
 
             <c:if test="${currentPage < totalPages}">
-                <a href="?page=${currentPage + 1}${not empty selectedCategoryId ? '&category=' += selectedCategoryId : ''}"
-                   class="btn-page">&gt;</a>
+                <a href="javascript:void(0);" onclick="goToPage(${currentPage + 1})" class="btn-page">&gt;</a>
             </c:if>
-
         </div>
     </section>
 
@@ -304,5 +369,83 @@
         });
     });
 </script>
+<script>
+    let currentSortBy = '${not empty sortBy ? sortBy : "id"}';
+    let currentOrder = '${not empty order ? order : "DESC"}';
+    let currentPage = ${currentPage != null ? currentPage : 1}; // Khởi tạo trang hiện tại
+    //Hàm tìm kiếm
+    function executeSearch() {
+        currentPage = 1; // Reset về trang 1 khi tìm kiếm
+        fetchFilteredData();
+    }
+    //  Khi click Sắp xếp
+    function sortData(column) {
+        if (currentSortBy === column) {
+            currentOrder = (currentOrder === 'ASC') ? 'DESC' : 'ASC';
+        } else {
+            currentSortBy = column;
+            currentOrder = 'ASC';
+        }
+        currentPage = 1; // Sắp xếp lại thì auto đưa về trang 1
+        fetchFilteredData();
+    }
 
+    //  Khi chọn Lọc (Dropdown)
+    function filterData() {
+        currentPage = 1; // Lọc lại cũng đưa về trang 1
+        fetchFilteredData();
+    }
+
+    //  Khi click Phân trang (Tránh load lại trang)
+    function goToPage(page) {
+        currentPage = page;
+        fetchFilteredData();
+    }
+
+    // Gọi AJAX lấy dữ liệu ngầm
+    function fetchFilteredData() {
+        const categoryId = document.getElementById("filterCategory").value;
+        const materialId = document.getElementById("filterMaterial").value;
+        const searchKeyword = document.getElementById("searchInput").value.trim();
+
+        const url = new URL(window.contextPath + '/adminProducts', window.location.origin);
+        if (categoryId) url.searchParams.set("category", categoryId);
+        if (materialId) url.searchParams.set("material", materialId);
+        if (searchKeyword) url.searchParams.set("search", searchKeyword); // Truyền từ khóa tìm kiếm về Servlet
+
+        url.searchParams.set("sortBy", currentSortBy);
+        url.searchParams.set("order", currentOrder);
+        url.searchParams.set("page", currentPage); // Truyền thêm page vào URL
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+
+                // Cập nhật lại Bảng và Thanh phân trang
+                document.querySelector(".product-table tbody").innerHTML = doc.querySelector(".product-table tbody").innerHTML;
+                document.querySelector(".server-pagination").innerHTML = doc.querySelector(".server-pagination").innerHTML;
+
+                // Lưu lại URL lên trình duyệt cho đẹp và giữ history
+                window.history.pushState({}, '', url);
+                updateSortIcons();
+            })
+            .catch(err => console.error("Lỗi AJAX:", err));
+    }
+
+    function updateSortIcons() {
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('active-sort');
+            th.querySelector('i').className = 'fas fa-sort';
+
+            if (th.getAttribute('data-col') === currentSortBy) {
+                th.classList.add('active-sort');
+                th.querySelector('i').className = (currentOrder === 'ASC') ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", updateSortIcons);
+</script>
 </html>
