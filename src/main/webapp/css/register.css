@@ -98,3 +98,22 @@ label {
     font-weight: lighter;
     padding: 10px;
 }
+
+.register-login-link {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.register-login-link a {
+    color: #555;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.register-login-link a:hover {
+    color: #050403;
+    text-decoration: underline;
+}

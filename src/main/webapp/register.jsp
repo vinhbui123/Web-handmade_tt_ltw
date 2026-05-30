@@ -102,6 +102,10 @@
                                     <div class="btn-register">
                                         <button type="submit">Đăng Kí Ngay</button>
                                     </div>
+
+                                    <div class="register-login-link">
+                                        <a href="${pageContext.request.contextPath}/login.jsp">Đã có tài khoản? Đăng nhập ngay</a>
+                                    </div>
                             </form>
                         </div>
                     </div>
