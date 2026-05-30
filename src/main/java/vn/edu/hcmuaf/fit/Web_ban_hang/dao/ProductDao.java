@@ -742,8 +742,29 @@ public class ProductDao {
         }
         return result;
     }
-    // Hàm lấy danh sách có Hỗ trợ Filter (Chất liệu, Danh mục) và Sort (Cột, ASC/DESC)
-    public List<Product> getAdminProductsFilterSort(Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
+    // Hàm Vừa Tìm kiếm, Vừa Lọc, Vừa Sắp xếp
+    public List<Product> getAdminProductsUnified(String keyword, Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
+        List<Integer> matchedIds = null;
+
+        // Nếu có từ khóa, dùng thuật toán tìm kiếm mờ (Fuzzy) để quét danh sách ID
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            List<Product> fuzzyMatches = searchProducts(keyword.trim());
+            matchedIds = new ArrayList<>();
+            for (Product p : fuzzyMatches) {
+                matchedIds.add(p.getId());
+            }
+
+            // Nếu nhập ID bằng số (tìm theo ID)
+            if (keyword.trim().matches("\\d+")) {
+                int searchId = Integer.parseInt(keyword.trim());
+                if (!matchedIds.contains(searchId)) matchedIds.add(searchId);
+            }
+
+            // Nếu tìm không ra ID nào -> Trả về rỗng luôn (tránh chạy query thừa)
+            if (matchedIds.isEmpty()) return new ArrayList<>();
+        }
+
+        // Xây dựng câu SQL kết hợp Lọc (Category, Material) và Sắp xếp
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
@@ -752,7 +773,6 @@ public class ProductDao {
                         "LEFT JOIN inventory i ON p.id = i.product_id "
         );
 
-        // Nối bảng nếu có lọc theo chất liệu
         if (materialId != null && materialId > 0) {
             sql.append("INNER JOIN product_materials pm ON p.id = pm.product_id AND pm.material_id = ? ");
         }
@@ -763,12 +783,22 @@ public class ProductDao {
             sql.append("AND p.catalog_id = ? ");
         }
 
-        // Chống SQL Injection bằng cách chuẩn hóa tên cột Sắp xếp
-        String validSortCol = "p.id"; // Mặc định
+        // Ép các sản phẩm phải nằm trong danh sách ID vừa tìm được
+        if (matchedIds != null && !matchedIds.isEmpty()) {
+            sql.append("AND p.id IN (");
+            for (int i = 0; i < matchedIds.size(); i++) {
+                sql.append("?");
+                if (i < matchedIds.size() - 1) sql.append(",");
+            }
+            sql.append(") ");
+        }
+
+        // Xử lý Sắp xếp chống SQL Injection
+        String validSortCol = "p.id";
         if ("id".equals(sortBy)) validSortCol = "p.id";
-        else if ("name".equals(sortBy)) validSortCol = "TRIM(p.name)"; // Dùng TRIM để bỏ khoảng trắng thừa ở đầu nếu có
+        else if ("name".equals(sortBy)) validSortCol = "TRIM(p.name)";
         else if ("price".equals(sortBy)) validSortCol = "p.price";
-        else if ("stock".equals(sortBy)) validSortCol = "stock"; // Alias của COALESCE
+        else if ("stock".equals(sortBy)) validSortCol = "stock";
 
         String validOrder = "DESC";
         if ("ASC".equalsIgnoreCase(order)) validOrder = "ASC";
@@ -782,6 +812,13 @@ public class ProductDao {
             int paramIndex = 1;
             if (materialId != null && materialId > 0) stmt.setInt(paramIndex++, materialId);
             if (categoryId != null && categoryId > 0) stmt.setInt(paramIndex++, categoryId);
+
+            if (matchedIds != null && !matchedIds.isEmpty()) {
+                for (Integer id : matchedIds) {
+                    stmt.setInt(paramIndex++, id);
+                }
+            }
+
             stmt.setInt(paramIndex++, size);
             stmt.setInt(paramIndex++, offset);
 
@@ -797,19 +834,31 @@ public class ProductDao {
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
                 p.setWeight(rs.getInt("weight"));
-
-                // Gọi helper lấy chất liệu nhanh
                 p.setMaterials(getMaterialsByProductIdLocal(conn, p.getId()));
                 products.add(p);
             }
         } catch (SQLException e) {
-            log.error("Lỗi getAdminProductsFilterSort: " + e.getMessage());
+            log.error("Lỗi getAdminProductsUnified: " + e.getMessage());
         }
         return products;
     }
 
-    // Hàm đếm tổng số lượng (để phân trang chính xác khi Filter)
-    public int getTotalCountFilterSort(Integer categoryId, Integer materialId) {
+    //  Hàm đếm tổng số lượng  (Để phân trang chạy chính xác)
+    public int getTotalCountUnified(String keyword, Integer categoryId, Integer materialId) {
+        List<Integer> matchedIds = null;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            List<Product> fuzzyMatches = searchProducts(keyword.trim());
+            matchedIds = new ArrayList<>();
+            for (Product p : fuzzyMatches) {
+                matchedIds.add(p.getId());
+            }
+            if (keyword.trim().matches("\\d+")) {
+                int searchId = Integer.parseInt(keyword.trim());
+                if (!matchedIds.contains(searchId)) matchedIds.add(searchId);
+            }
+            if (matchedIds.isEmpty()) return 0;
+        }
+
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM products p ");
         if (materialId != null && materialId > 0) {
             sql.append("INNER JOIN product_materials pm ON p.id = pm.product_id AND pm.material_id = ? ");
@@ -819,11 +868,25 @@ public class ProductDao {
             sql.append("AND p.catalog_id = ? ");
         }
 
+        if (matchedIds != null && !matchedIds.isEmpty()) {
+            sql.append("AND p.id IN (");
+            for (int i = 0; i < matchedIds.size(); i++) {
+                sql.append("?");
+                if (i < matchedIds.size() - 1) sql.append(",");
+            }
+            sql.append(") ");
+        }
+
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             int paramIndex = 1;
             if (materialId != null && materialId > 0) stmt.setInt(paramIndex++, materialId);
             if (categoryId != null && categoryId > 0) stmt.setInt(paramIndex++, categoryId);
+            if (matchedIds != null && !matchedIds.isEmpty()) {
+                for (Integer id : matchedIds) {
+                    stmt.setInt(paramIndex++, id);
+                }
+            }
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {
@@ -831,8 +894,6 @@ public class ProductDao {
         }
         return 0;
     }
-
-    // Hàm helper lấy nhanh material mà không cần mở Connection mới (Tối ưu hiệu năng)
     private List<Material> getMaterialsByProductIdLocal(Connection conn, int productId) throws SQLException {
         List<Material> materials = new ArrayList<>();
         String query = "SELECT m.id, m.name FROM product_materials pm JOIN materials m ON m.id = pm.material_id WHERE pm.product_id = ?";
