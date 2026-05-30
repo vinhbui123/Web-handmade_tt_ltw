@@ -65,6 +65,11 @@ public class FacebookCallbackServlet extends HttpServlet {
             User user = getUser(email, facebookId, name);
 
             if (user != null) {
+                if (user.getStatus() == 0) {
+                    request.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+                    request.getRequestDispatcher("login.jsp").forward(request, response);
+                    return;
+                }
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
 
