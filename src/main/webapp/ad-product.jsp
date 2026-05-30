@@ -248,8 +248,6 @@
                 <label for="addPrice">Giá:</label>
                 <input type="number" id="addPrice" name="price" placeholder="Nhập giá sản phẩm" required>
 
-                <label for="addQuantity">Số Lượng:</label>
-                <input type="number" id="addQuantity" name="quantity" placeholder="Nhập số lượng sản phẩm" required>
                 <label>Chất liệu:</label>
                 <div class="material-checkbox-group">
                     <c:forEach var="m" items="${materials}">

@@ -14,10 +14,9 @@ public class AdminDao {
 
     private static final Logger log = LoggerFactory.getLogger(AdminDao.class);
 
-    public static void addProduct(Product product, int quantityIn, String[] materialIds) {
+    // [CẬP NHẬT]: Bỏ tham số quantity, chỉ lưu thông tin hồ sơ sản phẩm và chất liệu
+    public static void addProduct(Product product, String[] materialIds) {
         String queryInsertProduct = "INSERT INTO products (name, price, discount, view, img, catalog_id, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String queryInsertTransaction = "INSERT INTO inventory_transactions (product_id, type, quantity) VALUES (?, 'import', ?)";
-        String queryInsertInventory = "INSERT INTO inventory (product_id, quantity_in) VALUES (?, ?) ON DUPLICATE KEY UPDATE quantity_in = quantity_in + VALUES(quantity_in)";
         String queryInsertProductMaterial = "INSERT INTO product_materials (product_id, material_id) VALUES (?, ?)";
 
         try (Connection connection = DBConnect.getConnection()) {
@@ -39,21 +38,7 @@ public class AdminDao {
                         if (rs.next()) {
                             int productId = rs.getInt(1);
 
-                            // Thêm vào inventory_transactions
-                            try (PreparedStatement stmtTransaction = connection.prepareStatement(queryInsertTransaction)) {
-                                stmtTransaction.setInt(1, productId);
-                                stmtTransaction.setInt(2, quantityIn);
-                                stmtTransaction.executeUpdate();
-                            }
-
-                            // Thêm vào inventory
-                            try (PreparedStatement stmtInventory = connection.prepareStatement(queryInsertInventory)) {
-                                stmtInventory.setInt(1, productId);
-                                stmtInventory.setInt(2, quantityIn);
-                                stmtInventory.executeUpdate();
-                            }
-
-                            // Thêm material cho sản phẩm
+                            // Thêm material (chất liệu) cho sản phẩm
                             if (materialIds != null) {
                                 try (PreparedStatement stmtMaterial = connection.prepareStatement(queryInsertProductMaterial)) {
                                     for (String mid : materialIds) {
@@ -254,6 +239,5 @@ public class AdminDao {
         }
         return stats;
     }
-
 
 }

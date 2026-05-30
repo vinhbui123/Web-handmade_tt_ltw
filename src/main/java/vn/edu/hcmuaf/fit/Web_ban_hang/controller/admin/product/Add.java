@@ -29,7 +29,6 @@ public class Add extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String name = request.getParameter("name");
         String priceParam = request.getParameter("price");
-        String quantityParam = request.getParameter("quantity");
         String description = request.getParameter("description");
         String catalogIdParam = request.getParameter("category");
         Part filePart = request.getPart("image"); // Lấy ảnh từ form
@@ -37,7 +36,6 @@ public class Add extends HttpServlet {
 
         try {
             int price = Integer.parseInt(priceParam);
-            int quantity = Integer.parseInt(quantityParam);
             int catalogId = Integer.parseInt(catalogIdParam);
 
             // Lấy tên file
@@ -61,7 +59,6 @@ public class Add extends HttpServlet {
             Product product = new Product();
             product.setName(name);
             product.setPrice(price);
-            product.setQuantity(quantity);
             product.setDescription(description);
             product.setCatalog_id(catalogId);
             product.setImg(imgPath);
@@ -71,7 +68,6 @@ public class Add extends HttpServlet {
 
             String[] materialIds = request.getParameterValues("materialIds");
             System.out.println("Tên sản phẩm: " + name);
-            System.out.println("Số lượng: " + quantity);
             System.out.println("Chất liệu chọn: ");
             if (materialIds != null) {
                 for (String id : materialIds) {
@@ -81,7 +77,7 @@ public class Add extends HttpServlet {
                 System.out.println(">> KHÔNG CHỌN");
             }
 
-            AdminDao.addProduct(product, quantity, materialIds);
+            AdminDao.addProduct(product, materialIds);
             System.out.println("Material IDs:");
             if (materialIds != null) {
                 for (String id : materialIds) {
@@ -96,7 +92,7 @@ public class Add extends HttpServlet {
             // Đặt thông báo vào session để giữ khi redirect
             request.getSession().setAttribute("message", "✔️ Thêm sản phẩm thành công!");
             request.getSession().setAttribute("messageType", "success");
-            response.sendRedirect(request.getContextPath() + "/adminProduct");
+            response.sendRedirect(request.getContextPath() + "/adminProducts");
 
         } catch (NumberFormatException e) {
             response.getWriter().println("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.");
