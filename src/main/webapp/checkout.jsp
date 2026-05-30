@@ -114,9 +114,8 @@
                             <section class="payment-methods">
                                 <h2>Phương thức thanh toán</h2>
                                 <div class="payment-tabs" style="padding-top: 15px;">
-                                    <button class="tab active" onclick="showPayment('cod')">Thanh toán khi nhận
-                                        hàng</button>
-                                    <button class="tab" onclick="showPayment('qr')">QR chuyển khoản</button>
+                                    <button class="tab active" onclick="showPayment('cod')">Thanh toán khi nhận hàng</button>
+                                    <button class="tab" onclick="showPayment('qr')">Thanh toán VNPAY</button>
                                 </div>
 
                                 <div class="payment-content" id="cod">
@@ -127,11 +126,11 @@
                                 </div>
 
                                 <div class="payment-content hidden" id="qr">
-                                    <p>Bạn đã chọn phương thức <strong>QR chuyển khoản</strong>.</p>
-                                    <div class="qr-container">
-                                        <img src="${pageContext.request.contextPath}/images/qrcode.png" alt="QR Code"
-                                            class="qr-code">
-                                        <p>Quét mã QR để thanh toán.</p>
+                                    <p>Bạn đã chọn phương thức <strong>Thanh toán qua cổng VNPAY</strong>.</p>
+                                    <div class="qr-container" style="text-align: center; padding: 25px; background-color: #f8fbff; border-radius: 8px; border: 1px dashed #005baa; margin-top: 10px;">
+                                        <i class="fas fa-qrcode" style="font-size: 45px; color: #005baa; margin-bottom: 15px;"></i>
+                                        <h4 style="color: #005baa; margin-bottom: 5px;">Thanh toán An toàn & Tự động</h4>
+                                        <p style="color: #555; font-size: 0.95em; margin: 0;">Sau khi bấm <strong>"Đặt hàng"</strong>, hệ thống sẽ chuyển hướng bạn đến cổng thanh toán VNPAY để giao dịch.</p>
                                     </div>
                                 </div>
 
@@ -200,7 +199,7 @@
                                 const contextPath = "${pageContext.request.contextPath}";
                                 const userId = "${sessionScope.user.id}";
                             </script>
-                            <script src="${pageContext.request.contextPath}/js/checkout.js"></script>
+                    <script src="${pageContext.request.contextPath}/js/checkout.js?t=<%=System.currentTimeMillis()%>"></script>
                 </body>
 
                 </html>

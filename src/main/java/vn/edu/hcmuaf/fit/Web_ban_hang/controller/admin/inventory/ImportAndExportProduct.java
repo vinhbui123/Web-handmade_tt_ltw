@@ -58,34 +58,38 @@ public class ImportAndExportProduct extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            //Xác định trang hiện tại và kích thước trang
+            // 1. Nhận toàn bộ tham số từ AJAX
+            String searchKeyword = req.getParameter("search");
+            String sortBy = req.getParameter("sortBy");
+            String order = req.getParameter("order");
+
+            String categoryIdParam = req.getParameter("category");
+            Integer categoryId = (categoryIdParam != null && !categoryIdParam.isEmpty())
+                    ? Integer.parseInt(categoryIdParam) : null;
+
             int page = 1;
-            int pageSize = 10; // Mỗi trang hiện 10 món
+            int pageSize = 10;
             String pageParam = req.getParameter("page");
             if (pageParam != null && !pageParam.isEmpty()) {
                 page = Integer.parseInt(pageParam);
             }
             int offset = (page - 1) * pageSize;
 
-            // Lấy bộ lọc Category
-            String categoryIdParam = req.getParameter("category");
-            Integer categoryId = (categoryIdParam != null && !categoryIdParam.isEmpty())
-                    ? Integer.parseInt(categoryIdParam) : null;
-
-            // GỌI DAO ĐỂ LẤY DỮ LIỆU PHÂN TRANG (Thay vì getAll)
-            List<Product> products = productDao.getProductsPaged(true, categoryId, offset, pageSize);
-
-            //  TÍNH TỔNG SỐ TRANG
-            int totalProducts = productDao.getTotalCount(true, categoryId);
+            // 2. GỌI HÀM HỢP NHẤT (Sử dụng chung ProductDao)
+            // Lưu ý: Trang Nhập xuất không lọc theo Chất liệu nên ta truyền 'null' vào vị trí materialId
+            List<Product> products = productDao.getAdminProductsUnified(searchKeyword, categoryId, null, sortBy, order, offset, pageSize);
+            int totalProducts = productDao.getTotalCountUnified(searchKeyword, categoryId, null);
             int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
-            // Đẩy các biến này sang JSP để JSTL xử lý
+            // 3. Đẩy biến sang JSP
             req.setAttribute("products", products);
-            req.setAttribute("totalPages", totalPages);
+            req.setAttribute("searchKeyword", searchKeyword != null ? searchKeyword.trim() : "");
+            req.setAttribute("selectedCategoryId", categoryId); // Đổi tên biến cho khớp với JSP
+            req.setAttribute("sortBy", sortBy);
+            req.setAttribute("order", order);
             req.setAttribute("currentPage", page);
-            req.setAttribute("selectedCategory", categoryId);
+            req.setAttribute("totalPages", totalPages);
 
-            // Các phần CategoryService và Message giữ nguyên...
             List<Category> categories = new CategoryService().getAll();
             req.setAttribute("category", categories);
 

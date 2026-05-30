@@ -71,8 +71,12 @@ function placeOrder() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Đặt hàng thành công!");
-                window.location.href = `${contextPath}/purchase`;
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    alert("Đặt hàng thành công!");
+                    window.location.href = `${contextPath}/purchase`;
+                }
             } else {
                 alert("Đặt hàng thất bại, vui lòng thử lại!" + data.message);
             }

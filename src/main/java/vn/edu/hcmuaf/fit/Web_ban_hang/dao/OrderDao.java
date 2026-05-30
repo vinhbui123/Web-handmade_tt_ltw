@@ -57,6 +57,7 @@ public class OrderDao {
                 int orderId = -1;
                 if (generatedKeys.next()) {
                     orderId = generatedKeys.getInt(1);
+                    order.setId(orderId); // Đưa ID ngược lại object
                 } else {
                     throw new SQLException("Không lấy được order_id!");
                 }
