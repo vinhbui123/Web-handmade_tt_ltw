@@ -5,19 +5,25 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "ListProductController", value = "/list-product")
 public class ListProductController extends HttpServlet {
     private final ProductService productService = new ProductService();
     private final CategoryService categoryService = new CategoryService();
+    private final WishlistService wishlistService = new WishlistService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -112,6 +118,18 @@ public class ListProductController extends HttpServlet {
         request.setAttribute("currentSort", sortParam);
         request.setAttribute("products", products);
         request.setAttribute("categoryName", categoryName);
+
+        // Inject wishlist data
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            Set<Integer> wishlistIds = wishlistService.getProductIdsByUserId(user.getId());
+            request.setAttribute("wishlistIds", wishlistIds);
+            session.setAttribute("wishlistCount", wishlistIds.size());
+        } else {
+            request.setAttribute("wishlistIds", new HashSet<>());
+        }
+
         request.getRequestDispatcher("list-product.jsp").forward(request, response);
     }
 
