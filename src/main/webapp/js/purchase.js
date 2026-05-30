@@ -5,9 +5,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const buttonVisibility = {
         '0': ['cancel', 'connect'],
         '1': ['cancel', 'connect'],
-        '2': ['connect'],
-        '3': ['connect', 'ratting', 'reorder'],
+        '2': ['cancel','connect'],
+        '3': ['connect', 'ratting', 'reorder', 'return-order-btn'],
         '4': ['reorder', 'connect'],
+        '5': ['reorder', 'connect'],
+        '6': ['reorder', 'connect'],
+        '7': ['ratting', 'reorder', 'connect']
     };
 
     function updateVisibility(selectedStatus) {
