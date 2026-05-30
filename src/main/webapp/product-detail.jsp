@@ -121,6 +121,12 @@
                                         <i class="fa-solid fa-cart-plus"></i>Thêm Vào Giỏ Hàng
                                     </button>
                                     <button class="buy-btn">Mua Ngay</button>
+                                    <button type="button"
+                                            class="btn-wishlist-detail ${isInWishlist ? 'wishlisted' : ''}"
+                                            onclick="toggleWishlist(${product.id}, this, event)">
+                                        <i class="${isInWishlist ? 'fas' : 'far'} fa-heart"></i>
+                                        <span>${isInWishlist ? 'Yêu Thích' : 'Yêu Thích'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -246,6 +252,7 @@
                         </div>
                         <%@include file="footer.jsp" %>
                             <script src="${pageContext.request.contextPath}/js/product_detail.js"></script>
+                            <script src="${pageContext.request.contextPath}/js/wishlist.js"></script>
                 </body>
 
                 </html>

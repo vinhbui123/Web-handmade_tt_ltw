@@ -12,6 +12,7 @@
     <title>Header</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/header.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/wishlist.css">
     <script>
         window.contextPath = "${pageContext.request.contextPath}";
     </script>
@@ -92,6 +93,16 @@
                     </c:if>
                     <span class="cart-text"> Giỏ Hàng</span>
                 </div>
+
+                <c:if test="${not empty sessionScope.user}">
+                    <div class="header-wishlist" onclick="window.location.href='${pageContext.request.contextPath}/wishlist'">
+                        <i class="fas fa-heart"></i>
+                        <c:if test="${sessionScope.wishlistCount != null && sessionScope.wishlistCount > 0}">
+                            <span class="wishlist-count">${sessionScope.wishlistCount}</span>
+                        </c:if>
+                        <span class="cart-text">Yêu Thích</span>
+                    </div>
+                </c:if>
 
                 <c:if test="${not empty sessionScope.user}">
                     <div class="header-purchase" onclick="window.location.href='purchase'">

@@ -93,6 +93,10 @@
                                 <c:forEach var="p" items="${products}">
                                     <div class="product-box">
                                         <div class="product-id hidden">${p.id}</div>
+                                        <button type="button" class="wishlist-btn ${wishlistIds.contains(p.id) ? 'wishlisted' : ''}"
+                                                onclick="toggleWishlist(${p.id}, this, event)">
+                                            <i class="${wishlistIds.contains(p.id) ? 'fas' : 'far'} fa-heart"></i>
+                                        </button>
                                         <a href="product-detail?id=${p.id}">
                                             <c:if test="${p.discount !=0}">
                                                 <div class="discount">-${p.discount}%</div>
@@ -139,6 +143,7 @@
 
                     <%@include file="footer.jsp" %>
 
+                    <script src="${pageContext.request.contextPath}/js/wishlist.js"></script>
             </body>
 
             </html>
