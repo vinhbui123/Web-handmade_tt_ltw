@@ -29,8 +29,22 @@ public class Show extends HttpServlet {
 
         // Khai báo ProductDao để gọi 2 hàm phân trang thần thánh
         ProductDao productDao = new ProductDao();
-
+        // 1. NHẬN TOÀN BỘ THAM SỐ TỪ AJAX/REQUEST GỬI LÊN
         String searchKeyword = request.getParameter("search");
+        String sortBy = request.getParameter("sortBy");
+        String order = request.getParameter("order");
+
+        String categoryIdStr = request.getParameter("category");
+        Integer categoryId = null;
+        if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
+            try { categoryId = Integer.parseInt(categoryIdStr); } catch (Exception e) {}
+        }
+
+        String materialIdStr = request.getParameter("material");
+        Integer materialId = null;
+        if (materialIdStr != null && !materialIdStr.isEmpty()) {
+            try { materialId = Integer.parseInt(materialIdStr); } catch (Exception e) {}
+        }
 
         //  Tính toán phân trang
         int page = 1;
@@ -40,55 +54,26 @@ public class Show extends HttpServlet {
             page = Integer.parseInt(pageParam);
         }
         int offset = (page - 1) * pageSize;
-        List<Product> products;
-        int totalProducts = 0;
-
-        // Lấy bộ lọc Danh mục
-        String categoryIdStr = request.getParameter("category");
-        Integer categoryId = null;
-        String categoryName = "Tất cả sản phẩm";
-        String sortBy = request.getParameter("sortBy");
-        String order = request.getParameter("order");
-        String materialIdStr = request.getParameter("material");
-        Integer materialId = null;
-        if (materialIdStr != null && !materialIdStr.isEmpty()) {
-            try { materialId = Integer.parseInt(materialIdStr); } catch (Exception e) {}
-        }
-
-        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            // ---> LUỒNG 1: ADMIN ĐANG DÙNG THANH TÌM KIẾM
-            String keyword = searchKeyword.trim();
-            products = productDao.searchProductsAdminFuzzyPaged(keyword, offset, pageSize);
-            totalProducts = productDao.countSearchProductsAdminFuzzy(keyword);
-
-            // Đẩy từ khóa ngược lại JSP để hiển thị lên ô input
-            request.setAttribute("searchKeyword", keyword);
-            categoryName = "Kết quả tìm kiếm: '" + keyword + "'";
-
-        } else {
-            if (categoryIdStr != null && !categoryIdStr.isEmpty()) {
-                try {
-                    categoryId = Integer.parseInt(categoryIdStr);
-                    categoryName = categoryService.getCategoryNameById(categoryId);
-                } catch (NumberFormatException e) {
-                    categoryId = null;
-                }
-            }
-
-            products = productDao.getAdminProductsFilterSort(categoryId, materialId, sortBy, order, offset, pageSize);
-            totalProducts = productDao.getTotalCountFilterSort(categoryId, materialId);
-
-            // Set attributes để hiển thị lại UI
-            request.setAttribute("selectedCategoryId", categoryId);
-            request.setAttribute("selectedMaterialId", materialId);
-            request.setAttribute("sortBy", sortBy);
-            request.setAttribute("order", order);
-        }
+        List<Product> products = productDao.getAdminProductsUnified(searchKeyword, categoryId, materialId, sortBy, order, offset, pageSize);
+        int totalProducts = productDao.getTotalCountUnified(searchKeyword, categoryId, materialId);
         int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
 
+        // Lấy bộ lọc Danh mục
+
+        String categoryName = "Tất cả sản phẩm";
+        if (categoryId != null) {
+            categoryName = categoryService.getCategoryNameById(categoryId);
+        } else if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            categoryName = "Kết quả tìm kiếm: '" + searchKeyword.trim() + "'";
+        }
+
         request.setAttribute("products", products);
+        request.setAttribute("searchKeyword", searchKeyword != null ? searchKeyword.trim() : "");
         request.setAttribute("selectedCategory", categoryName);
         request.setAttribute("selectedCategoryId", categoryId);
+        request.setAttribute("selectedMaterialId", materialId);
+        request.setAttribute("sortBy", sortBy);
+        request.setAttribute("order", order);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
 

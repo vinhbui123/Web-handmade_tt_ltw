@@ -91,21 +91,37 @@
         <c:remove var="messageType" scope="session"/>
     </c:if>
 
-    <section class="product-management">
+    <div class="top-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 20px; margin-bottom: 25px; margin-top: 10px;">
+
+        <div class="search-box" style="display: flex; gap: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
+            <div style="background: #fff; padding: 10px 15px; display: flex; align-items: center; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px;">
+                <i class="fas fa-search" style="color: #888;"></i>
+            </div>
+            <input type="text" id="searchInput" placeholder="Nhập ID hoặc Tên sản phẩm..."
+                   value="${searchKeyword}"
+                   onkeypress="if(event.keyCode == 13) executeSearch()"
+                   style="padding: 10px 15px 10px 5px; width: 350px; border: 1px solid #ddd; border-left: none; outline: none; font-size: 14px;">
+            <button onclick="executeSearch()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s;">
+                Tìm kiếm
+            </button>
+        </div>
+
         <c:choose>
             <c:when test="${sessionScope.user.role == 1}">
-                <button class="btn-add" onclick="openModal('add')">
+                <button class="btn-add" onclick="openModal('add')" style="margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm
                 </button>
             </c:when>
             <c:otherwise>
-                <button class="btn-add disabled" style=" opacity: 0.5; cursor: not-allowed; pointer-events: auto;"
+                <button class="btn-add disabled" style="margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 8px; opacity: 0.5; cursor: not-allowed;"
                         onclick="alert('Bạn không có quyền thêm sản phẩm!')">
                     <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm
                 </button>
             </c:otherwise>
         </c:choose>
+    </div>
 
+    <section class="product-management">
         <table class="product-table">
             <thead>
             <tr>
@@ -357,7 +373,11 @@
     let currentSortBy = '${not empty sortBy ? sortBy : "id"}';
     let currentOrder = '${not empty order ? order : "DESC"}';
     let currentPage = ${currentPage != null ? currentPage : 1}; // Khởi tạo trang hiện tại
-
+    //Hàm tìm kiếm
+    function executeSearch() {
+        currentPage = 1; // Reset về trang 1 khi tìm kiếm
+        fetchFilteredData();
+    }
     //  Khi click Sắp xếp
     function sortData(column) {
         if (currentSortBy === column) {
@@ -386,10 +406,13 @@
     function fetchFilteredData() {
         const categoryId = document.getElementById("filterCategory").value;
         const materialId = document.getElementById("filterMaterial").value;
+        const searchKeyword = document.getElementById("searchInput").value.trim();
 
         const url = new URL(window.contextPath + '/adminProducts', window.location.origin);
         if (categoryId) url.searchParams.set("category", categoryId);
         if (materialId) url.searchParams.set("material", materialId);
+        if (searchKeyword) url.searchParams.set("search", searchKeyword); // Truyền từ khóa tìm kiếm về Servlet
+
         url.searchParams.set("sortBy", currentSortBy);
         url.searchParams.set("order", currentOrder);
         url.searchParams.set("page", currentPage); // Truyền thêm page vào URL
