@@ -217,4 +217,152 @@ public class OrderDao {
             return false;
         }
     }
+    // Hàm tạo yêu cầu hoàn trả đơn hàng
+    public boolean createReturnRequest(int orderId, String reason, String description, String proofImg) {
+        String insertReturn = "INSERT INTO return_requests (order_id, reason, description, proof_img, status) VALUES (?, ?, ?, ?, 0)";
+        // Chuyển trạng thái đơn hàng sang 5 (Đang yêu cầu hoàn trả)
+        String updateOrderStatus = "UPDATE orders SET status = 5 WHERE id = ?";
+
+        try (Connection conn = DBConnect.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu Transaction để đảm bảo tính toàn vẹn dữ liệu
+
+            // Lưu yêu cầu vào bảng return_requests
+            try (PreparedStatement stmt1 = conn.prepareStatement(insertReturn)) {
+                stmt1.setInt(1, orderId);
+                stmt1.setString(2, reason);
+                stmt1.setString(3, description);
+                stmt1.setString(4, proofImg);
+                stmt1.executeUpdate();
+            }
+
+            // Cập nhật trạng thái đơn hàng trong bảng orders
+            try (PreparedStatement stmt2 = conn.prepareStatement(updateOrderStatus)) {
+                stmt2.setInt(1, orderId);
+                stmt2.executeUpdate();
+            }
+
+            conn.commit(); // Thành công cả 2 thao tác thì mới lưu vào DB
+            return true;
+        } catch (SQLException e) {
+            log.error("Lỗi khi tạo yêu cầu hoàn trả cho đơn hàng " + orderId + ": " + e.getMessage());
+        }
+        return false;
+    }
+    public Map<String, String> getReturnDetails(int orderId) {
+        Map<String, String> details = new HashMap<>();
+        String sql = "SELECT reason, description, proof_img FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    details.put("reason", rs.getString("reason"));
+                    details.put("description", rs.getString("description"));
+                    details.put("proofImg", rs.getString("proof_img"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error(e.getMessage());
+        }
+        return details;
+    }
+
+    // Xử lý quyết định của Admin: Chấp nhận hoặc Từ chối hoàn trả
+    public boolean processReturnRequest(int orderId, String action) {
+        int newOrderStatus = "accept".equals(action) ? 6 : 7;
+        int returnRequestStatus = "accept".equals(action) ? 1 : 2;
+
+        String updateOrder = "UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?";
+        String updateReturn = "UPDATE return_requests SET status = ? WHERE order_id = ? AND status = 0";
+
+        // Lấy chi tiết sản phẩm cần hoàn
+        String selectDetails = "SELECT od.product_id, od.quantity, o.user_id FROM order_details od JOIN orders o ON od.order_id = o.id WHERE od.order_id = ?";
+
+        // Lấy lý do hoàn trả để phân loại
+        String selectReason = "SELECT reason FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
+
+        try (Connection conn = DBConnect.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Cập nhật trạng thái đơn
+            try (PreparedStatement psOrder = conn.prepareStatement(updateOrder)) {
+                psOrder.setInt(1, newOrderStatus);
+                psOrder.setInt(2, orderId);
+                psOrder.executeUpdate();
+            }
+
+            // Cập nhật trạng thái yêu cầu hoàn trả
+            try (PreparedStatement psReturn = conn.prepareStatement(updateReturn)) {
+                psReturn.setInt(1, returnRequestStatus);
+                psReturn.setInt(2, orderId);
+                psReturn.executeUpdate();
+            }
+
+            // HOÀN KHO (Chỉ chạy khi Chấp nhận)
+            if ("accept".equals(action)) {
+
+                // Lấy lý do hoàn trả
+                String reason = "";
+                try (PreparedStatement psReason = conn.prepareStatement(selectReason)) {
+                    psReason.setInt(1, orderId);
+                    try (ResultSet rsReason = psReason.executeQuery()) {
+                        if (rsReason.next()) {
+                            reason = rsReason.getString("reason");
+                        }
+                    }
+                }
+
+                // Kiểm tra xem hàng có bị hỏng không
+                boolean isDamaged = "Sản phẩm bị lỗi, hỏng hóc do vận chuyển".equals(reason);
+
+                // SQL cộng kho tương ứng
+                String updateInventory = isDamaged ?
+                        "UPDATE inventory SET quantity_damaged = quantity_damaged + ? WHERE product_id = ?" :
+                        "UPDATE inventory SET quantity_returned = quantity_returned + ? WHERE product_id = ?";
+
+                // Chọn loại giao dịch ghi vào lịch sử
+                String transType = isDamaged ? "damaged" : "return";
+                String insertTrans = "INSERT INTO inventory_transactions (product_id, user_id, quantity, type, created_at) VALUES (?, ?, ?, ?, NOW())";
+
+                //Tiến hành cập nhật
+                try (PreparedStatement psSelect = conn.prepareStatement(selectDetails)) {
+                    psSelect.setInt(1, orderId);
+                    try (ResultSet rs = psSelect.executeQuery()) {
+                        try (PreparedStatement psInv = conn.prepareStatement(updateInventory);
+                             PreparedStatement psTrans = conn.prepareStatement(insertTrans)) {
+
+                            while (rs.next()) {
+                                int productId = rs.getInt("product_id");
+                                int qty = rs.getInt("quantity");
+                                int userId = rs.getInt("user_id");
+
+                                // Cập nhật kho (Hư hỏng hoặc Trả lại)
+                                psInv.setInt(1, qty);
+                                psInv.setInt(2, productId);
+                                psInv.addBatch();
+
+                                // Ghi log giao dịch với type tương ứng
+                                psTrans.setInt(1, productId);
+                                psTrans.setInt(2, userId);
+                                psTrans.setInt(3, qty);
+                                psTrans.setString(4, transType); // Ghi 'damaged' hoặc 'return'
+                                psTrans.addBatch();
+                            }
+
+                            psInv.executeBatch();
+                            psTrans.executeBatch();
+                        }
+                    }
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("LỖI SQL KHI HOÀN TRẢ ĐƠN HÀNG #" + orderId + ":");
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
