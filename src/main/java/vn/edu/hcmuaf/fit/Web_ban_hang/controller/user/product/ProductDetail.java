@@ -26,7 +26,13 @@ public class ProductDetail extends HttpServlet {
 
         String pid = request.getParameter("id");
         if (pid != null) {
-            int id = Integer.parseInt(pid);
+            int id;
+            try {
+                id = Integer.parseInt(pid);
+            } catch (NumberFormatException e) {
+                response.sendRedirect("layoutProduct.jsp");
+                return;
+            }
             ProductService productService = new ProductService();
             productService.increaseView(id);
             Product product = productService.getById(id);
