@@ -8,31 +8,23 @@ import java.sql.*;
 
 public class DBConnect {
     private static final Logger log = LoggerFactory.getLogger(DBConnect.class);
-    static Connection conn;
     static String url = "jdbc:mysql://" + DBProperties.host() + ":" + DBProperties.port() + "/" + DBProperties.dbname() + "?" + DBProperties.option();
 
+    // Mỗi lần gọi sẽ trả về connection MỚI an toàn hơn
     public static Connection getConnection() throws SQLException {
-        if (conn == null || conn.isClosed()) {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                conn = DriverManager.getConnection(url, DBProperties.username(), DBProperties.password());
-            } catch (ClassNotFoundException | SQLException e) {
-                // Log the error before re-throwing the SQLException
-                log.error("Failed to establish database connection.", e);
-                throw new SQLException("Connection failed: " + e.getMessage());
-            }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            return DriverManager.getConnection(url, DBProperties.username(), DBProperties.password());
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("Failed to establish database connection.", e);
+            throw new SQLException("Connection failed: " + e.getMessage());
         }
-        return conn;
     }
     public static Statement getStatement() {
         try {
-            if (conn == null || conn.isClosed()) {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                conn = DriverManager.getConnection(url, DBProperties.username(), DBProperties.password());
-            }
+            Connection conn = getConnection();
             return conn.createStatement();
-        } catch (SQLException | ClassNotFoundException e) {
-            // Log the error instead of returning null silently
+        } catch (SQLException e) {
             log.error("Failed to get database statement.", e);
             return null;
         }

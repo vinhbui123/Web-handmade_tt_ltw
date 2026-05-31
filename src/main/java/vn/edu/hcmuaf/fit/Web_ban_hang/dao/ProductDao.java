@@ -232,7 +232,11 @@ public class ProductDao {
             stmt.setInt(1, productId);
             stmt.executeUpdate();
             Product p = getById(productId);
-            System.out.println("view tăng:" + p.getView());
+            if (p != null) {
+                System.out.println("view tăng:" + p.getView());
+            } else {
+                log.warn("increaseView: product not found with id={}", productId);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
