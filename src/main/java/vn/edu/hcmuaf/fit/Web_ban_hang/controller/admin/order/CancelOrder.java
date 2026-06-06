@@ -17,23 +17,33 @@ public class CancelOrder extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String orderIdRaw = request.getParameter("orderId");
+        boolean isAjax = "true".equals(request.getParameter("ajax"));
+        boolean success = false;
 
         try {
             int orderId = Integer.parseInt(orderIdRaw);
-            // ✅ Lấy user từ session
+            // Lấy user từ session
             HttpSession session = request.getSession(false);
             User currentUser = (User) session.getAttribute("user");
 
             if (currentUser != null) {
-                boolean success = orderDao.cancelOrder(orderId, currentUser.getId());
+                success = orderDao.cancelOrder(orderId, currentUser.getId());
                 if (success) {
-                    System.out.println("✅ Admin đã hủy đơn hàng #" + orderId);
+                    System.out.println("Admin đã hủy đơn hàng #" + orderId);
                 } else {
-                    System.out.println("❌ Hủy đơn hàng thất bại");
+                    System.out.println("Hủy đơn hàng thất bại");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        // Xử lý trả về cho AJAX
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().print("{\"success\": " + success + "}");
+            return;
         }
 
         response.sendRedirect(request.getContextPath() + "/adminOrders");

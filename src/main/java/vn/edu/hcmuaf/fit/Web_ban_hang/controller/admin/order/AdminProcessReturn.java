@@ -17,10 +17,12 @@ public class AdminProcessReturn extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String orderIdRaw = request.getParameter("orderId");
         String action = request.getParameter("action"); // Sẽ nhận giá trị "accept" hoặc "reject"
+        boolean isAjax = "true".equals(request.getParameter("ajax"));
+        boolean success = false;
 
         try {
             int orderId = Integer.parseInt(orderIdRaw);
-            boolean success = orderDao.processReturnRequest(orderId, action);
+            success = orderDao.processReturnRequest(orderId, action);
 
             if (success) {
                 if ("accept".equals(action)) {
@@ -33,7 +35,15 @@ public class AdminProcessReturn extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Xử lý xong thì quay lại trang Quản lý Đơn hàng
+        // Xử lý trả về cho AJAX
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().print("{\"success\": " + success + "}");
+            return;
+        }
+
+        // Xử lý xong thì quay lại trang Quản lý Đơn hàng (dành cho non-ajax)
         response.sendRedirect(request.getContextPath() + "/adminOrders");
     }
 }

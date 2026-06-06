@@ -12,11 +12,24 @@ import java.io.IOException;
 public class ConfirmOrder extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int orderId = Integer.parseInt(request.getParameter("orderId"));
+        boolean isAjax = "true".equals(request.getParameter("ajax"));
+
         OrderDao dao = new OrderDao();
         boolean success = dao.confirmOrder(orderId);
+
         if (success) {
             System.out.println("Admin đã xác nhận đơn hàng #" + orderId);
         }
+
+        // Xử lý trả về cho AJAX
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().print("{\"success\": " + success + "}");
+            return;
+        }
+
+        // Fallback nếu người dùng tắt JS hoặc lỗi (sẽ reload trang)
         response.sendRedirect(request.getContextPath() + "/adminOrders");
     }
 }
