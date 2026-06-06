@@ -51,16 +51,8 @@ public class CheckoutController extends HttpServlet {
                     orderDTO.getPaymentTypeId());
             List<OrderDetail> details = orderService.toDetailOrder(orderDTO.getDetails());
 
-            // 2. Kiểm tra tồn kho
+            // 2. Chuẩn bị InventoryDao
             InventoryDao inventoryDao = new InventoryDao();
-            for (OrderDetail detail : details) {
-                int stock = inventoryDao.getStock(detail.getProductId());
-                if (stock < detail.getQuantity()) {
-                    out.print("{\"success\": false, \"message\": \"Không đủ hàng trong kho cho SP ID: "
-                            + detail.getProductId() + "\"}");
-                    return;
-                }
-            }
 
             // 3. Kiểm tra địa chỉ giao hàng
             HttpSession session = request.getSession(false);
@@ -77,7 +69,6 @@ public class CheckoutController extends HttpServlet {
             // Áp dụng coupon discount lên chi tiết đơn hàng
             Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
             if (appliedCoupon != null) {
-                // Tính tổng tiền đơn hàng
                 double orderTotal = 0;
                 for (OrderDetail detail : details) {
                     orderTotal += detail.getTotalMoney();
@@ -85,13 +76,11 @@ public class CheckoutController extends HttpServlet {
 
                 int discountAmount = ApplyCouponController.getDiscountAmount(appliedCoupon, orderTotal);
 
-                // Phân bổ discount cho từng detail theo tỷ lệ
                 int remainingDiscount = discountAmount;
                 for (int i = 0; i < details.size(); i++) {
                     OrderDetail detail = details.get(i);
 
                     if (i == details.size() - 1) {
-                        // Dòng cuối nhận phần còn lại để tránh sai lệch do làm tròn
                         detail.setDiscountAmount(remainingDiscount);
                     } else {
                         int detailDiscount = (int) ((double) detail.getTotalMoney() / orderTotal * discountAmount);
@@ -101,21 +90,19 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
-            // 5. Lưu đơn hàng
-            orderService.addOrder(order, details);
-
-            // 6. Trừ kho
+            // 4. Trừ kho TRƯỚC khi lưu đơn (dùng SELECT ... FOR UPDATE chống race condition)
             for (OrderDetail detail : details) {
-                System.out.println("Exporting productId=" + detail.getProductId() + ", quantity="
-                        + detail.getQuantity() + ", userId=" + orderDTO.getUserId());
-
                 boolean success = inventoryDao.exportProduct(detail.getProductId(), detail.getQuantity(),
                         orderDTO.getUserId(), "export");
                 if (!success) {
-                    out.print("{\"success\": false, \"message\": \"Trừ kho thất bại sau khi đã lưu đơn.\"}");
+                    out.print("{\"success\": false, \"message\": \"Không đủ hàng trong kho cho SP ID: "
+                            + detail.getProductId() + "\"}");
                     return;
                 }
             }
+
+            // 5. Lưu đơn hàng (chỉ sau khi trừ kho thành công)
+            orderService.addOrder(order, details);
             // Chỉ xóa sản phẩm khỏi giỏ hàng thật khi không phải Mua Ngay
             if (!orderDTO.isBuyNow()) {
                 CartService cart = (CartService) session.getAttribute("cart");

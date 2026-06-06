@@ -119,14 +119,16 @@ public class InventoryDao {
     public boolean exportProduct(int productId, int quantity, int userId, String type) {
         Connection conn = null;
         try {
-            int stock = getStock(productId);
-            if (stock < quantity) {
-                System.out.println("Không đủ hàng! (Tồn: " + stock + ", Yêu cầu: " + quantity + ")");
-                return false;
-            }
-
             conn = DBConnect.getConnection();
             conn.setAutoCommit(false);
+
+            // SELECT ... FOR UPDATE khóa dòng inventory → thread khác phải đợi
+            int stock = getStockForUpdate(conn, productId);
+            if (stock < quantity) {
+                System.out.println("Không đủ hàng! (Tồn: " + stock + ", Yêu cầu: " + quantity + ")");
+                conn.rollback();
+                return false;
+            }
 
             boolean updateOk = updateInventory(conn, productId, 0, quantity);
             if (!updateOk) {
@@ -145,6 +147,24 @@ public class InventoryDao {
             if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
         }
         return false;
+    }
+
+    /**
+     * Lấy tồn kho với SELECT ... FOR UPDATE (khóa dòng trong transaction).
+     * Thread khác phải đợi cho đến khi transaction này COMMIT hoặc ROLLBACK.
+     */
+    public int getStockForUpdate(Connection conn, int productId) throws SQLException {
+        String sql = "SELECT quantity FROM inventory WHERE product_id = ? FOR UPDATE";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity");
+                } else {
+                    throw new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + productId);
+                }
+            }
+        }
     }
 
     public List<Map<String, Object>> getTransactionHistory() {
