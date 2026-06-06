@@ -365,4 +365,88 @@ public class OrderDao {
             return false;
         }
     }
+    // 1. Đếm tổng số lượng đơn hàng
+    public int getTotalOrdersCount() {
+        String sql = "SELECT COUNT(id) FROM orders";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi đếm đơn hàng: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    // 2. Lấy danh sách chi tiết đơn hàng THEO TRANG (Xử lý thông minh tránh cắt ngang đơn)
+    public List<Map<String, Object>> getOrdersByPageForAdmin(int offset, int limit) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        List<Integer> orderIds = new ArrayList<>();
+
+        // Bước A: Lấy danh sách ID đơn hàng cho trang hiện tại
+        String sqlIds = "SELECT id FROM orders ORDER BY id DESC LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlIds)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    orderIds.add(rs.getInt("id"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi lấy ID đơn hàng: " + e.getMessage());
+        }
+
+        if (orderIds.isEmpty()) return result;
+
+        // Bước B: Lấy chi tiết các sản phẩm thuộc các ID vừa tìm được
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < orderIds.size(); i++) {
+            placeholders.append("?");
+            if (i < orderIds.size() - 1) placeholders.append(",");
+        }
+
+        String query = "SELECT o.id AS order_id, u.username, p.id AS product_id, p.name AS product_name, " +
+                "od.quantity, od.total_money, od.discount_amount, o.shipping_fee, " +
+                "o.status, o.create_at, o.updated_at, pt.payment_name AS payment_method, pt.payment_code AS payment_code " +
+                "FROM orders o " +
+                "JOIN users u ON o.user_id = u.id " +
+                "JOIN order_details od ON o.id = od.order_id " +
+                "JOIN products p ON od.product_id = p.id " +
+                "JOIN payment_types pt ON o.payment_type_id = pt.id " +
+                "WHERE o.id IN (" + placeholders.toString() + ") " +
+                "ORDER BY o.id DESC";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            for (int i = 0; i < orderIds.size(); i++) {
+                ps.setInt(i + 1, orderIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("order_id", rs.getInt("order_id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("product_id", rs.getInt("product_id"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("quantity", rs.getInt("quantity"));
+                    row.put("total_money", rs.getInt("total_money"));
+                    row.put("discount_amount", rs.getInt("discount_amount"));
+                    row.put("shipping_fee", rs.getInt("shipping_fee"));
+                    row.put("status", rs.getByte("status"));
+                    row.put("create_at", rs.getTimestamp("create_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    row.put("payment_method", rs.getString("payment_method"));
+                    row.put("payment_code", rs.getString("payment_code"));
+                    result.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi lấy chi tiết đơn hàng: " + e.getMessage());
+        }
+        return result;
+    }
 }
