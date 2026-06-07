@@ -30,11 +30,19 @@ public class OrderManagement extends HttpServlet {
                 page = Integer.parseInt(request.getParameter("page"));
             }
 
-            int totalOrders = orderDao.getTotalOrdersCount();
+            // Nhận tham số tìm kiếm và lọc
+            String searchKeyword = request.getParameter("search");
+            String statusStr = request.getParameter("status");
+            Integer statusFilter = null;
+            if (statusStr != null && !statusStr.isEmpty() && !"-1".equals(statusStr)) {
+                try { statusFilter = Integer.parseInt(statusStr); } catch (Exception ignored) {}
+            }
+
+            int totalOrders = orderDao.getTotalOrdersCountUnified(searchKeyword, statusFilter);
             int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
             int offset = (page - 1) * pageSize;
 
-            List<Map<String, Object>> orders = orderDao.getOrdersByPageForAdmin(offset, pageSize);
+            List<Map<String, Object>> orders = orderDao.getOrdersUnified(searchKeyword, statusFilter, offset, pageSize);
 
             Map<String, Object> responseMap = new HashMap<>();
             responseMap.put("orderDetails", orders);

@@ -449,4 +449,127 @@ public class OrderDao {
         }
         return result;
     }
+    // Đếm tổng số lượng đơn hàng (lọc và tìm kiếm)
+    public int getTotalOrdersCountUnified(String keyword, Integer statusFilter) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(o.id) FROM orders o JOIN users u ON o.user_id = u.id WHERE 1=1 ");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (u.username LIKE ? OR o.id = ?) ");
+        }
+        if (statusFilter != null && statusFilter >= 0) {
+            sql.append(" AND o.status = ? ");
+        }
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+                int searchId = -1;
+                try { searchId = Integer.parseInt(keyword.trim()); } catch (Exception e) {}
+                ps.setInt(paramIndex++, searchId);
+            }
+            if (statusFilter != null && statusFilter >= 0) {
+                ps.setInt(paramIndex++, statusFilter);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi đếm đơn hàng Unified: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    // Lấy danh sách chi tiết đơn hàng THEO TRANG + TÌM KIẾM + LỌC TRẠNG THÁI
+    public List<Map<String, Object>> getOrdersUnified(String keyword, Integer statusFilter, int offset, int limit) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        List<Integer> orderIds = new ArrayList<>();
+
+        // Tìm các ID đơn hàng khớp với điều kiện tìm kiếm/lọc
+        StringBuilder sqlIds = new StringBuilder("SELECT o.id FROM orders o JOIN users u ON o.user_id = u.id WHERE 1=1 ");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sqlIds.append(" AND (u.username LIKE ? OR o.id = ?) ");
+        }
+        if (statusFilter != null && statusFilter >= 0) {
+            sqlIds.append(" AND o.status = ? ");
+        }
+        sqlIds.append(" ORDER BY o.id DESC LIMIT ? OFFSET ?");
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlIds.toString())) {
+
+            int paramIndex = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(paramIndex++, "%" + keyword.trim() + "%");
+                int searchId = -1;
+                try { searchId = Integer.parseInt(keyword.trim()); } catch (Exception e) {}
+                ps.setInt(paramIndex++, searchId);
+            }
+            if (statusFilter != null && statusFilter >= 0) {
+                ps.setInt(paramIndex++, statusFilter);
+            }
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    orderIds.add(rs.getInt("id"));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi lấy ID đơn hàng Unified: " + e.getMessage());
+        }
+
+        if (orderIds.isEmpty()) return result;
+
+        // Lấy chi tiết các sản phẩm thuộc các ID vừa tìm được
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < orderIds.size(); i++) {
+            placeholders.append("?");
+            if (i < orderIds.size() - 1) placeholders.append(",");
+        }
+
+        String query = "SELECT o.id AS order_id, u.username, p.id AS product_id, p.name AS product_name, " +
+                "od.quantity, od.total_money, od.discount_amount, o.shipping_fee, " +
+                "o.status, o.create_at, o.updated_at, pt.payment_name AS payment_method, pt.payment_code AS payment_code " +
+                "FROM orders o " +
+                "JOIN users u ON o.user_id = u.id " +
+                "JOIN order_details od ON o.id = od.order_id " +
+                "JOIN products p ON od.product_id = p.id " +
+                "JOIN payment_types pt ON o.payment_type_id = pt.id " +
+                "WHERE o.id IN (" + placeholders.toString() + ") " +
+                "ORDER BY o.id DESC";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            for (int i = 0; i < orderIds.size(); i++) {
+                ps.setInt(i + 1, orderIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("order_id", rs.getInt("order_id"));
+                    row.put("username", rs.getString("username"));
+                    row.put("product_id", rs.getInt("product_id"));
+                    row.put("product_name", rs.getString("product_name"));
+                    row.put("quantity", rs.getInt("quantity"));
+                    row.put("total_money", rs.getInt("total_money"));
+                    row.put("discount_amount", rs.getInt("discount_amount"));
+                    row.put("shipping_fee", rs.getInt("shipping_fee"));
+                    row.put("status", rs.getByte("status"));
+                    row.put("create_at", rs.getTimestamp("create_at"));
+                    row.put("updated_at", rs.getTimestamp("updated_at"));
+                    row.put("payment_method", rs.getString("payment_method"));
+                    row.put("payment_code", rs.getString("payment_code"));
+                    result.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi lấy chi tiết đơn hàng Unified: " + e.getMessage());
+        }
+        return result;
+    }
 }
