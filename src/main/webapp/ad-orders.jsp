@@ -50,7 +50,32 @@
     <header>
         <h1>Quản Lý Đơn Hàng</h1>
     </header>
+    <div class="top-toolbar" style="display: flex; gap: 15px; margin-top: 20px; margin-bottom: 20px; align-items: center;">
+        <div class="search-box" style="display: flex; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; background: #fff;">
+            <div style="padding: 10px 15px; display: flex; align-items: center; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px;">
+                <i class="fas fa-search" style="color: #888;"></i>
+            </div>
+            <input type="text" id="orderSearch" placeholder="Nhập Mã đơn hoặc Username..."
+                   onkeypress="if(event.keyCode == 13) executeOrderSearch()"
+                   style="padding: 10px 15px 10px 5px; width: 300px; border: 1px solid #ddd; border-left: none; outline: none; font-size: 14px;">
+        </div>
 
+        <select id="orderStatusFilter" onchange="executeOrderSearch()" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <option value="-1">-- Tất cả trạng thái --</option>
+            <option value="0">Đang chờ xác nhận</option>
+            <option value="1">Đã xác nhận</option>
+            <option value="2">Đang giao hàng</option>
+            <option value="3">Đã hoàn thành</option>
+            <option value="4">Đã huỷ</option>
+            <option value="5">Yêu cầu hoàn trả</option>
+            <option value="6">Đã hoàn tiền</option>
+            <option value="7">Từ chối hoàn trả</option>
+        </select>
+
+        <button onclick="executeOrderSearch()" style="padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: bold; border-radius: 8px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            Lọc Đơn Hàng
+        </button>
+    </div>
     <section class="order-management">
         <table class="transaction-table">
             <thead>
@@ -107,9 +132,16 @@
         loadOrders(1);
     });
 
+    function executeOrderSearch() {
+        loadOrders(1); // Khi gõ tìm kiếm hoặc đổi select, luôn quay về trang 1
+    }
+
     function loadOrders(page) {
         currentGlobalPage = page;
-        fetch(`\${contextPath}/adminOrders?action=list_ajax&page=\${page}`)
+        const keyword = document.getElementById("orderSearch").value.trim();
+        const status = document.getElementById("orderStatusFilter").value;
+
+        fetch(`\${contextPath}/adminOrders?action=list_ajax&page=\${page}&search=\${encodeURIComponent(keyword)}&status=\${status}`)
             .then(response => response.json())
             .then(data => {
                 const groupedOrders = groupOrders(data.orderDetails);
