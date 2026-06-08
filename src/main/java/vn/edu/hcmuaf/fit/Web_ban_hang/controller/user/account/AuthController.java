@@ -23,6 +23,9 @@ public class AuthController extends HttpServlet {
     private static final int MAX_ATTEMPTS = 5;
     private static final long LOCK_TIME = 5 * 60 * 1000;
 
+    // ⚡ ĐẶT = true ĐỂ TẮT CAPTCHA KHI TEST RACE CONDITION. ĐẶT LẠI = false KHI DEPLOY!
+    private static final boolean BYPASS_CAPTCHA = true;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String path = request.getServletPath();
@@ -56,22 +59,24 @@ public class AuthController extends HttpServlet {
             return;
         }
 
-        // Validate CAPTCHA
-        String sessionCaptcha = (String) session.getAttribute("captcha");
-        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
-            failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
-            session.setAttribute("failedAttempts", failedAttempts);
+        // Validate CAPTCHA (bỏ qua nếu BYPASS_CAPTCHA = true)
+        if (!BYPASS_CAPTCHA) {
+            String sessionCaptcha = (String) session.getAttribute("captcha");
+            if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
+                failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
+                session.setAttribute("failedAttempts", failedAttempts);
 
-            if (failedAttempts >= MAX_ATTEMPTS) {
-                session.setAttribute("lockTime", Instant.now().toEpochMilli());
-                request.setAttribute("errorMessage", "Bạn đã nhập CAPTCHA sai quá 5 lần. Tài khoản bị khóa trong 5 phút.");
-            } else {
-                request.setAttribute("errorMessage", "Mã CAPTCHA không chính xác. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
+                if (failedAttempts >= MAX_ATTEMPTS) {
+                    session.setAttribute("lockTime", Instant.now().toEpochMilli());
+                    request.setAttribute("errorMessage", "Bạn đã nhập CAPTCHA sai quá 5 lần. Tài khoản bị khóa trong 5 phút.");
+                } else {
+                    request.setAttribute("errorMessage", "Mã CAPTCHA không chính xác. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
+                }
+
+                request.setAttribute("username", usernameOrEmail);
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
             }
-
-            request.setAttribute("username", usernameOrEmail);
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-            return;
         }
 
         // --- Authenticate User ---
