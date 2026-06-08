@@ -164,18 +164,18 @@
                     <div class="role-info">
                         Vai trò hiện tại:
                         <c:choose>
-                            <c:when test="${userRole == 0}">👤 User</c:when>
-                            <c:when test="${userRole == 1}">👑 Admin</c:when>
-                            <c:when test="${userRole == 2}">🏪 Seller</c:when>
-                            <c:when test="${userRole == 3}">📦 Mod Nhập Hàng</c:when>
-                            <c:when test="${userRole == 4}">🔍 Kiểm Duyệt Viên</c:when>
+                            <c:when test="${userRole == 0}">User</c:when>
+                            <c:when test="${userRole == 1}">Admin</c:when>
+                            <c:when test="${userRole == 2}">Seller</c:when>
+                            <c:when test="${userRole == 3}">Mod Nhập Hàng</c:when>
+                            <c:when test="${userRole == 4}">Kiểm Duyệt Viên</c:when>
                             <c:otherwise>Không xác định</c:otherwise>
                         </c:choose>
                     </div>
                 </c:if>
 
                 <div class="btn-group">
-                    <a href="<%= request.getContextPath() %>/home" class="btn btn-home">🏠 Trang Chủ</a>
+                    <a href="<%= request.getContextPath() %>/home" class="btn btn-home">Trang Chủ</a>
                     <a href="javascript:history.back()" class="btn btn-back">← Quay Lại</a>
                 </div>
             </div>

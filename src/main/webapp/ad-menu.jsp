@@ -17,14 +17,14 @@
 
     <%-- Hiển thị thông tin user & role --%>
     <div class="sidebar-user-info">
-        <span class="sidebar-username"><i class="fa-solid fa-user"></i> ${userName}</span>
+        <span class="sidebar-username">${userName}</span>
         <span class="sidebar-role">
             <c:choose>
-                <c:when test="${userRole == 1}">👑 Admin</c:when>
-                <c:when test="${userRole == 2}">🏪 Seller</c:when>
-                <c:when test="${userRole == 3}">📦 Mod Nhập Hàng</c:when>
-                <c:when test="${userRole == 4}">🔍 Kiểm Duyệt Viên</c:when>
-                <c:otherwise>👤 Không xác định</c:otherwise>
+                <c:when test="${userRole == 1}">Admin</c:when>
+                <c:when test="${userRole == 2}">Seller</c:when>
+                <c:when test="${userRole == 3}">Mod Nhập Hàng</c:when>
+                <c:when test="${userRole == 4}">Kiểm Duyệt Viên</c:when>
+                <c:otherwise>Không xác định</c:otherwise>
             </c:choose>
         </span>
     </div>
