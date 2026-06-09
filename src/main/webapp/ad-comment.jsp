@@ -138,7 +138,7 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>\${cmt.id}</td>
-                <td>\${cmt.productId}</td>
+                <td>\${cmt.productName || 'SP #' + cmt.productId}</td>
                 <td>\${cmt.userName || 'Ẩn danh'}</td>
                 <td>\${cmt.rating} <i class="fa-solid fa-star" style="color: #f5c518;"></i></td>
                 <td>\${cmt.content}</td>

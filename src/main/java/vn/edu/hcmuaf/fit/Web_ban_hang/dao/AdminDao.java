@@ -43,18 +43,6 @@ public class AdminDao {
                         if (rs.next()) {
                             int productId = rs.getInt(1);
 
-                            try (PreparedStatement stmtTransaction = connection.prepareStatement(queryInsertTransaction)) {
-                                stmtTransaction.setInt(1, productId);
-                                stmtTransaction.setInt(2, quantityIn);
-                                stmtTransaction.executeUpdate();
-                            }
-
-                            try (PreparedStatement stmtInventory = connection.prepareStatement(queryInsertInventory)) {
-                                stmtInventory.setInt(1, productId);
-                                stmtInventory.setInt(2, quantityIn);
-                                stmtInventory.executeUpdate();
-                            }
-
                             if (materialIds != null) {
                                 try (PreparedStatement stmtMaterial = connection.prepareStatement(queryInsertProductMaterial)) {
                                     for (String mid : materialIds) {

@@ -159,6 +159,11 @@
                 </div>
             </div>
 
+            <div class="login__field" style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; padding-left: 5px;">
+                <input type="checkbox" id="remember" name="remember" style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="remember" style="font-size: 14px; color: #555; cursor: pointer; user-select: none;">Ghi nhớ đăng nhập</label>
+            </div>
+
             <button type="submit" class="button login__submit">
                 <span class="button__text">Đăng Nhập</span>
                 <i class="button__icon fas fa-chevron-right"></i>
