@@ -9,20 +9,18 @@ import java.util.Locale;
 public class Coupon implements Serializable {
     private int id;
     private String code;
-    private int type; // 0: Tiền mặt, 1: Phần trăm
+    private int type; 
     private Integer discountValue;
     private Integer discountPercent;
-    private Integer maxDiscountValue; // Dùng Integer để có thể nhận giá trị null
+    private Integer maxDiscountValue;
     private int minOrderAmount;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime createdAt;
 
-    // Constructor không tham số
     public Coupon() {
     }
 
-    // Constructor đầy đủ
     public Coupon(int id, String code, int type, int discountValue, int minOrderAmount,
                   Integer maxDiscountValue, LocalDateTime startDate,  LocalDateTime endDate, LocalDateTime createdAt) {
         this.id = id;
@@ -36,7 +34,6 @@ public class Coupon implements Serializable {
         this.createdAt = createdAt;
     }
 
-    // Getters & Setters
     public int getId() {
         return id;
     }

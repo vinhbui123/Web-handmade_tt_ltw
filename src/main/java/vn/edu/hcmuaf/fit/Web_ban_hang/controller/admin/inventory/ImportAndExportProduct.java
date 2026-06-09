@@ -1,5 +1,8 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.inventory;
 
+import java.io.IOException;
+import java.util.List;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,9 +13,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
-
-import java.io.IOException;
-import java.util.List;
 
 @WebServlet(urlPatterns = "/adminInventory")
 public class ImportAndExportProduct extends HttpServlet {
@@ -36,12 +36,9 @@ public class ImportAndExportProduct extends HttpServlet {
             String type = req.getParameter("type");
 
             boolean success = false;
-            // Xử lý linh hoạt cả 4 loại giao dịch
             if ("import".equalsIgnoreCase(type) || "returned".equalsIgnoreCase(type)) {
-                // Nhập hàng hoặc Khách trả hàng (đều làm tăng kho)
                 success = inventoryDao.importProduct(productId, quantity, user.getId());
             } else if ("export".equalsIgnoreCase(type) || "damaged".equalsIgnoreCase(type)) {
-                // Xuất hàng hoặc Hàng lỗi (đều làm giảm kho)
                 success = inventoryDao.exportProduct(productId, quantity, user.getId(), type);
             }
 
@@ -58,7 +55,6 @@ public class ImportAndExportProduct extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            // 1. Nhận toàn bộ tham số từ AJAX
             String searchKeyword = req.getParameter("search");
             String sortBy = req.getParameter("sortBy");
             String order = req.getParameter("order");
@@ -75,13 +71,9 @@ public class ImportAndExportProduct extends HttpServlet {
             }
             int offset = (page - 1) * pageSize;
 
-            // 2. GỌI HÀM HỢP NHẤT (Sử dụng chung ProductDao)
-            // Lưu ý: Trang Nhập xuất không lọc theo Chất liệu nên ta truyền 'null' vào vị trí materialId
             List<Product> products = productDao.getAdminProductsUnified(searchKeyword, categoryId, null, sortBy, order, offset, pageSize);
             int totalProducts = productDao.getTotalCountUnified(searchKeyword, categoryId, null);
             int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
-
-            // 3. Đẩy biến sang JSP
             req.setAttribute("products", products);
             req.setAttribute("searchKeyword", searchKeyword != null ? searchKeyword.trim() : "");
             req.setAttribute("selectedCategoryId", categoryId); // Đổi tên biến cho khớp với JSP

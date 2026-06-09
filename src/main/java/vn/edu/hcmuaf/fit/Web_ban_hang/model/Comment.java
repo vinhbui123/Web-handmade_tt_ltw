@@ -10,7 +10,7 @@ public class Comment implements Serializable {
     private String content;
     private int rating;
     private Timestamp createdAt;
-    private String userName; // Để hiển thị tên người dùng trong comment
+    private String userName;
 
     public Comment() {
     }

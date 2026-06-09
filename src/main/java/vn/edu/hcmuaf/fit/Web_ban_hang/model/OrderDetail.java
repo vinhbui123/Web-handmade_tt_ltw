@@ -13,7 +13,6 @@ public class OrderDetail implements Serializable {
     private int status;
     private String dateAllocated;
 
-    // Getter và Setter
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -38,7 +37,6 @@ public class OrderDetail implements Serializable {
     public String getDateAllocated() { return dateAllocated; }
     public void setDateAllocated(String dateAllocated) { this.dateAllocated = dateAllocated; }
 
-    // Constructor
     public OrderDetail() {}
 
     public OrderDetail(int productId, int price, int quantity) {
@@ -58,7 +56,6 @@ public class OrderDetail implements Serializable {
         this.totalMoney = totalMoney;
     }
 
-    // Constuctor to get info from web to DB
     public OrderDetail(int productId, int price, int quantity, int discountAmount, int status) {
         this.productId = productId;
         this.price = price;

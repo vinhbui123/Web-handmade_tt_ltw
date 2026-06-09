@@ -15,7 +15,6 @@ public class GoogleLoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Tự động chọn redirect URI dựa trên domain hiện tại
         String redirectUri;
         String serverName = request.getServerName();
         if (serverName.contains("ttltwtnkiet.id.vn")) {
@@ -30,7 +29,6 @@ public class GoogleLoginServlet extends HttpServlet {
                 "&scope=" + SCOPE +
                 "&response_type=code";
 
-        // Chuyển hướng người dùng đến trang đăng nhập Google
         response.sendRedirect(authorizationUrl);
     }
 }

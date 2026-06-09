@@ -1,29 +1,25 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.DetailOrderDTO;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class OrderService {
 
     private OrderDao orderDao = new OrderDao();
 
-    // Add order to DB
     public void addOrder(Order order, List<OrderDetail> orderDetails) {
         orderDao.addOrder(order, orderDetails);
     }
-
-    // Get list order by uid
     public List<Order> getAllOrders(int userId) {
         return orderDao.getAllOrders(userId);
     }
 
-    // detailsOrderDTO to detailOrders
     public List<OrderDetail> toDetailOrder(List<DetailOrderDTO> detailOrderDTOS) {
         List<OrderDetail> result = new ArrayList<>();
         for (DetailOrderDTO dto : detailOrderDTOS) {

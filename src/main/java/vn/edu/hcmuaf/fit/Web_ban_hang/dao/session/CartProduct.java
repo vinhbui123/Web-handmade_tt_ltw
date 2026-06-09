@@ -13,7 +13,7 @@ public class CartProduct implements Serializable {
     private int stock;
 
     public CartProduct() {
-        this.selected = true; // Mặc định được chọn khi thêm vào giỏ
+        this.selected = true;
     }
 
     public int getId() {
@@ -80,9 +80,6 @@ public class CartProduct implements Serializable {
         this.stock = stock;
     }
 
-    /**
-     * Tính giá sau khi giảm giá
-     */
     public int getDiscountedPrice() {
         if (discount > 0) {
             return price - (price * discount / 100);

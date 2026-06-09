@@ -42,7 +42,6 @@ public class GoogleCallbackServlet extends HttpServlet {
                 HttpTransport httpTransport = new NetHttpTransport();
                 JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-                // Tự động chọn redirect URI dựa trên domain hiện tại
                 String redirectUri;
                 String serverName = request.getServerName();
                 if (serverName.contains("ttltwtnkiet.id.vn")) {
@@ -118,7 +117,6 @@ public class GoogleCallbackServlet extends HttpServlet {
 
         if (session.getAttribute("cart") == null) {
             session.setAttribute("cart", new CartService());
-            //log.info("Khởi tạo giỏ hàng thành công cho người dùng Google: {}", user.getUsername());
         }
         response.sendRedirect(request.getContextPath() + "/home");
     }

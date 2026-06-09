@@ -1,6 +1,8 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.user;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
+import java.io.IOException;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,9 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-
-import java.io.IOException;
-import java.util.List;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 
 @WebServlet(name = "ManagerUsers", value = "/adminUsers")
 public class ManagerUsers extends HttpServlet {
@@ -26,7 +26,6 @@ public class ManagerUsers extends HttpServlet {
         List<?> users = userService.getAllUsers();
         request.setAttribute("users", users);
 
-        // Đảm bảo thông báo lỗi được giữ nếu có
         String error = (String) request.getAttribute("errorMessage");
         if (error != null) {
             request.setAttribute("errorMessage", error);

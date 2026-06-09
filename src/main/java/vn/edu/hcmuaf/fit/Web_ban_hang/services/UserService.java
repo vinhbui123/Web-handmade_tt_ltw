@@ -1,12 +1,13 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.UserDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-
-import java.util.*;
 
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
@@ -17,7 +18,7 @@ public class UserService {
         return userDao.authenticateUser(usernameOrEmail, password); // truyền hash vào DAO
     }
 
-    //input filter
+    // filter input đăng ký
     public String validateInputs(String firstName, String lastName, String username, String email, String password, String confirmPassword) {
         if (StringUtils.isBlank(firstName)) return "Tên không được để trống.";
         if (StringUtils.isBlank(lastName)) return "Họ không được để trống.";
@@ -48,15 +49,12 @@ public class UserService {
         return null;
     }
 
-    // Kiểm tra email có tồn tại
     public boolean isEmailExists(String email) { return userDao.isEmailExists(email); }
 
-    // Kiểm tra username
     public boolean isUsernameExists(String username) {
         return userDao.isUsernameExists(username);
     }
 
-    // Đăng ký người dùng
     public boolean registerUser(User user) {
         if (isUsernameExists(user.getUsername()) || isEmailExists(user.getEmail())) {
             return false;
@@ -64,22 +62,18 @@ public class UserService {
         return userDao.registerUser(user);
     }
 
-    // Cập nhật thông tin người dùng
     public boolean updateUser(User user) {
         return userDao.updateUser(user);
     }
 
-    // Lấy danh sách tất cả người dùng
     public List<User> getAllUsers() {
         return userDao.getAllUsers();
     }
 
-    // Cập nhật mật khẩu
     public boolean updatePassword(String username, String newPassword) {
         return userDao.updatePassword(username, newPassword);
     }
 
-    // Cập nhật role và status người dùng
     public boolean updateUserRoleAndStatus(int userId, int newRole, int newStatus) {
         return userDao.updateUserRoleAndStatus(userId, newRole, newStatus);
     }
@@ -88,13 +82,8 @@ public class UserService {
         return new UserDao().getById(id);
     }
 
-    // Lấy sessionId hiện đang lưu trong DB
     public String getLoggedSessionId(int userId) {
         return userDao.getLoggedSessionId(userId);
     }
 
-//    // Cập nhật sessionId vào DB sau khi đăng nhập
-//    public void updateLoggedSessionId(int userId, String sessionId) {
-//        userDao.updateSessionId(userId, sessionId);
-//    }
 }

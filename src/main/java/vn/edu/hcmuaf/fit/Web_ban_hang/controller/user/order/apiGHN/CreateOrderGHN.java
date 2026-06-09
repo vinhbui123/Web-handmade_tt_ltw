@@ -1,11 +1,11 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order.apiGHN;
 
+import java.io.IOException;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 
 @WebServlet("/api/create-order")
 public class CreateOrderGHN extends HttpServlet {
@@ -27,15 +27,5 @@ public class CreateOrderGHN extends HttpServlet {
                 + "\"service_type_id\": 2,"
                 + "\"items\": [{ \"name\": \"Áo thun\", \"quantity\": 2 }]"
                 + "}";
-
-//        String url = "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create";
-//
-//        Map<String, String> headers = new HashMap<>();
-//        headers.put("Token", "YOUR_GHN_TOKEN");
-//        headers.put("ShopId", "YOUR_SHOP_ID");
-//
-////        String result = GHNHelper.callApi(url, "POST", jsonBody, headers);
-//        response.setContentType("application/json");
-//        response.getWriter().write(result);
     }
 }

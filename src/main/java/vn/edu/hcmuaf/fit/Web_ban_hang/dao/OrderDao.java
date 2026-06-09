@@ -40,11 +40,10 @@ public class OrderDao {
         return orders;
     }
 
-    // Thêm đơn hàng và chi tiết vào database
     public void addOrder(Order order, List<OrderDetail> details) {
         String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
 
-        try (Connection connection = DBConnect.getConnection()) { // chỉ mở 1 connection
+        try (Connection connection = DBConnect.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, order.getStatus());
                 statement.setInt(2, order.getUserId());

@@ -1,14 +1,15 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.material;
 
-import jakarta.servlet.http.HttpServlet;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.MaterialDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.MaterialDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 
 @WebServlet(name = "MaterialProduct", urlPatterns = "/adminMaterials")
 public class MaterialProduct extends HttpServlet {
@@ -36,7 +37,6 @@ public class MaterialProduct extends HttpServlet {
             success = materialDao.deleteMaterial(id);
         }
 
-        // redirect để load lại danh sách
         resp.sendRedirect(req.getContextPath() + "/adminMaterials?success=" + success);
     }
 }

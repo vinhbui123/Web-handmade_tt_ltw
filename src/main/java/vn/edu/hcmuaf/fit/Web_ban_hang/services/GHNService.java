@@ -4,12 +4,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.GHNHelper;
 
 public class GHNService {
     private static final String TOKEN = "53953c8b-4c11-11f1-a973-aee5264794df";
     private static final int SHOP_ID = 200253;
-    public static final int FROM_DISTRICT_ID = 1463; //Quận Thủ Đức (id huyện api từ cửa hàng)
+    public static final int FROM_DISTRICT_ID = 1463;
 
     public String createOrder(String jsonBody) {
         String url = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create";
@@ -79,11 +80,9 @@ public class GHNService {
         try {
             String response = GHNHelper.postJson(url, TOKEN, SHOP_ID, new JsonObject().toString());
 
-            // Parse kết quả
             JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
             JsonArray shops = jsonResponse.getAsJsonObject("data").getAsJsonArray("shops");
 
-            // Tìm shop theo SHOP_ID
             for (JsonElement element : shops) {
                 JsonObject shop = element.getAsJsonObject();
                 if (shop.get("_id").getAsLong() == SHOP_ID) {
@@ -97,7 +96,6 @@ public class GHNService {
                 }
             }
 
-            // Không tìm thấy shop
             return "{\"error\": \"Shop not found\"}";
 
         } catch (Exception e) {
@@ -118,13 +116,10 @@ public class GHNService {
 
     public String getLocationCodes(String province, String district, String ward) {
         try {
-            // Lấy danh sách tỉnh/thành phố
             String provincesJson = getProvinces();
             System.out.println("[GHN] Provinces response: " + provincesJson);
             JsonObject provincesResponse = JsonParser.parseString(provincesJson).getAsJsonObject();
             JsonArray provinces = provincesResponse.getAsJsonArray("data");
-
-            // Tìm ID tỉnh/thành phố
             int provinceId = -1;
             for (JsonElement element : provinces) {
                 JsonObject p = element.getAsJsonObject();
@@ -140,13 +135,10 @@ public class GHNService {
             }
             System.out.println("[GHN] Tìm thấy provinceId: " + provinceId);
 
-            // Lấy danh sách quận/huyện
             String districtsJson = getDistricts(provinceId);
             System.out.println("[GHN] Districts response: " + districtsJson);
             JsonObject districtsResponse = JsonParser.parseString(districtsJson).getAsJsonObject();
             JsonArray districts = districtsResponse.getAsJsonArray("data");
-
-            // Tìm ID quận/huyện
             int districtId = -1;
             for (JsonElement element : districts) {
                 JsonObject d = element.getAsJsonObject();
@@ -162,13 +154,11 @@ public class GHNService {
             }
             System.out.println("[GHN] Tìm thấy districtId: " + districtId);
 
-            // Lấy danh sách phường/xã
             String wardsJson = getWards(districtId);
             System.out.println("[GHN] Wards response: " + wardsJson);
             JsonObject wardsResponse = JsonParser.parseString(wardsJson).getAsJsonObject();
             JsonArray wards = wardsResponse.getAsJsonArray("data");
 
-            // Tìm mã phường/xã
             String wardCode = null;
             for (JsonElement element : wards) {
                 JsonObject w = element.getAsJsonObject();
@@ -200,14 +190,6 @@ public class GHNService {
         }
     }
 
-    /**
-     * Lấy service_id động từ GHN dựa trên tuyến đường
-     *
-     * @param fromDistrictId Mã quận/huyện gửi
-     * @param toDistrictId   Mã quận/huyện nhận
-     * @param toWardCode     Mã phường/xã nhận
-     * @return service_id đầu tiên nếu có, -1 nếu không có dịch vụ
-     */
     public int getDynamicServiceId(int fromDistrictId, int toDistrictId, String toWardCode) {
         try {
             com.google.gson.JsonObject req = new com.google.gson.JsonObject();
@@ -229,42 +211,34 @@ public class GHNService {
         return -1;
     }
     public String createShippingOrder(String toName, String toPhone, String addressDetail, String wardCode, int districtId, int serviceId, int codAmount, com.google.gson.JsonArray items) {
-        // link dev
         String url = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create";
 
         com.google.gson.JsonObject jsonBody = new com.google.gson.JsonObject();
 
-        // 1: Người gửi trả phí ship, 2: Người nhận trả phí ship
         jsonBody.addProperty("payment_type_id", 2);
         jsonBody.addProperty("note", "Hàng dễ vỡ, xin nhẹ tay");
 
-        // Các tùy chọn: CHOTHUHANG, CHOXEMHANGKHONGTHU, KHONGCHOXEMHANG
         jsonBody.addProperty("required_note", "CHOXEMHANGKHONGTHU");
 
-        // Thông tin người nhận (Được truyền vào từ CheckoutController)
         jsonBody.addProperty("to_name", toName);
         jsonBody.addProperty("to_phone", toPhone);
         jsonBody.addProperty("to_address", addressDetail);
         jsonBody.addProperty("to_ward_code", wardCode);
         jsonBody.addProperty("to_district_id", districtId);
 
-        // Tiền thu hộ (COD) - Nếu khách thanh toán QR rồi thì = 0, nếu nhận hàng trả tiền thì = Tổng hóa đơn
         jsonBody.addProperty("cod_amount", codAmount);
 
-        // Kích thước tổng gói hàng (Tạm fix cứng)
         jsonBody.addProperty("weight", 500);
         jsonBody.addProperty("length", 20);
         jsonBody.addProperty("width", 15);
         jsonBody.addProperty("height", 10);
 
         jsonBody.addProperty("service_id", serviceId);
-        jsonBody.addProperty("service_type_id", 2); // 2: Đi bộ/Xe máy
+        jsonBody.addProperty("service_type_id", 2);
 
-        // Danh sách sản phẩm (Được truyền vào từ CheckoutController)
         jsonBody.add("items", items);
 
         try {
-            // Sử dụng lại hàm postJson thần thánh của bạn
             String result = GHNHelper.postJson(url, TOKEN, SHOP_ID, jsonBody.toString());
             System.out.println("[GHN_CREATE_ORDER] " + result);
             return result;

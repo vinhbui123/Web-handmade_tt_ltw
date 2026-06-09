@@ -1,5 +1,9 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.IOException;
+
+import com.google.gson.Gson;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,8 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-import java.io.IOException;
-import com.google.gson.Gson;
 
 @WebServlet(name = "GetProduct", value = "/getProduct")
 public class GetProduct extends HttpServlet {
@@ -24,7 +26,7 @@ public class GetProduct extends HttpServlet {
         try {
             int productId = Integer.parseInt(idParam);
             ProductService productService = new ProductService();
-            Product product = productService.getById(productId); // cần đảm bảo có setMaterials()
+            Product product = productService.getById(productId);
 
             if (product != null) {
                 resp.setContentType("application/json");

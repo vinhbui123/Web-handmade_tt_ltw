@@ -1,20 +1,23 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+
 public class InventoryDao {
 
     private static final Logger log = LoggerFactory.getLogger(InventoryDao.class);
 
-    // Kiểm tra tồn kho hiện tại
     public int getStock(int productId) {
         String sql = "SELECT quantity FROM inventory WHERE product_id = ?";
 
@@ -26,20 +29,16 @@ public class InventoryDao {
                 if (rs.next()) {
                     return rs.getInt("quantity");
                 } else {
-                    // Không tìm thấy sản phẩm trong DB
                     throw new IllegalArgumentException("Không tìm thấy sản phẩm với ID: " + productId);
-                    // Hoặc tạo một Exception tự định nghĩa: throw new ProductNotFoundException(...)
                 }
             }
         } catch (SQLException e) {
             log.error("Lỗi khi lấy tồn kho cho product: {}", productId, e);
-            // Ném ra một RuntimeException để báo lỗi hệ thống, không trả về 0
             throw new RuntimeException("Lỗi kết nối cơ sở dữ liệu", e);
         }
     }
     public boolean updateInventory(Connection conn, int productId, int quantityIn, int quantityOut) {
 
-        //String sql = "UPDATE inventory SET quantity_in = quantity_in + ?, quantity_out = quantity_out + ? WHERE product_id = ?";
         String sql = """
             INSERT INTO inventory (product_id, quantity_in, quantity_out)
             VALUES (?, ?, ?)
@@ -73,7 +72,6 @@ public class InventoryDao {
             stmt.setString(4, type);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            // NẾU BẢNG NÀY KHÔNG TỒN TẠI TRONG DB, NÓ SẼ BÁO LỖI Ở ĐÂY NHƯNG KHÔNG LÀM SẬP TIẾN TRÌNH
             System.out.println("Cảnh báo: Không thể lưu lịch sử giao dịch (Có thể bảng inventory_transactions chưa được tạo). Bỏ qua bước này.");
             return false;
         }
@@ -83,7 +81,7 @@ public class InventoryDao {
         Connection conn = null;
         try {
             conn = DBConnect.getConnection();
-            conn.setAutoCommit(false); // bật transaction
+            conn.setAutoCommit(false);
 
             boolean transOk = insertTransaction(conn, productId, userId, quantity, "import");
             boolean updateOk = updateInventory(conn, productId, quantity, 0);
@@ -122,7 +120,6 @@ public class InventoryDao {
             conn = DBConnect.getConnection();
             conn.setAutoCommit(false);
 
-            // SELECT ... FOR UPDATE khóa dòng inventory → thread khác phải đợi
             int stock = getStockForUpdate(conn, productId);
             if (stock < quantity) {
                 System.out.println("Không đủ hàng! (Tồn: " + stock + ", Yêu cầu: " + quantity + ")");
@@ -149,10 +146,6 @@ public class InventoryDao {
         return false;
     }
 
-    /**
-     * Lấy tồn kho với SELECT ... FOR UPDATE (khóa dòng trong transaction).
-     * Thread khác phải đợi cho đến khi transaction này COMMIT hoặc ROLLBACK.
-     */
     public int getStockForUpdate(Connection conn, int productId) throws SQLException {
         String sql = "SELECT quantity FROM inventory WHERE product_id = ? FOR UPDATE";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

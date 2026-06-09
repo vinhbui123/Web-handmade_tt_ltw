@@ -1,5 +1,8 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.File;
+import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,9 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.AdminDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
-import java.io.File;
-import java.io.IOException;
 
 @WebServlet(name = "Remove", value = "/adminRemove")
 public class Remove extends HttpServlet {
@@ -22,12 +22,9 @@ public class Remove extends HttpServlet {
             try {
                 int productId = Integer.parseInt(productIdParam);
 
-                // 🔍 Lấy thông tin sản phẩm
                 Product product = ProductDao.getById(productId);
                 if (product != null) {
-                    String imagePath = product.getImg(); // "images/moc_cao.jpg"
-
-                    // 🗑 Xóa ảnh trong thư mục webapp/images nếu tồn tại
+                    String imagePath = product.getImg();
                     if (imagePath != null && !imagePath.isEmpty()) {
                         String fullImagePath = getServletContext().getRealPath("/" + imagePath.replace("/", File.separator));
                         File imageFile = new File(fullImagePath);
@@ -36,26 +33,25 @@ public class Remove extends HttpServlet {
                         }
                     }
 
-                    // 🗑 Xóa sản phẩm trong DB
                     boolean result = new AdminDao().removeProduct(productId);
 
                     if (result) {
-                        request.getSession().setAttribute("message", "✔️ Xóa sản phẩm thành công.");
+                        request.getSession().setAttribute("message", " Xóa sản phẩm thành công.");
                         request.getSession().setAttribute("messageType", "success");
                     } else {
-                        request.getSession().setAttribute("message", "❌ Lỗi khi xóa sản phẩm.");
+                        request.getSession().setAttribute("message", " Lỗi khi xóa sản phẩm.");
                         request.getSession().setAttribute("messageType", "error");
                     }
                 } else {
-                    request.getSession().setAttribute("message", "❌ Không tìm thấy sản phẩm.");
+                    request.getSession().setAttribute("message", " Không tìm thấy sản phẩm.");
                     request.getSession().setAttribute("messageType", "error");
                 }
             } catch (NumberFormatException e) {
-                request.getSession().setAttribute("message", "❌ ID sản phẩm không hợp lệ.");
+                request.getSession().setAttribute("message", " ID sản phẩm không hợp lệ.");
                 request.getSession().setAttribute("messageType", "error");
             }
         } else {
-            request.getSession().setAttribute("message", "❌ Thiếu ID sản phẩm.");
+            request.getSession().setAttribute("message", " Thiếu ID sản phẩm.");
             request.getSession().setAttribute("messageType", "error");
         }
 
