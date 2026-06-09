@@ -161,7 +161,11 @@ public class CommentDao {
     // Lấy danh sách comment theo trang
     public List<Comment> getCommentsByPage(int offset, int limit) {
         List<Comment> list = new ArrayList<>();
-        String sql = "SELECT c.*, u.username FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.create_at DESC LIMIT ? OFFSET ?";
+        String sql = "SELECT c.*, u.username, p.name AS product_name " +
+                "FROM comments c " +
+                "LEFT JOIN users u ON c.user_id = u.id " +
+                "LEFT JOIN products p ON c.product_id = p.id " +
+                "ORDER BY c.create_at DESC LIMIT ? OFFSET ?";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, limit);
@@ -176,6 +180,7 @@ public class CommentDao {
                     c.setContent(rs.getString("comment"));
                     c.setCreatedAt(rs.getTimestamp("create_at"));
                     c.setUserName(rs.getString("username"));
+                    c.setProductName(rs.getString("product_name"));
                     list.add(c);
                 }
             }

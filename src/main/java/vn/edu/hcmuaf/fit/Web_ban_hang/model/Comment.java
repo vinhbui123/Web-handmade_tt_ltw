@@ -11,6 +11,7 @@ public class Comment implements Serializable {
     private int rating;
     private Timestamp createdAt;
     private String userName;
+    private String productName;
 
     public Comment() {
     }
@@ -69,5 +70,13 @@ public class Comment implements Serializable {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 } 
