@@ -709,7 +709,6 @@ public class ProductDao {
             if (i < ids.size() - 1) placeholders.append(",");
         }
 
-        // [CHỈNH SỬA]: Thêm p.weight
         String sql = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
                 "COALESCE(i.quantity, 0) AS stock " +
                 "FROM products p " +
@@ -749,11 +748,9 @@ public class ProductDao {
         }
         return result;
     }
-    // Hàm Vừa Tìm kiếm, Vừa Lọc, Vừa Sắp xếp
     public List<Product> getAdminProductsUnified(String keyword, Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
         List<Integer> matchedIds = null;
 
-        // Nếu có từ khóa, dùng thuật toán tìm kiếm mờ (Fuzzy) để quét danh sách ID
         if (keyword != null && !keyword.trim().isEmpty()) {
             List<Product> fuzzyMatches = searchProducts(keyword.trim());
             matchedIds = new ArrayList<>();
@@ -761,17 +758,14 @@ public class ProductDao {
                 matchedIds.add(p.getId());
             }
 
-            // Nếu nhập ID bằng số (tìm theo ID)
             if (keyword.trim().matches("\\d+")) {
                 int searchId = Integer.parseInt(keyword.trim());
                 if (!matchedIds.contains(searchId)) matchedIds.add(searchId);
             }
 
-            // Nếu tìm không ra ID nào -> Trả về rỗng luôn (tránh chạy query thừa)
             if (matchedIds.isEmpty()) return new ArrayList<>();
         }
 
-        // Xây dựng câu SQL kết hợp Lọc (Category, Material) và Sắp xếp
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
@@ -790,7 +784,6 @@ public class ProductDao {
             sql.append("AND p.catalog_id = ? ");
         }
 
-        // Ép các sản phẩm phải nằm trong danh sách ID vừa tìm được
         if (matchedIds != null && !matchedIds.isEmpty()) {
             sql.append("AND p.id IN (");
             for (int i = 0; i < matchedIds.size(); i++) {
@@ -800,7 +793,6 @@ public class ProductDao {
             sql.append(") ");
         }
 
-        // Xử lý Sắp xếp chống SQL Injection
         String validSortCol = "p.id";
         if ("id".equals(sortBy)) validSortCol = "p.id";
         else if ("name".equals(sortBy)) validSortCol = "TRIM(p.name)";
@@ -850,7 +842,6 @@ public class ProductDao {
         return products;
     }
 
-    //  Hàm đếm tổng số lượng  (Để phân trang chạy chính xác)
     public int getTotalCountUnified(String keyword, Integer categoryId, Integer materialId) {
         List<Integer> matchedIds = null;
         if (keyword != null && !keyword.trim().isEmpty()) {

@@ -151,9 +151,8 @@ public class OrderDao {
         Connection conn = null;
         try {
             conn = DBConnect.getConnection();
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false);
 
-            // Bước 1: Lấy danh sách sản phẩm trong đơn
             Map<Integer, Integer> productMap = new HashMap<>();
             try (PreparedStatement ps = conn.prepareStatement(selectDetailsSql)) {
                 ps.setInt(1, orderId);
@@ -166,17 +165,15 @@ public class OrderDao {
                 }
             }
 
-            // Bước 2: Cập nhật trạng thái đơn hàng
             try (PreparedStatement ps = conn.prepareStatement(updateOrderSql)) {
                 ps.setInt(1, orderId);
                 int rows = ps.executeUpdate();
                 if (rows == 0) {
                     conn.rollback();
-                    return false; // không cập nhật được trạng thái
+                    return false;
                 }
             }
 
-            // Bước 3: Hoàn lại kho và ghi log hủy từng sản phẩm
             InventoryDao inventoryDao = new InventoryDao();
             for (Map.Entry<Integer, Integer> entry : productMap.entrySet()) {
                 int productId = entry.getKey();
@@ -191,7 +188,7 @@ public class OrderDao {
                 }
             }
 
-            conn.commit(); // tất cả OK
+            conn.commit();
             return true;
 
         } catch (Exception e) {
@@ -204,7 +201,6 @@ public class OrderDao {
     }
 
     public boolean confirmOrder(int orderId) {
-        // Chỉ cho phép xác nhận nếu đơn đang ở trạng thái 0
         String sql = "UPDATE orders SET status = 1, updated_at = NOW() WHERE id = ? AND status = 0";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -216,16 +212,13 @@ public class OrderDao {
             return false;
         }
     }
-    // Hàm tạo yêu cầu hoàn trả đơn hàng
     public boolean createReturnRequest(int orderId, String reason, String description, String proofImg) {
         String insertReturn = "INSERT INTO return_requests (order_id, reason, description, proof_img, status) VALUES (?, ?, ?, ?, 0)";
-        // Chuyển trạng thái đơn hàng sang 5 (Đang yêu cầu hoàn trả)
         String updateOrderStatus = "UPDATE orders SET status = 5 WHERE id = ?";
 
         try (Connection conn = DBConnect.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu Transaction để đảm bảo tính toàn vẹn dữ liệu
+            conn.setAutoCommit(false);
 
-            // Lưu yêu cầu vào bảng return_requests
             try (PreparedStatement stmt1 = conn.prepareStatement(insertReturn)) {
                 stmt1.setInt(1, orderId);
                 stmt1.setString(2, reason);
@@ -234,13 +227,12 @@ public class OrderDao {
                 stmt1.executeUpdate();
             }
 
-            // Cập nhật trạng thái đơn hàng trong bảng orders
             try (PreparedStatement stmt2 = conn.prepareStatement(updateOrderStatus)) {
                 stmt2.setInt(1, orderId);
                 stmt2.executeUpdate();
             }
 
-            conn.commit(); // Thành công cả 2 thao tác thì mới lưu vào DB
+            conn.commit();
             return true;
         } catch (SQLException e) {
             log.error("Lỗi khi tạo yêu cầu hoàn trả cho đơn hàng " + orderId + ": " + e.getMessage());
@@ -267,7 +259,6 @@ public class OrderDao {
         return details;
     }
 
-    // Xử lý quyết định của Admin: Chấp nhận hoặc Từ chối hoàn trả
     public boolean processReturnRequest(int orderId, String action) {
         int newOrderStatus = "accept".equals(action) ? 6 : 7;
         int returnRequestStatus = "accept".equals(action) ? 1 : 2;
@@ -275,33 +266,27 @@ public class OrderDao {
         String updateOrder = "UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?";
         String updateReturn = "UPDATE return_requests SET status = ? WHERE order_id = ? AND status = 0";
 
-        // Lấy chi tiết sản phẩm cần hoàn
         String selectDetails = "SELECT od.product_id, od.quantity, o.user_id FROM order_details od JOIN orders o ON od.order_id = o.id WHERE od.order_id = ?";
 
-        // Lấy lý do hoàn trả để phân loại
         String selectReason = "SELECT reason FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
 
         try (Connection conn = DBConnect.getConnection()) {
             conn.setAutoCommit(false);
 
-            // Cập nhật trạng thái đơn
             try (PreparedStatement psOrder = conn.prepareStatement(updateOrder)) {
                 psOrder.setInt(1, newOrderStatus);
                 psOrder.setInt(2, orderId);
                 psOrder.executeUpdate();
             }
 
-            // Cập nhật trạng thái yêu cầu hoàn trả
             try (PreparedStatement psReturn = conn.prepareStatement(updateReturn)) {
                 psReturn.setInt(1, returnRequestStatus);
                 psReturn.setInt(2, orderId);
                 psReturn.executeUpdate();
             }
 
-            // HOÀN KHO (Chỉ chạy khi Chấp nhận)
             if ("accept".equals(action)) {
 
-                // Lấy lý do hoàn trả
                 String reason = "";
                 try (PreparedStatement psReason = conn.prepareStatement(selectReason)) {
                     psReason.setInt(1, orderId);
@@ -312,19 +297,15 @@ public class OrderDao {
                     }
                 }
 
-                // Kiểm tra xem hàng có bị hỏng không
                 boolean isDamaged = "Sản phẩm bị lỗi, hỏng hóc do vận chuyển".equals(reason);
 
-                // SQL cộng kho tương ứng
                 String updateInventory = isDamaged ?
                         "UPDATE inventory SET quantity_damaged = quantity_damaged + ? WHERE product_id = ?" :
                         "UPDATE inventory SET quantity_returned = quantity_returned + ? WHERE product_id = ?";
 
-                // Chọn loại giao dịch ghi vào lịch sử
                 String transType = isDamaged ? "damaged" : "return";
                 String insertTrans = "INSERT INTO inventory_transactions (product_id, user_id, quantity, type, created_at) VALUES (?, ?, ?, ?, NOW())";
 
-                //Tiến hành cập nhật
                 try (PreparedStatement psSelect = conn.prepareStatement(selectDetails)) {
                     psSelect.setInt(1, orderId);
                     try (ResultSet rs = psSelect.executeQuery()) {
@@ -336,16 +317,14 @@ public class OrderDao {
                                 int qty = rs.getInt("quantity");
                                 int userId = rs.getInt("user_id");
 
-                                // Cập nhật kho (Hư hỏng hoặc Trả lại)
                                 psInv.setInt(1, qty);
                                 psInv.setInt(2, productId);
                                 psInv.addBatch();
 
-                                // Ghi log giao dịch với type tương ứng
                                 psTrans.setInt(1, productId);
                                 psTrans.setInt(2, userId);
                                 psTrans.setInt(3, qty);
-                                psTrans.setString(4, transType); // Ghi 'damaged' hoặc 'return'
+                                psTrans.setString(4, transType);
                                 psTrans.addBatch();
                             }
 
@@ -364,7 +343,6 @@ public class OrderDao {
             return false;
         }
     }
-    // 1. Đếm tổng số lượng đơn hàng
     public int getTotalOrdersCount() {
         String sql = "SELECT COUNT(id) FROM orders";
         try (Connection conn = DBConnect.getConnection();
@@ -379,12 +357,10 @@ public class OrderDao {
         return 0;
     }
 
-    // 2. Lấy danh sách chi tiết đơn hàng THEO TRANG (Xử lý thông minh tránh cắt ngang đơn)
     public List<Map<String, Object>> getOrdersByPageForAdmin(int offset, int limit) {
         List<Map<String, Object>> result = new ArrayList<>();
         List<Integer> orderIds = new ArrayList<>();
 
-        // Bước A: Lấy danh sách ID đơn hàng cho trang hiện tại
         String sqlIds = "SELECT id FROM orders ORDER BY id DESC LIMIT ? OFFSET ?";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlIds)) {
@@ -401,7 +377,6 @@ public class OrderDao {
 
         if (orderIds.isEmpty()) return result;
 
-        // Bước B: Lấy chi tiết các sản phẩm thuộc các ID vừa tìm được
         StringBuilder placeholders = new StringBuilder();
         for (int i = 0; i < orderIds.size(); i++) {
             placeholders.append("?");
@@ -448,7 +423,6 @@ public class OrderDao {
         }
         return result;
     }
-    // Đếm tổng số lượng đơn hàng (lọc và tìm kiếm)
     public int getTotalOrdersCountUnified(String keyword, Integer statusFilter) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(o.id) FROM orders o JOIN users u ON o.user_id = u.id WHERE 1=1 ");
 
@@ -482,12 +456,9 @@ public class OrderDao {
         return 0;
     }
 
-    // Lấy danh sách chi tiết đơn hàng THEO TRANG + TÌM KIẾM + LỌC TRẠNG THÁI
     public List<Map<String, Object>> getOrdersUnified(String keyword, Integer statusFilter, int offset, int limit) {
         List<Map<String, Object>> result = new ArrayList<>();
         List<Integer> orderIds = new ArrayList<>();
-
-        // Tìm các ID đơn hàng khớp với điều kiện tìm kiếm/lọc
         StringBuilder sqlIds = new StringBuilder("SELECT o.id FROM orders o JOIN users u ON o.user_id = u.id WHERE 1=1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
             sqlIds.append(" AND (u.username LIKE ? OR o.id = ?) ");

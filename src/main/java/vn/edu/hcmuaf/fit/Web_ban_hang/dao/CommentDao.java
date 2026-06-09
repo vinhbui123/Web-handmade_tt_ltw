@@ -143,7 +143,6 @@ public class CommentDao {
         }
     }
 
-    // Đếm tổng số lượng comment
     public int getTotalCommentsCount() {
         String sql = "SELECT COUNT(*) FROM comments";
         try (Connection conn = DBConnect.getConnection();
@@ -158,7 +157,6 @@ public class CommentDao {
         return 0;
     }
 
-    // Lấy danh sách comment theo trang
     public List<Comment> getCommentsByPage(int offset, int limit) {
         List<Comment> list = new ArrayList<>();
         String sql = "SELECT c.*, u.username, p.name AS product_name " +

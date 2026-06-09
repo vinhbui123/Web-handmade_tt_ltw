@@ -30,7 +30,6 @@ public class VnPayReturnController extends HttpServlet {
         fields.remove("vnp_SecureHashType");
         fields.remove("vnp_SecureHash");
 
-        // Checksum bảo mật
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -50,41 +49,33 @@ public class VnPayReturnController extends HttpServlet {
 
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
-                // THANH TOÁN THÀNH CÔNG
                 String orderIdStr = request.getParameter("vnp_TxnRef");
                 try {
                     int orderId = Integer.parseInt(orderIdStr);
                     OrderDao orderDao = new OrderDao();
-                    orderDao.confirmOrder(orderId); // Cập nhật đơn thành Đã thanh toán (status = 1)
+                    orderDao.confirmOrder(orderId);
                 } catch (Exception e) {}
 
-                // Chuyển hướng về trang lịch sử đơn hàng kèm thông báo
                 response.sendRedirect(request.getContextPath() + "/purchase?msg=payment_success");
             } else {
-                // KHÁCH HỦY GIAO DỊCH HOẶC THANH TOÁN LỖI
                 String orderIdStr = request.getParameter("vnp_TxnRef");
                 try {
                     int orderId = Integer.parseInt(orderIdStr);
                     OrderDao orderDao = new OrderDao();
-
-                    // Lấy thông tin user từ Session để lấy ID truyền vào hàm hoàn kho
                     vn.edu.hcmuaf.fit.Web_ban_hang.model.User user = (vn.edu.hcmuaf.fit.Web_ban_hang.model.User) request.getSession().getAttribute("user");
 
                     if (user != null) {
-                        orderDao.cancelOrder(orderId, user.getId()); // Hủy đơn và hoàn kho
+                        orderDao.cancelOrder(orderId, user.getId());
                     } else {
-                        // Đề phòng trường hợp trình duyệt làm mất Session khi chuyển trang
                         orderDao.cancelOrder(orderId, 0);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                // Chuyển hướng về trang lịch sử đơn hàng kèm thông báo
                 response.sendRedirect(request.getContextPath() + "/purchase?msg=payment_failed");
             }
         } else {
-            // LỖI CHỮ KÝ BẢO MẬT (Hacker can thiệp)
             response.sendRedirect(request.getContextPath() + "/purchase?msg=invalid_signature");
         }
     }
