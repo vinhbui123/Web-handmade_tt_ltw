@@ -76,7 +76,7 @@ public class Show extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
-
+        request.setAttribute("totalProducts", totalProducts);
         request.getRequestDispatcher("ad-product.jsp").forward(request, response);
     }
 }

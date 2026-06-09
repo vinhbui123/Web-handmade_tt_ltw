@@ -232,3 +232,21 @@
 .status-list-icon:hover {
     color: #0056b3;
 }
+
+/* CSS cho Nút Hoàn đơn hàng */
+.order-actions .return-order-btn {
+    background-color: #ee4d2d;
+    color: white;
+    border: 1px solid #ee4d2d;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.order-actions .return-order-btn:hover {
+    background-color: #d7321194;
+    border-color: #d7321194;
+    opacity: 0.9;
+}

@@ -1,42 +1,41 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.order;
 
-import java.io.IOException;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 
-@WebServlet(name = "CancelOrder", urlPatterns = "/cancelOrder")
-public class CancelOrder extends HttpServlet {
+import java.io.IOException;
+
+@WebServlet(name = "AdminProcessReturn", urlPatterns = "/adminProcessReturn")
+public class AdminProcessReturn extends HttpServlet {
     private final OrderDao orderDao = new OrderDao();
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String orderIdRaw = request.getParameter("orderId");
+        String action = request.getParameter("action"); // Sẽ nhận giá trị "accept" hoặc "reject"
         boolean isAjax = "true".equals(request.getParameter("ajax"));
         boolean success = false;
 
         try {
             int orderId = Integer.parseInt(orderIdRaw);
-            HttpSession session = request.getSession(false);
-            User currentUser = (User) session.getAttribute("user");
+            success = orderDao.processReturnRequest(orderId, action);
 
-            if (currentUser != null) {
-                success = orderDao.cancelOrder(orderId, currentUser.getId());
-                if (success) {
-                    System.out.println("Admin đã hủy đơn hàng #" + orderId);
+            if (success) {
+                if ("accept".equals(action)) {
+                    System.out.println("Admin đã CHẤP NHẬN hoàn trả đơn hàng #" + orderId);
                 } else {
-                    System.out.println("Hủy đơn hàng thất bại");
+                    System.out.println("Admin đã TỪ CHỐI hoàn trả đơn hàng #" + orderId);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        // Xử lý trả về cho AJAX
         if (isAjax) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -44,6 +43,7 @@ public class CancelOrder extends HttpServlet {
             return;
         }
 
+        // Xử lý xong thì quay lại trang Quản lý Đơn hàng (dành cho non-ajax)
         response.sendRedirect(request.getContextPath() + "/adminOrders");
     }
 }
