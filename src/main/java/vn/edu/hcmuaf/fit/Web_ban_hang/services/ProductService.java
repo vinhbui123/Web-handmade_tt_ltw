@@ -1,12 +1,12 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import java.util.Collections;
+import java.util.List;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CommentDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
-import java.util.Collections;
-import java.util.List;
 
 public class ProductService {
 
@@ -16,12 +16,10 @@ public class ProductService {
         return productDao.getAll();
     }
 
-    // Lấy sản phẩm theo ID
     public Product getById(int id) {
         return ProductDao.getById(id);
     }
 
-    // Lấy sản phẩm theo danh mục
     public List<Product> getByCategory(int categoryId) {
         List<Product> products = productDao.getByCategory(categoryId);
         Collections.shuffle(products);

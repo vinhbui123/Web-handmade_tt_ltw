@@ -35,10 +35,4 @@ public class SettingDAO {
         };
     }
 
-    // <%--<c:when test="${firstRow.status == 0}">Đang chờ xác nhận</c:when>--%>
-    // <%--<c:when test="${firstRow.status == 1}">Đã xác nhận</c:when>--%>
-    // <%--<c:when test="${firstRow.status == 2}">Đang giao hàng</c:when>--%>
-    // <%--<c:when test="${firstRow.status == 3}">Đã hoàn thành</c:when>--%>
-    // <%--<c:when test="${firstRow.status == 4}">Đã huỷ</c:when>--%>
-
 }

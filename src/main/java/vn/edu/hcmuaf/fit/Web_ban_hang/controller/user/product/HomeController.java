@@ -1,5 +1,10 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,11 +17,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @WebServlet(urlPatterns = {"/home"})
 public class HomeController extends HttpServlet {
@@ -34,14 +34,11 @@ public class HomeController extends HttpServlet {
         ProductService productService = new ProductService();
         List<Product> productViewest;
 
-        // 2. Sử dụng biến này để lấy data
         productViewest = productService.getProductViewest(itemsPerPage);
         req.setAttribute("productViewest", productViewest);
 
-        // 3. Gửi biến này sang index.jsp
         req.setAttribute("itemsPerPageConfig", itemsPerPage);
 
-        // 4. Inject wishlist data
         HttpSession session = req.getSession();
         User user = (User) session.getAttribute("user");
         if (user != null) {

@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.order;
 
+import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,8 +10,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-
-import java.io.IOException;
 
 @WebServlet(name = "CancelOrder", urlPatterns = "/cancelOrder")
 public class CancelOrder extends HttpServlet {
@@ -20,7 +20,6 @@ public class CancelOrder extends HttpServlet {
 
         try {
             int orderId = Integer.parseInt(orderIdRaw);
-            // ✅ Lấy user từ session
             HttpSession session = request.getSession(false);
             User currentUser = (User) session.getAttribute("user");
 

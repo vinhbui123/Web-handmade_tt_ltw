@@ -15,10 +15,8 @@ public class ShopAddress {
     @SerializedName("ward_code")
     private String wardCode;
 
-    // Constructors
     public ShopAddress() {}
 
-    // Getters and Setters
     public long getShopId() {
         return shopId;
     }

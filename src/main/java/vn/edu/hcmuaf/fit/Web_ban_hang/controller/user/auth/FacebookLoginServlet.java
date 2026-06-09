@@ -14,7 +14,6 @@ public class FacebookLoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Tự động chọn redirect URI dựa trên domain hiện tại
         String redirectUri;
         String serverName = request.getServerName();
         if (serverName.contains("ttltwtnkiet.id.vn")) {

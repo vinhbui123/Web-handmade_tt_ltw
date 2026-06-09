@@ -30,10 +30,8 @@ public class RegisterController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Xử lý tiếng Việt cho dữ liệu nhập vào
         request.setCharacterEncoding("UTF-8");
 
-        // Lấy dữ liệu từ form
         String firstName = request.getParameter("firstName");
         String lastName = request.getParameter("lastName");
         String username = request.getParameter("username");
@@ -45,10 +43,8 @@ public class RegisterController extends HttpServlet {
         String address = request.getParameter("address");
         String bio = request.getParameter("bio");
 
-        // Kiểm tra tính hợp lệ của input (Basic Validation)
         String errorMessage = userService.validateInputs(firstName, lastName, username, email, password, confirmPassword);
 
-        // trả về giá trị sai in ra màn hình
         if (errorMessage != null) {
             handleRegisterError(request, response, errorMessage);
             return;
@@ -67,23 +63,19 @@ public class RegisterController extends HttpServlet {
         user.setRole(0);
         user.setStatus(1);
 
-        // Gọi Service để lưu
         boolean success = userService.registerUser(user);
 
         if (success) {
-            // Đăng ký thành công → Auto-login: lấy user vừa tạo từ DB, khởi tạo session
             UserDao userDao = new UserDao();
             User registeredUser = userDao.getUserByUsername(username);
 
             HttpSession session = request.getSession(true);
             session.setAttribute("user", registeredUser);
             session.setAttribute("cart", new Cart());
-            // Flag để trang chủ hiển thị popup chào mừng
             session.setAttribute("welcomeNewUser", true);
 
             response.sendRedirect(request.getContextPath() + "/home");
         } else {
-            // Lỗi hệ thống hoặc lỗi không xác định
             handleRegisterError(request, response, "Đăng ký thất bại. Vui lòng thử lại sau.");
         }
     }
@@ -91,7 +83,6 @@ public class RegisterController extends HttpServlet {
     private void handleRegisterError(HttpServletRequest request, HttpServletResponse response, String error) throws ServletException, IOException {
         request.setAttribute("error", error);
 
-        // Refill form: Giữ lại thông tin để người dùng đỡ phải nhập lại
         request.setAttribute("firstName", request.getParameter("firstName"));
         request.setAttribute("lastName", request.getParameter("lastName"));
         request.setAttribute("username", request.getParameter("username"));
@@ -100,8 +91,6 @@ public class RegisterController extends HttpServlet {
         request.setAttribute("address", request.getParameter("address"));
         request.setAttribute("bio", request.getParameter("bio"));
         request.setAttribute("avatar", request.getParameter("avatar"));
-
-        // Lưu ý: KHÔNG bao giờ set lại password và confirmPassword vì lý do bảo mật
 
         request.getRequestDispatcher("register.jsp").forward(request, response);
     }

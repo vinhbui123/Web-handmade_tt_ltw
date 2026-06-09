@@ -22,12 +22,12 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.AddressService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.OrderService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
 
 @WebServlet(name = "CheckoutController", value = "/checkout")
@@ -43,7 +43,6 @@ public class CheckoutController extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // 1. Parse JSON
             OrderDTO orderDTO = ReadJsonUtil.parseJson(request, OrderDTO.class);
 
             OrderService orderService = new OrderService();
@@ -51,10 +50,8 @@ public class CheckoutController extends HttpServlet {
                     orderDTO.getPaymentTypeId());
             List<OrderDetail> details = orderService.toDetailOrder(orderDTO.getDetails());
 
-            // 2. Chuẩn bị InventoryDao
             InventoryDao inventoryDao = new InventoryDao();
 
-            // 3. Kiểm tra địa chỉ giao hàng
             HttpSession session = request.getSession(false);
             if (session == null) {
                 out.print("{\"success\": false, \"message\": \"Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.\"}");
@@ -66,7 +63,6 @@ public class CheckoutController extends HttpServlet {
                 return;
             }
 
-            // Áp dụng coupon discount lên chi tiết đơn hàng
             Coupon appliedCoupon = (Coupon) session.getAttribute("appliedCoupon");
             if (appliedCoupon != null) {
                 double orderTotal = 0;
@@ -90,7 +86,6 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
-            // 4. Trừ kho TRƯỚC khi lưu đơn (dùng SELECT ... FOR UPDATE chống race condition)
             for (OrderDetail detail : details) {
                 boolean success = inventoryDao.exportProduct(detail.getProductId(), detail.getQuantity(),
                         orderDTO.getUserId(), "export");
@@ -101,9 +96,8 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
-            // 5. Lưu đơn hàng (chỉ sau khi trừ kho thành công)
             orderService.addOrder(order, details);
-            // Chỉ xóa sản phẩm khỏi giỏ hàng thật khi không phải Mua Ngay
+
             if (!orderDTO.isBuyNow()) {
                 CartService cart = (CartService) session.getAttribute("cart");
                 if (cart != null) {
@@ -113,24 +107,19 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
-            // 7. Xóa coupon khỏi session sau khi đặt hàng thành công
             session.removeAttribute("appliedCoupon");
 
-            if (order.getPaymentTypeId() == 2) { // 2 = QR VNPAY
+            if (order.getPaymentTypeId() == 2) {
                 System.out.println("========== ĐÃ VÀO ĐƯỢC LUỒNG VNPAY ==========");
-                // Tính tổng tiền cần thanh toán
                 long totalAmount = order.getShippingFee();
                 for (OrderDetail detail : details) {
                     totalAmount += (detail.getTotalMoney() - detail.getDiscountAmount());
                 }
 
-                // Gọi Config để sinh link VNPAY
                 String vnpayUrl = vn.edu.hcmuaf.fit.Web_ban_hang.utils.VnPayConfig.generatePaymentUrl(String.valueOf(order.getId()), totalAmount, request);
 
-                // Trả URL về cho Javascript chuyển hướng
                 out.print("{\"success\": true, \"redirectUrl\": \"" + vnpayUrl + "\"}");
             } else {
-                // Thanh toán tiền mặt (COD) - Trả về thành công bình thường
                 out.print("{\"success\": true}");
             }
         } catch (Exception e) {
@@ -145,35 +134,30 @@ public class CheckoutController extends HttpServlet {
         }
     }
 
-    // Hiển thị trang checkout
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
 
-        // Kiểm tra đăng nhập
         if (user == null || user.getUsername() == null) {
             request.setAttribute("message", "Cần đăng nhập để thực hiện thao tác này.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }
 
-        // Lấy địa chỉ mặc định nếu chưa có
         if (session.getAttribute("addressDefault") == null) {
             AddressService addressService = new AddressService();
             Address defaultAddress = addressService.getAddressDefault(user.getId());
             session.setAttribute("addressDefault", defaultAddress);
         }
 
-        // ===== Phần mua ngay (buyNow) =====
         String buyNow = request.getParameter("buyNow");
         if ("true".equals(buyNow)) {
             try {
                 int productId = Integer.parseInt(request.getParameter("productId"));
                 int quantity = Integer.parseInt(request.getParameter("quantity"));
 
-                // Lấy sản phẩm từ DB
                 ProductService productService = new ProductService();
                 Product product = productService.getById(productId);
                 if (product == null) {
@@ -182,14 +166,12 @@ public class CheckoutController extends HttpServlet {
                     return;
                 }
 
-                // Tạo giỏ hàng tạm chỉ chứa sản phẩm "Mua Ngay"
                 CartService buyNowCart = new CartService();
                 buyNowCart.add(product, quantity);
 
-                // Truyền dữ liệu cho checkout.jsp
                 request.setAttribute("cart", buyNowCart);
                 request.setAttribute("isCartEmpty", false);
-                request.setAttribute("isBuyNow", true); // Đánh dấu mode Mua Ngay
+                request.setAttribute("isBuyNow", true);
 
                 addTocart(request, response, session, buyNowCart);
                 return;
@@ -202,7 +184,6 @@ public class CheckoutController extends HttpServlet {
             }
         }
 
-        // ===== Phần cart (giỏ hàng) =====
         Object cart = session.getAttribute("cart");
         if (cart == null || ((CartService) cart).getList().isEmpty()) {
             request.setAttribute("isCartEmpty", true);

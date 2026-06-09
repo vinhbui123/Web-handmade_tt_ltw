@@ -1,22 +1,24 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
 
 public class CommentDao {
 
     private static final Logger log = LoggerFactory.getLogger(CommentDao.class);
 
-    // Lấy danh sách comment theo productId
     public List<Comment> getCommentsByProductId(int productId) {
         List<Comment> comments = new ArrayList<>();
-        // FIX: Changed 'created_at' to 'create_at' and 'content' will be handled in loop
         String query = "SELECT c.*, u.username " +
                 "FROM comments c " +
                 "JOIN ( " +
@@ -74,7 +76,6 @@ public class CommentDao {
     }
 
     public void addComment(Comment comment) {
-        // Attempt to update the existing comment for this specific user and product
         String updateQuery = "UPDATE comments SET comment = ?, rating = ?, create_at = ? " +
                 "WHERE product_id = ? AND user_id = ?";
 
@@ -82,7 +83,6 @@ public class CommentDao {
                 "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnect.getConnection()) {
-            // Step 1: Try updating first
             try (PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
                 updateStmt.setString(1, comment.getContent());
                 updateStmt.setInt(2, comment.getRating());
@@ -92,7 +92,6 @@ public class CommentDao {
 
                 int rowsAffected = updateStmt.executeUpdate();
 
-                // Step 2: If no rows were updated, it's a new comment, so insert it
                 if (rowsAffected == 0) {
                     try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
                         insertStmt.setInt(1, comment.getProductId());
@@ -111,7 +110,6 @@ public class CommentDao {
 
     public List<Comment> getAllComments() {
         List<Comment> list = new ArrayList<>();
-        // FIX: create_at
         String sql = "SELECT c.*, u.username FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.create_at DESC";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -122,11 +120,7 @@ public class CommentDao {
                 c.setProductId(rs.getInt("product_id"));
                 c.setUserId(rs.getInt("user_id"));
                 c.setRating(rs.getInt("rating"));
-
-                // FIX: comment
                 c.setContent(rs.getString("comment"));
-
-                // FIX: create_at
                 c.setCreatedAt(rs.getTimestamp("create_at"));
 
                 c.setUserName(rs.getString("username"));

@@ -5,6 +5,9 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 
 import jakarta.servlet.annotation.WebServlet;
@@ -12,8 +15,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CouponDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
@@ -54,13 +55,10 @@ public class ApplyCouponController extends HttpServlet {
                 return;
             }
 
-            // Logic tính toán số tiền giảm giá
             int discountAmount = getDiscountAmount(matchedCoupon, total);
 
-            // Lưu mã vào session để có thể sử dụng khi checkout nếu cần
             session.setAttribute("appliedCoupon", matchedCoupon);
 
-            // Trả về JSON kết quả bằng HashMap (tương thích tốt với Gson)
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Đã áp dụng mã thành công.");
@@ -79,19 +77,15 @@ public class ApplyCouponController extends HttpServlet {
 
     public static int getDiscountAmount(Coupon matchedCoupon, Double total) {
         int discountAmount = 0;
-        if (matchedCoupon.getType() == 0) { // Giảm tiền mặt
+        if (matchedCoupon.getType() == 0) {
             discountAmount = matchedCoupon.getDiscountValue();
-        } else if (matchedCoupon.getType() == 1) { // Giảm theo phần trăm
+        } else if (matchedCoupon.getType() == 1) {
             int discountPercent = matchedCoupon.getDiscountPercent();
             discountAmount = (int) (total * discountPercent / 100.0);
-
-            // Áp dụng giới hạn số tiền giảm tối đa nếu có
             if (matchedCoupon.getMaxDiscountValue() != null && discountAmount > matchedCoupon.getMaxDiscountValue()) {
                 discountAmount = matchedCoupon.getMaxDiscountValue();
             }
         }
-
-        // Safety check: Số tiền giảm không được lớn hơn tổng giá trị đơn hàng
         if (discountAmount > total) {
             discountAmount = total.intValue();
         }

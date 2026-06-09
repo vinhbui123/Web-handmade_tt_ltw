@@ -90,7 +90,6 @@ public class OrderDTO {
         this.paymentTypeId = paymentTypeId;
     }
 
-    // next code: tự động add nếu trùng trong details
     public boolean addDetail(DetailOrderDTO detail) {
        return this.details.add(detail);
     }

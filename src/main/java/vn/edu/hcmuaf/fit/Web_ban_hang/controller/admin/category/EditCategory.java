@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.category;
 
+import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,8 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.AdminDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
-
-import java.io.IOException;
 
 @WebServlet(name = "EditCategory", value = "/editCategory")
 public class EditCategory extends HttpServlet {
@@ -22,7 +22,6 @@ public class EditCategory extends HttpServlet {
         } else {
             int categoryId = Integer.parseInt(categoryIdStr);
 
-            // Cập nhật danh mục vào database
             Category category = new Category();
             category.setId(categoryId);
             category.setName(categoryName);
@@ -31,7 +30,6 @@ public class EditCategory extends HttpServlet {
             adminDao.updateCategory(category);
         }
 
-        // Sau khi cập nhật, load lại danh sách danh mục
         response.sendRedirect(request.getContextPath() + "/adminCategory");
     }
 }

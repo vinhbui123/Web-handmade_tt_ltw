@@ -30,8 +30,6 @@ public class RemoveCouponController extends HttpServlet {
 
         try {
             HttpSession session = req.getSession();
-            
-            // Xóa mã giảm giá khỏi session
             session.removeAttribute("appliedCoupon");
 
             double total = 0.0;

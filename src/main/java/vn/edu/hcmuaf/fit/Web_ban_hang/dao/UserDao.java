@@ -1,18 +1,23 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HashUtil;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.HashUtil;
 
 public class UserDao {
 
@@ -85,7 +90,6 @@ public class UserDao {
         return fetchUserByStringParam(email, query);
     }
 
-    // HELPER: Fetches a user based on a single string parameter (username or email)
     private User fetchUserByStringParam(String paramValue, String query) {
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
@@ -99,7 +103,6 @@ public class UserDao {
         return null;
     }
 
-    // HELPER: Executes the statement and maps the first result to a User
     private User fetchSingleUser(PreparedStatement statement) throws SQLException {
         try (ResultSet rs = statement.executeQuery()) {
             if (rs.next()) {
@@ -125,7 +128,6 @@ public class UserDao {
         return users;
     }
 
-    // HELPER: Maps a single ResultSet row to a User object
     private User mapRowToUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));
@@ -385,12 +387,6 @@ public class UserDao {
         }
     }
 
-    // ======= FORGOT PASSWORD TOKEN METHODS =======
-
-    /**
-     * Lưu token đặt lại mật khẩu (UUID) cùng thời hạn hết hạn vào DB.
-     * Yêu cầu bảng users có 2 cột: reset_token (VARCHAR), reset_token_expiry (DATETIME).
-     */
     public boolean saveResetToken(String email, String token, Timestamp expiryTime) {
         String sql = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -407,9 +403,7 @@ public class UserDao {
         return false;
     }
 
-    /**
-     * Tìm user theo token đặt lại mật khẩu (chỉ trả về nếu token còn hạn).
-     */
+
     public User getUserByResetToken(String token) {
         String sql = "SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()";
         try (Connection conn = DBConnect.getConnection();
@@ -424,9 +418,6 @@ public class UserDao {
         return null;
     }
 
-    /**
-     * Xóa token sau khi đã đặt lại mật khẩu thành công.
-     */
     public boolean clearResetToken(String email) {
         String sql = "UPDATE users SET reset_token = NULL, reset_token_expiry = NULL WHERE email = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -441,9 +432,6 @@ public class UserDao {
         return false;
     }
 
-    /**
-     * Cập nhật mật khẩu theo email (dùng sau khi xác thực token).
-     */
     public boolean updatePasswordByEmail(String email, String newPassword) {
         String sql = "UPDATE users SET password = ? WHERE email = ?";
         try (Connection conn = DBConnect.getConnection();

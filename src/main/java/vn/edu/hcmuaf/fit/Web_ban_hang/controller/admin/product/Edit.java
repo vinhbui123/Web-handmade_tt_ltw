@@ -1,5 +1,9 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,10 +14,6 @@ import jakarta.servlet.http.Part;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.AdminDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
 
 @WebServlet(name = "Edit", value = "/adminEdit")
 @MultipartConfig(
@@ -65,17 +65,14 @@ public class Edit extends HttpServlet {
 
                 AdminDao.updateProduct(existingProduct);
                 AdminDao.updateProductMaterials(existingProduct.getId(), materialIds);
-                // Thông báo thành công
-                request.getSession().setAttribute("message", "✔️ Cập nhật sản phẩm thành công!");
+                request.getSession().setAttribute("message", " Cập nhật sản phẩm thành công!");
                 request.getSession().setAttribute("messageType", "success");
             } else {
-                // Thông báo không tìm thấy sản phẩm
-                request.getSession().setAttribute("message", "❌ Không tìm thấy sản phẩm để cập nhật!");
+                request.getSession().setAttribute("message", " Không tìm thấy sản phẩm để cập nhật!");
                 request.getSession().setAttribute("messageType", "error");
             }
         } catch (NumberFormatException e) {
-            // Dữ liệu không hợp lệ
-            request.getSession().setAttribute("message", "❌ Dữ liệu không hợp lệ. Vui lòng kiểm tra lại!");
+            request.getSession().setAttribute("message", " Dữ liệu không hợp lệ. Vui lòng kiểm tra lại!");
             request.getSession().setAttribute("messageType", "error");
         }
 

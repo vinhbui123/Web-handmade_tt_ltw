@@ -30,13 +30,11 @@ public class FacebookCallbackServlet extends HttpServlet {
         String code = request.getParameter("code");
 
         if (code == null) {
-//            logFailure("Không nhận được mã từ Facebook", request, "-");
             response.getWriter().println("Không nhận được mã từ Facebook");
             return;
         }
 
         try {
-            // Tự động chọn redirect URI dựa trên domain hiện tại
             String redirectUri;
             String serverName = request.getServerName();
             if (serverName.contains("ttltwtnkiet.id.vn")) {
@@ -73,17 +71,14 @@ public class FacebookCallbackServlet extends HttpServlet {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
 
-                // Nếu chưa có giỏ hàng trong session thì cấp mới ngay
                 if (session.getAttribute("cart") == null) {
                     session.setAttribute("cart", new CartService());
-                    //log.info("Khởi tạo giỏ hàng thành công cho người dùng FB: {}", user.getUsername());
                 }
             }
             response.sendRedirect(request.getContextPath() + "/home");
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-//            logFailure("Lỗi callback Facebook: " + e.getMessage(), request, "-");
             response.getWriter().println("Lỗi: " + e.getMessage());
         }
     }
@@ -106,39 +101,11 @@ public class FacebookCallbackServlet extends HttpServlet {
 
             userDao.insertFacebookUser(user);
             user = (email != null) ? userDao.getUserByEmail(email) : userDao.getUserByUsername(username);
-//                logSuccess(user, request, "Đăng ký + Đăng nhập bằng Facebook", "Tài khoản mới được tạo và đăng nhập Facebook");
         } else {
             if (user.getAuthProvider() == null || user.getAuthProvider().equals("local")) {
                 userDao.updateAuthProvider(user.getEmail(), "facebook");
             }
-//                logSuccess(user, request, "Đăng nhập bằng Facebook", "Đăng nhập Facebook thành công");
         }
         return user;
     }
-
-//    private void logSuccess(User user, HttpServletRequest request, String action, String note) {
-//        ActivityLog log = new ActivityLog();
-//        log.setUserId(user.getId());
-//        log.setUsername(user.getUsername());
-//        log.setEmail(user.getEmail());
-//        log.setAction(action);
-//        log.setStatus("Thành công");
-//        log.setIpAddress(request.getRemoteAddr());
-//        log.setNote(note);
-//        log.setTimestamp(new Timestamp(System.currentTimeMillis()));
-//        new ActivityLogDao().insertLog(log);
-//    }
-//
-//    private void logFailure(String note, HttpServletRequest request, String email) {
-//        ActivityLog log = new ActivityLog();
-//        log.setUserId(0);
-//        log.setUsername("-");
-//        log.setEmail(email);
-//        log.setAction("Đăng nhập bằng Facebook");
-//        log.setStatus("Thất bại");
-//        log.setIpAddress(request.getRemoteAddr());
-//        log.setNote(note);
-//        log.setTimestamp(new Timestamp(System.currentTimeMillis()));
-//        new ActivityLogDao().insertLog(log);
-//    }
 }

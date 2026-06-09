@@ -1,15 +1,14 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+
 public class CategoryShippingDao {
 
-    // Trả về mảng int chứa: [weight, length, width, height]
     public int[] getShippingDefaults(int categoryId) {
-        // Giá trị dự phòng: Nếu xóa mất danh mục thì trả về số mặc định này
         int[] defaults = {50, 10, 8, 5};
 
         String sql = "SELECT weight, length, width, height FROM category_shipping_defaults WHERE category_id = ?";

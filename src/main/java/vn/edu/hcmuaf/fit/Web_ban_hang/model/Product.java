@@ -23,10 +23,8 @@ public class Product implements Serializable {
 
     private int weight;
 
-    // Default constructor
     public Product() {}
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
