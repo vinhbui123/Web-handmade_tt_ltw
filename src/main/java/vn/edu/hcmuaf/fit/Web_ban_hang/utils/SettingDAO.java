@@ -20,6 +20,12 @@ public class SettingDAO {
                 return "Đã hoàn thành";
             case 4:
                 return "Đã huỷ";
+            case 5:
+                return "Đang yêu cầu hoàn trả";
+            case 6:
+                return "Đã hoàn tiền";
+            case 7:
+                return "Từ chối hoàn trả";
             case 0:
                 return "Đang chờ xác nhận";
             default:

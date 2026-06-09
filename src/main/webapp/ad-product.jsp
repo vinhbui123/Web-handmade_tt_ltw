@@ -210,7 +210,11 @@
             </c:forEach>
             </tbody>
         </table>
-        <div class="server-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 30px 0;">
+        <div class="pagination-info-container" style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #555; font-size: 14px;">
+            Trang ${currentPage}/${totalPages} – Tổng ${totalProducts != null ? totalProducts : 0} sản phẩm
+        </div>
+
+        <div class="server-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 10px 0;">
             <c:if test="${currentPage > 1}">
                 <a href="javascript:void(0);" onclick="goToPage(${currentPage - 1})" class="btn-page">&lt;</a>
             </c:if>
@@ -248,8 +252,6 @@
                 <label for="addPrice">Giá:</label>
                 <input type="number" id="addPrice" name="price" placeholder="Nhập giá sản phẩm" required>
 
-                <label for="addQuantity">Số Lượng:</label>
-                <input type="number" id="addQuantity" name="quantity" placeholder="Nhập số lượng sản phẩm" required>
                 <label>Chất liệu:</label>
                 <div class="material-checkbox-group">
                     <c:forEach var="m" items="${materials}">
@@ -426,7 +428,7 @@
                 // Cập nhật lại Bảng và Thanh phân trang
                 document.querySelector(".product-table tbody").innerHTML = doc.querySelector(".product-table tbody").innerHTML;
                 document.querySelector(".server-pagination").innerHTML = doc.querySelector(".server-pagination").innerHTML;
-
+                document.querySelector(".pagination-info-container").innerHTML = doc.querySelector(".pagination-info-container").innerHTML;
                 // Lưu lại URL lên trình duyệt cho đẹp và giữ history
                 window.history.pushState({}, '', url);
                 updateSortIcons();

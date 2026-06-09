@@ -49,7 +49,7 @@ public class CommentDao {
                 cmt.setCreatedAt(rs.getTimestamp("create_at"));
 
                 String username = rs.getString("username");
-                    cmt.setUserName(username);
+                cmt.setUserName(username);
 
 
                 comments.add(cmt);
@@ -141,5 +141,47 @@ public class CommentDao {
         } catch (SQLException e) {
             log.error(e.getMessage());
         }
+    }
+
+    // Đếm tổng số lượng comment
+    public int getTotalCommentsCount() {
+        String sql = "SELECT COUNT(*) FROM comments";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi đếm comment: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    // Lấy danh sách comment theo trang
+    public List<Comment> getCommentsByPage(int offset, int limit) {
+        List<Comment> list = new ArrayList<>();
+        String sql = "SELECT c.*, u.username FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.create_at DESC LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Comment c = new Comment();
+                    c.setId(rs.getInt("id"));
+                    c.setProductId(rs.getInt("product_id"));
+                    c.setUserId(rs.getInt("user_id"));
+                    c.setRating(rs.getInt("rating"));
+                    c.setContent(rs.getString("comment"));
+                    c.setCreatedAt(rs.getTimestamp("create_at"));
+                    c.setUserName(rs.getString("username"));
+                    list.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi phân trang comment: " + e.getMessage());
+        }
+        return list;
     }
 }
