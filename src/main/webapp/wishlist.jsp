@@ -68,11 +68,11 @@
         </c:when>
         <c:otherwise>
             <div class="wishlist-empty">
-                <i class="far fa-heart"></i>
-                <h3>Danh sách yêu thích trống</h3>
-                <p>Bạn chưa có sản phẩm yêu thích nào. Hãy khám phá và thêm sản phẩm ngay!</p>
+                <div class="empty-icon"><i class="fas fa-heartbeat"></i></div>
+                <h3>Chưa có sản phẩm yêu thích</h3>
+                <p>Danh sách của bạn đang trống.<br>Hãy khám phá các sản phẩm độc đáo và thêm vào danh sách yêu thích ngay!</p>
                 <a href="${pageContext.request.contextPath}/list-product?category=all" class="btn-shop-now">
-                    <i class="fas fa-store"></i> Khám Phá Sản Phẩm
+                    <i class="fas fa-shopping-bag"></i> Khám Phá Sản Phẩm
                 </a>
             </div>
         </c:otherwise>

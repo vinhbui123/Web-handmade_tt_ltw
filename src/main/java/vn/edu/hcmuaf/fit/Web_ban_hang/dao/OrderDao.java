@@ -1,22 +1,26 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
+
 public class OrderDao {
 
     private static final Logger log = LoggerFactory.getLogger(OrderDao.class);
 
-    // Lấy danh sách tất cả đơn hàng theo uid
     public List<Order> getAllOrders(int uid) {
         List<Order> orders = new ArrayList<>();
         String query = "SELECT * FROM orders WHERE user_id = ?";
@@ -40,10 +44,33 @@ public class OrderDao {
         return orders;
     }
 
+    public void addOrder(Connection connection, Order order, List<OrderDetail> details) throws SQLException {
+        String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, order.getStatus());
+            statement.setInt(2, order.getUserId());
+            statement.setInt(3, order.getShippingFee());
+            statement.setInt(4, order.getPaymentTypeId());
+            statement.executeUpdate();
+
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            int orderId = -1;
+            if (generatedKeys.next()) {
+                orderId = generatedKeys.getInt(1);
+                order.setId(orderId);
+            } else {
+                throw new SQLException("Không lấy được order_id!");
+            }
+
+            addDetailsOrder(connection, details, orderId, order.getStatus());
+        }
+    }
+
     public void addOrder(Order order, List<OrderDetail> details) {
         String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
 
-        try (Connection connection = DBConnect.getConnection()) {
+        try (Connection connection = DBConnect.getConnection()) { 
             try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, order.getStatus());
                 statement.setInt(2, order.getUserId());
@@ -51,17 +78,15 @@ public class OrderDao {
                 statement.setInt(4, order.getPaymentTypeId());
                 statement.executeUpdate();
 
-                // Lấy order_id vừa tạo
                 ResultSet generatedKeys = statement.getGeneratedKeys();
                 int orderId = -1;
                 if (generatedKeys.next()) {
                     orderId = generatedKeys.getInt(1);
-                    order.setId(orderId); // Đưa ID ngược lại object
+                    order.setId(orderId); 
                 } else {
                     throw new SQLException("Không lấy được order_id!");
                 }
 
-                // Thêm các chi tiết đơn hàng
                 addDetailsOrder(connection, details, orderId, order.getStatus());
             }
         } catch (SQLException e) {
@@ -151,9 +176,8 @@ public class OrderDao {
         Connection conn = null;
         try {
             conn = DBConnect.getConnection();
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false);
 
-            // Bước 1: Lấy danh sách sản phẩm trong đơn
             Map<Integer, Integer> productMap = new HashMap<>();
             try (PreparedStatement ps = conn.prepareStatement(selectDetailsSql)) {
                 ps.setInt(1, orderId);
@@ -166,17 +190,15 @@ public class OrderDao {
                 }
             }
 
-            // Bước 2: Cập nhật trạng thái đơn hàng
             try (PreparedStatement ps = conn.prepareStatement(updateOrderSql)) {
                 ps.setInt(1, orderId);
                 int rows = ps.executeUpdate();
                 if (rows == 0) {
                     conn.rollback();
-                    return false; // không cập nhật được trạng thái
+                    return false;
                 }
             }
 
-            // Bước 3: Hoàn lại kho và ghi log hủy từng sản phẩm
             InventoryDao inventoryDao = new InventoryDao();
             for (Map.Entry<Integer, Integer> entry : productMap.entrySet()) {
                 int productId = entry.getKey();
@@ -191,7 +213,7 @@ public class OrderDao {
                 }
             }
 
-            conn.commit(); // tất cả OK
+            conn.commit(); 
             return true;
 
         } catch (Exception e) {
@@ -204,7 +226,6 @@ public class OrderDao {
     }
 
     public boolean confirmOrder(int orderId) {
-        // Chỉ cho phép xác nhận nếu đơn đang ở trạng thái 0
         String sql = "UPDATE orders SET status = 1, updated_at = NOW() WHERE id = ? AND status = 0";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -216,6 +237,7 @@ public class OrderDao {
             return false;
         }
     }
+
     // Hàm tạo yêu cầu hoàn trả đơn hàng
     public boolean createReturnRequest(int orderId, String reason, String description, String proofImg) {
         String insertReturn = "INSERT INTO return_requests (order_id, reason, description, proof_img, status) VALUES (?, ?, ?, ?, 0)";
@@ -247,6 +269,7 @@ public class OrderDao {
         }
         return false;
     }
+
     public Map<String, String> getReturnDetails(int orderId) {
         Map<String, String> details = new HashMap<>();
         String sql = "SELECT reason, description, proof_img FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
@@ -364,90 +387,7 @@ public class OrderDao {
             return false;
         }
     }
-    // 1. Đếm tổng số lượng đơn hàng
-    public int getTotalOrdersCount() {
-        String sql = "SELECT COUNT(id) FROM orders";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            log.error("Lỗi đếm đơn hàng: " + e.getMessage());
-        }
-        return 0;
-    }
 
-    // 2. Lấy danh sách chi tiết đơn hàng THEO TRANG (Xử lý thông minh tránh cắt ngang đơn)
-    public List<Map<String, Object>> getOrdersByPageForAdmin(int offset, int limit) {
-        List<Map<String, Object>> result = new ArrayList<>();
-        List<Integer> orderIds = new ArrayList<>();
-
-        // Bước A: Lấy danh sách ID đơn hàng cho trang hiện tại
-        String sqlIds = "SELECT id FROM orders ORDER BY id DESC LIMIT ? OFFSET ?";
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlIds)) {
-            ps.setInt(1, limit);
-            ps.setInt(2, offset);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    orderIds.add(rs.getInt("id"));
-                }
-            }
-        } catch (SQLException e) {
-            log.error("Lỗi lấy ID đơn hàng: " + e.getMessage());
-        }
-
-        if (orderIds.isEmpty()) return result;
-
-        // Bước B: Lấy chi tiết các sản phẩm thuộc các ID vừa tìm được
-        StringBuilder placeholders = new StringBuilder();
-        for (int i = 0; i < orderIds.size(); i++) {
-            placeholders.append("?");
-            if (i < orderIds.size() - 1) placeholders.append(",");
-        }
-
-        String query = "SELECT o.id AS order_id, u.username, p.id AS product_id, p.name AS product_name, " +
-                "od.quantity, od.total_money, od.discount_amount, o.shipping_fee, " +
-                "o.status, o.create_at, o.updated_at, pt.payment_name AS payment_method, pt.payment_code AS payment_code " +
-                "FROM orders o " +
-                "JOIN users u ON o.user_id = u.id " +
-                "JOIN order_details od ON o.id = od.order_id " +
-                "JOIN products p ON od.product_id = p.id " +
-                "JOIN payment_types pt ON o.payment_type_id = pt.id " +
-                "WHERE o.id IN (" + placeholders.toString() + ") " +
-                "ORDER BY o.id DESC";
-
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            for (int i = 0; i < orderIds.size(); i++) {
-                ps.setInt(i + 1, orderIds.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("order_id", rs.getInt("order_id"));
-                    row.put("username", rs.getString("username"));
-                    row.put("product_id", rs.getInt("product_id"));
-                    row.put("product_name", rs.getString("product_name"));
-                    row.put("quantity", rs.getInt("quantity"));
-                    row.put("total_money", rs.getInt("total_money"));
-                    row.put("discount_amount", rs.getInt("discount_amount"));
-                    row.put("shipping_fee", rs.getInt("shipping_fee"));
-                    row.put("status", rs.getByte("status"));
-                    row.put("create_at", rs.getTimestamp("create_at"));
-                    row.put("updated_at", rs.getTimestamp("updated_at"));
-                    row.put("payment_method", rs.getString("payment_method"));
-                    row.put("payment_code", rs.getString("payment_code"));
-                    result.add(row);
-                }
-            }
-        } catch (SQLException e) {
-            log.error("Lỗi lấy chi tiết đơn hàng: " + e.getMessage());
-        }
-        return result;
-    }
     // Đếm tổng số lượng đơn hàng (lọc và tìm kiếm)
     public int getTotalOrdersCountUnified(String keyword, Integer statusFilter) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(o.id) FROM orders o JOIN users u ON o.user_id = u.id WHERE 1=1 ");
