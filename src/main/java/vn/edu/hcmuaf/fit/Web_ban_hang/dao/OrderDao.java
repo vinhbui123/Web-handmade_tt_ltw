@@ -495,7 +495,6 @@ public class OrderDao {
 
         if (orderIds.isEmpty()) return result;
 
-        // Lấy chi tiết các sản phẩm thuộc các ID vừa tìm được
         StringBuilder placeholders = new StringBuilder();
         for (int i = 0; i < orderIds.size(); i++) {
             placeholders.append("?");
@@ -541,5 +540,53 @@ public class OrderDao {
             log.error("Lỗi lấy chi tiết đơn hàng Unified: " + e.getMessage());
         }
         return result;
+    }
+    public Map<String, Object> getOrderDetailForPopup(int orderId) {
+        Map<String, Object> orderData = new HashMap<>();
+        List<Map<String, Object>> detailsList = new ArrayList<>();
+        int shippingFee = 0;
+        String paymentMethod = "Chưa xác định";
+        int status = 0;
+
+        String query = "SELECT o.shipping_fee, o.status, pt.payment_name, od.quantity, od.price, od.discount_amount, p.name, p.img " +
+                "FROM orders o " +
+                "JOIN order_details od ON o.id = od.order_id " +
+                "JOIN products p ON od.product_id = p.id " +
+                "LEFT JOIN payment_types pt ON o.payment_type_id = pt.id " +
+                "WHERE o.id = ?";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    shippingFee = rs.getInt("shipping_fee");
+                    status = rs.getInt("status");
+
+                    if (rs.getString("payment_name") != null) {
+                        paymentMethod = rs.getString("payment_name");
+                    }
+
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("productName", rs.getString("name"));
+                    item.put("productImg", rs.getString("img"));
+                    item.put("price", rs.getInt("price"));
+                    item.put("quantity", rs.getInt("quantity"));
+                    item.put("discountAmount", rs.getInt("discount_amount"));
+
+                    detailsList.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Lỗi lấy chi tiết đơn hàng cho Popup: " + e.getMessage());
+        }
+
+        orderData.put("shippingFee", shippingFee);
+        orderData.put("paymentMethod", paymentMethod);
+        orderData.put("status", status);
+        orderData.put("details", detailsList);
+
+        return detailsList.isEmpty() ? null : orderData;
     }
 }
