@@ -572,7 +572,7 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
-                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
+                p.setWeight(rs.getInt("weight")); 
                 products.add(p);
             }
         } catch (SQLException e) {
@@ -630,7 +630,7 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
-                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
+                p.setWeight(rs.getInt("weight"));
                 products.add(p);
             }
         } catch (SQLException e) {
@@ -734,7 +734,7 @@ public class ProductDao {
                 p.setImg(rs.getString("img"));
                 p.setCatalog_id(rs.getInt("catalog_id"));
                 p.setStock(rs.getInt("stock"));
-                p.setWeight(rs.getInt("weight")); // [THÊM MỚI]
+                p.setWeight(rs.getInt("weight")); 
                 map.put(p.getId(), p);
             }
 

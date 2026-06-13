@@ -17,16 +17,21 @@
 
     <%-- Hiển thị thông tin user & role --%>
     <div class="sidebar-user-info">
-        <span class="sidebar-username">${userName}</span>
-        <span class="sidebar-role">
-            <c:choose>
-                <c:when test="${userRole == 1}">Admin</c:when>
-                <c:when test="${userRole == 2}">Seller</c:when>
-                <c:when test="${userRole == 3}">Mod Nhập Hàng</c:when>
-                <c:when test="${userRole == 4}">Kiểm Duyệt Viên</c:when>
-                <c:otherwise>Không xác định</c:otherwise>
-            </c:choose>
-        </span>
+        <div class="sidebar-avatar">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="sidebar-user-details">
+            <span class="sidebar-username">${userName}</span>
+            <span class="sidebar-role">
+                <c:choose>
+                    <c:when test="${userRole == 1}">Admin</c:when>
+                    <c:when test="${userRole == 2}">Seller</c:when>
+                    <c:when test="${userRole == 3}">Mod Nhập Hàng</c:when>
+                    <c:when test="${userRole == 4}">Kiểm Duyệt Viên</c:when>
+                    <c:otherwise>Không xác định</c:otherwise>
+                </c:choose>
+            </span>
+        </div>
     </div>
 
     <ul>
@@ -34,7 +39,18 @@
         <li><a href="home"><i class="fa-solid fa-house"></i> Trang Chủ</a></li>
 
         <%-- Dashboard: tất cả role admin đều thấy --%>
-        <li><a href="admin"><i class="fa-solid fa-chart-line"></i> Thống Kê Tổng Quan</a></li>
+        <li>
+            <a href="admin">
+                <i class="fa-solid fa-chart-line"></i>
+                <c:choose>
+                    <c:when test="${userRole == 1}">Thống Kê Tổng Quan</c:when>
+                    <c:when test="${userRole == 2}">Thống Kê Bán Hàng</c:when>
+                    <c:when test="${userRole == 3}">Bảng Điều Khiển Nhập Hàng</c:when>
+                    <c:when test="${userRole == 4}">Bảng Điều Khiển Cộng Đồng</c:when>
+                    <c:otherwise>Bảng Điều Khiển</c:otherwise>
+                </c:choose>
+            </a>
+        </li>
 
         <%-- === Nhóm Sản Phẩm: Admin (1), Seller (2), Mod Nhập Hàng (3) === --%>
         <c:if test="${userRole == 1 || userRole == 2 || userRole == 3}">
@@ -73,9 +89,21 @@
         </c:if>
 
         <%-- Đăng Xuất: tất cả --%>
-        <li><a href="logout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</a></li>
+        <li class="sidebar-bottom"><a href="logout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</a></li>
     </ul>
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentPath = window.location.pathname;
+        const menuLinks = document.querySelectorAll('.sidebar ul li a');
+        menuLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== 'logout' && currentPath.includes(href)) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 </body>
 </html>

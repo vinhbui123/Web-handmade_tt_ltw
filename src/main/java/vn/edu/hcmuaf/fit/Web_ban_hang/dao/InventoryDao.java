@@ -114,6 +114,22 @@ public class InventoryDao {
         return false;
     }
 
+    public boolean exportProduct(Connection conn, int productId, int quantity, int userId, String type) throws SQLException {
+        int stock = getStockForUpdate(conn, productId);
+        if (stock < quantity) {
+            log.warn("Không đủ hàng! (SP: {}, Tồn: {}, Yêu cầu: {})", productId, stock, quantity);
+            return false;
+        }
+
+        boolean updateOk = updateInventory(conn, productId, 0, quantity);
+        if (!updateOk) {
+            return false;
+        }
+
+        insertTransaction(conn, productId, userId, quantity, type);
+        return true;
+    }
+
     public boolean exportProduct(int productId, int quantity, int userId, String type) {
         Connection conn = null;
         try {

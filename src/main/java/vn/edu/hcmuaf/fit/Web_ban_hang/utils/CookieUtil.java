@@ -62,7 +62,6 @@ public class CookieUtil {
         }
     }
 
-    // Tạo cookie remember me với userId đã mã hóa
     public static void setRememberCookie(HttpServletResponse response, int userId, String contextPath) {
         String encrypted = encrypt(String.valueOf(userId));
         Cookie cookie = new Cookie("REMEMBER_TOKEN", encrypted);
@@ -72,7 +71,6 @@ public class CookieUtil {
         response.addCookie(cookie);
     }
 
-    // Xoá cookie remember me
     public static void clearRememberCookie(HttpServletResponse response, String contextPath) {
         Cookie cookie = new Cookie("REMEMBER_TOKEN", "");
         cookie.setMaxAge(0);
@@ -81,7 +79,6 @@ public class CookieUtil {
         response.addCookie(cookie);
     }
 
-    // Đọc userId từ cookie, trả -1 nếu không có hoặc lỗi
     public static int getUserIdFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return -1;

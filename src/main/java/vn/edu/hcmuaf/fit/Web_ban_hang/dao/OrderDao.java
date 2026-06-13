@@ -1,22 +1,26 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.OrderDetail;
+
 public class OrderDao {
 
     private static final Logger log = LoggerFactory.getLogger(OrderDao.class);
 
-    // Lấy danh sách tất cả đơn hàng theo uid
     public List<Order> getAllOrders(int uid) {
         List<Order> orders = new ArrayList<>();
         String query = "SELECT * FROM orders WHERE user_id = ?";
@@ -40,10 +44,33 @@ public class OrderDao {
         return orders;
     }
 
+    public void addOrder(Connection connection, Order order, List<OrderDetail> details) throws SQLException {
+        String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, order.getStatus());
+            statement.setInt(2, order.getUserId());
+            statement.setInt(3, order.getShippingFee());
+            statement.setInt(4, order.getPaymentTypeId());
+            statement.executeUpdate();
+
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            int orderId = -1;
+            if (generatedKeys.next()) {
+                orderId = generatedKeys.getInt(1);
+                order.setId(orderId);
+            } else {
+                throw new SQLException("Không lấy được order_id!");
+            }
+
+            addDetailsOrder(connection, details, orderId, order.getStatus());
+        }
+    }
+
     public void addOrder(Order order, List<OrderDetail> details) {
         String query = "INSERT INTO orders (status, user_id, shipping_fee, payment_type_id) VALUES (?, ?, ?, ?)";
 
-        try (Connection connection = DBConnect.getConnection()) {
+        try (Connection connection = DBConnect.getConnection()) { 
             try (PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, order.getStatus());
                 statement.setInt(2, order.getUserId());
@@ -51,17 +78,15 @@ public class OrderDao {
                 statement.setInt(4, order.getPaymentTypeId());
                 statement.executeUpdate();
 
-                // Lấy order_id vừa tạo
                 ResultSet generatedKeys = statement.getGeneratedKeys();
                 int orderId = -1;
                 if (generatedKeys.next()) {
                     orderId = generatedKeys.getInt(1);
-                    order.setId(orderId); // Đưa ID ngược lại object
+                    order.setId(orderId); 
                 } else {
                     throw new SQLException("Không lấy được order_id!");
                 }
 
-                // Thêm các chi tiết đơn hàng
                 addDetailsOrder(connection, details, orderId, order.getStatus());
             }
         } catch (SQLException e) {
@@ -239,6 +264,7 @@ public class OrderDao {
         }
         return false;
     }
+
     public Map<String, String> getReturnDetails(int orderId) {
         Map<String, String> details = new HashMap<>();
         String sql = "SELECT reason, description, proof_img FROM return_requests WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";

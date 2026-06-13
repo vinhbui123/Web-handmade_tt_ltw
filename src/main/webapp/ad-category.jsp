@@ -15,6 +15,15 @@
   </header>
 
   <section class="category-management">
+    <c:if test="${not empty sessionScope.error}">
+      <div class="alert alert-danger" style="color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; padding: 10px; margin-bottom: 15px; border-radius: 5px;">${sessionScope.error}</div>
+      <c:remove var="error" scope="session"/>
+    </c:if>
+    <c:if test="${not empty sessionScope.success}">
+      <div class="alert alert-success" style="color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 10px; margin-bottom: 15px; border-radius: 5px;">${sessionScope.success}</div>
+      <c:remove var="success" scope="session"/>
+    </c:if>
+
     <c:if test="${sessionScope.user.role == 1}">
       <button class="btn-add" onclick="openCategoryModal()">
         <i class="fa-solid fa-plus"></i> Thêm Danh Mục
@@ -60,7 +69,7 @@
     <div class="modal-content">
       <span class="close" onclick="closeCategoryModal()">&times;</span>
       <h2>Thêm Danh Mục</h2>
-      <form id="categoryForm" action="${pageContext.request.contextPath}/adminCategory" method="post">
+      <form id="categoryForm" action="${pageContext.request.contextPath}/adminCategorys" method="post">
         <label for="categoryName">Tên Danh Mục:</label>
         <input type="text" id="categoryName" name="categoryName" required>
 

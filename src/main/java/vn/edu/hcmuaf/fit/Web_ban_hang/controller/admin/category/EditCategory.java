@@ -30,6 +30,6 @@ public class EditCategory extends HttpServlet {
             adminDao.updateCategory(category);
         }
 
-        response.sendRedirect(request.getContextPath() + "/adminCategory");
+        response.sendRedirect(request.getContextPath() + "/adminCategorys");
     }
 }
