@@ -27,9 +27,7 @@ public class Show extends HttpServlet {
         List<Material> materials = materialDao.getAll();
         request.setAttribute("materials", materials);
 
-        // Khai báo ProductDao để gọi 2 hàm phân trang thần thánh
         ProductDao productDao = new ProductDao();
-        // 1. NHẬN TOÀN BỘ THAM SỐ TỪ AJAX/REQUEST GỬI LÊN
         String searchKeyword = request.getParameter("search");
         String sortBy = request.getParameter("sortBy");
         String order = request.getParameter("order");
@@ -46,7 +44,6 @@ public class Show extends HttpServlet {
             try { materialId = Integer.parseInt(materialIdStr); } catch (Exception e) {}
         }
 
-        //  Tính toán phân trang
         int page = 1;
         int pageSize = 10;
         String pageParam = request.getParameter("page");
@@ -57,8 +54,6 @@ public class Show extends HttpServlet {
         List<Product> products = productDao.getAdminProductsUnified(searchKeyword, categoryId, materialId, sortBy, order, offset, pageSize);
         int totalProducts = productDao.getTotalCountUnified(searchKeyword, categoryId, materialId);
         int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
-
-        // Lấy bộ lọc Danh mục
 
         String categoryName = "Tất cả sản phẩm";
         if (categoryId != null) {

@@ -174,7 +174,6 @@ public class GHNService {
             }
             System.out.println("[GHN] Tìm thấy wardCode: " + wardCode);
 
-            // Trả về kết quả
             JsonObject result = new JsonObject();
             result.addProperty("province_id", provinceId);
             result.addProperty("district_id", districtId);

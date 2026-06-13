@@ -748,7 +748,6 @@ public class ProductDao {
         }
         return result;
     }
-   
     public List<Product> getAdminProductsUnified(String keyword, Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
         List<Integer> matchedIds = null;
 
@@ -843,7 +842,6 @@ public class ProductDao {
         return products;
     }
 
-    //  Hàm đếm tổng số lượng  (Để phân trang chạy chính xác)
     public int getTotalCountUnified(String keyword, Integer categoryId, Integer materialId) {
         List<Integer> matchedIds = null;
         if (keyword != null && !keyword.trim().isEmpty()) {
