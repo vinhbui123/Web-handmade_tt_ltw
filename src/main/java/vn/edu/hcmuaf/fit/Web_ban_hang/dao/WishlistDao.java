@@ -1,10 +1,5 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,10 +9,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+
 public class WishlistDao {
     private static final Logger log = LoggerFactory.getLogger(WishlistDao.class);
 
-    // Thêm sản phẩm vào danh sách yêu thích
     public boolean add(int userId, int productId) {
         String query = "INSERT IGNORE INTO wishlist (user_id, product_id) VALUES (?, ?)";
         try (Connection conn = DBConnect.getConnection();
@@ -31,7 +31,6 @@ public class WishlistDao {
         return false;
     }
 
-    // Xóa sản phẩm khỏi danh sách yêu thích
     public boolean remove(int userId, int productId) {
         String query = "DELETE FROM wishlist WHERE user_id = ? AND product_id = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -45,7 +44,6 @@ public class WishlistDao {
         return false;
     }
 
-    // Kiểm tra sản phẩm đã có trong wishlist chưa
     public boolean exists(int userId, int productId) {
         String query = "SELECT 1 FROM wishlist WHERE user_id = ? AND product_id = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -61,7 +59,6 @@ public class WishlistDao {
         return false;
     }
 
-    // Lấy danh sách product IDs trong wishlist của user (dùng để render heart icon)
     public Set<Integer> getProductIdsByUserId(int userId) {
         Set<Integer> ids = new HashSet<>();
         String query = "SELECT product_id FROM wishlist WHERE user_id = ?";
@@ -79,7 +76,6 @@ public class WishlistDao {
         return ids;
     }
 
-    // Lấy danh sách sản phẩm trong wishlist (JOIN với bảng products)
     public List<Product> getProductsByUserId(int userId) {
         List<Product> products = new ArrayList<>();
         String query = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.weight " +
@@ -109,7 +105,6 @@ public class WishlistDao {
         return products;
     }
 
-    // Đếm số sản phẩm trong wishlist
     public int countByUserId(int userId) {
         String query = "SELECT COUNT(*) FROM wishlist WHERE user_id = ?";
         try (Connection conn = DBConnect.getConnection();

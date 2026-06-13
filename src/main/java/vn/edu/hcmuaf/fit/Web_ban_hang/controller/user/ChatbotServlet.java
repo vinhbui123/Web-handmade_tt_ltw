@@ -34,7 +34,6 @@ public class ChatbotServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Đọc message từ request
         StringBuilder body = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
             String line;
@@ -56,37 +55,29 @@ public class ChatbotServlet extends HttpServlet {
             return;
         }
 
-        // Quản lý lịch sử hội thoại trong session
         HttpSession session = request.getSession();
-        @SuppressWarnings("unchecked")
         JsonArray chatHistory = (JsonArray) session.getAttribute("chatHistory");
         if (chatHistory == null) {
             chatHistory = new JsonArray();
             session.setAttribute("chatHistory", chatHistory);
         }
 
-        // Thêm tin nhắn người dùng vào lịch sử
         JsonObject userMsg = new JsonObject();
         userMsg.addProperty("role", "user");
         userMsg.addProperty("content", userMessage);
         chatHistory.add(userMsg);
-
-        // Giới hạn lịch sử (giữ 20 tin nhắn gần nhất)
+        
         while (chatHistory.size() > 20) {
             chatHistory.remove(0);
         }
 
         try {
-            // Gọi service để lấy phản hồi
             String aiReply = chatbotService.generateReply(userMessage, chatHistory);
 
-            // Thêm phản hồi AI vào lịch sử
             JsonObject assistantMsg = new JsonObject();
             assistantMsg.addProperty("role", "assistant");
             assistantMsg.addProperty("content", aiReply);
             chatHistory.add(assistantMsg);
-
-            // Trả về response
             JsonObject result = new JsonObject();
             result.addProperty("reply", aiReply);
             response.getWriter().write(result.toString());

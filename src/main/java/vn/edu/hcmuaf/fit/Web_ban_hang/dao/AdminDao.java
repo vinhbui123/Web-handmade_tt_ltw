@@ -1,20 +1,25 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AdminDao {
 
     private static final Logger log = LoggerFactory.getLogger(AdminDao.class);
 
-    // [CẬP NHẬT]: Bỏ tham số quantity, chỉ lưu thông tin hồ sơ sản phẩm và chất liệu
     public static void addProduct(Product product, String[] materialIds) {
         String queryInsertProduct = "INSERT INTO products (name, price, discount, view, img, catalog_id, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String queryInsertProductMaterial = "INSERT INTO product_materials (product_id, material_id) VALUES (?, ?)";
@@ -38,7 +43,6 @@ public class AdminDao {
                         if (rs.next()) {
                             int productId = rs.getInt(1);
 
-                            // Thêm material (chất liệu) cho sản phẩm
                             if (materialIds != null) {
                                 try (PreparedStatement stmtMaterial = connection.prepareStatement(queryInsertProductMaterial)) {
                                     for (String mid : materialIds) {
@@ -68,8 +72,6 @@ public class AdminDao {
         }
     }
 
-
-    // Cập nhật sản phẩm
     public static void updateProduct(Product product) {
         String query = "UPDATE products SET catalog_id = ?, name = ?, img = ?, price = ?, discount = ?, view = ?, description = ?, updated_at = ? WHERE id = ?";
 
@@ -120,7 +122,6 @@ public class AdminDao {
         return result;
     }
 
-    // Thêm danh mục sản phẩm
     public void addCategory(Category category) {
         String sql = "INSERT INTO categories (name) VALUES (?)";
         try (Connection conn = DBConnect.getConnection();
@@ -132,7 +133,6 @@ public class AdminDao {
         }
     }
 
-    // ✅ 2. Xóa danh mục
     public void deleteCategory(int categoryId) {
         String sql = "DELETE FROM categories WHERE id = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -144,7 +144,6 @@ public class AdminDao {
         }
     }
 
-    // ✅ 3. Chỉnh sửa danh mục
     public void updateCategory(Category category) {
         String sql = "UPDATE categories SET name = ? WHERE id = ?";
         try (Connection conn = DBConnect.getConnection();
@@ -158,14 +157,12 @@ public class AdminDao {
     }
     public static void updateProductMaterials(int productId, String[] materialIds) {
         try (Connection conn = DBConnect.getConnection()) {
-            // Xoá chất liệu cũ
             String deleteSQL = "DELETE FROM product_materials WHERE product_id = ?";
             try (PreparedStatement ps = conn.prepareStatement(deleteSQL)) {
                 ps.setInt(1, productId);
                 ps.executeUpdate();
             }
 
-            // Thêm chất liệu mới
             if (materialIds != null) {
                 String insertSQL = "INSERT INTO product_materials (product_id, material_id) VALUES (?, ?)";
                 try (PreparedStatement ps = conn.prepareStatement(insertSQL)) {

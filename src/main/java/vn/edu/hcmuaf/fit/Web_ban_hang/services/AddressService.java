@@ -8,15 +8,12 @@ import java.util.List;
 public class AddressService {
     AddressDao addressDao = new AddressDao();
 
-    // Thêm địa chỉ giao hàng vào db
     public boolean insertAddressAndSetDefault(Address address) {return addressDao.insertAddressAndSetDefault(address);}
 
-    // Lấy danh sách địa chỉ đơn hàng theo id
     public List<Address> getAddressByIdUser(int userId) {
         return addressDao.getAddressByIdUser(userId);
     }
 
-    // Cập nhật địa chỉ giao hàng của user
     public boolean updateAddress(Address address) {
         return addressDao.updateAddress(address);
     }

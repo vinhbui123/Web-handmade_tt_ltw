@@ -63,7 +63,7 @@ td.status-cancelled {
 
 /*Side bar*/
 .sidebar {
-    width: 200px;
+    width: 240px;
     background: #050403;
     padding: 20px;
     min-height: 100vh;
@@ -101,12 +101,53 @@ td.status-cancelled {
     transform: translateX(10px);
 }
 
+/* Sidebar User Info */
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-username {
+    color: #e0e0e0;
+    font-size: 14px;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-role {
+    color: #f39c12;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sidebar ul li a.btn-logout {
+    margin-top: 20px;
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+    text-align: center;
+}
+
+.sidebar ul li a.btn-logout:hover {
+    background-color: #e74c3c;
+    color: white;
+    transform: none;
+}
+
 .main-content {
     flex-grow: 1;
     padding: 20px;
     background-color: #ffffff;
     overflow: auto;
-    margin-left: 200px;
+    margin-left: 240px;
 }
 .layout-wrapper {
     display: flex;

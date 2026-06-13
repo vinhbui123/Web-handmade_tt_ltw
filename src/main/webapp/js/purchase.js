@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
         orderBlocks.forEach(orderBlock => {
             const status = orderBlock.getAttribute('data-index');
 
-            // Tab "review" hiển thị đơn hàng status == 3 (đã hoàn thành)
             let shouldShow;
             if (selectedStatus === 'review') {
                 shouldShow = (status === '3');
@@ -25,15 +24,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 shouldShow = (selectedStatus === 'all' || status === selectedStatus);
             }
 
-            // Hiện/ẩn đơn hàng
             orderBlock.style.display = shouldShow ? 'block' : 'none';
 
-            // Xử lý nút
             const buttons = orderBlock.querySelectorAll('.order-actions button');
             buttons.forEach(button => {
                 const classList = Array.from(button.classList);
 
-                // Với tab review, chỉ hiện nút đánh giá
                 let visibleButtons;
                 if (selectedStatus === 'review') {
                     visibleButtons = ['ratting'];
@@ -51,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Bắt sự kiện click tab
     tabs.forEach(tab => {
         tab.addEventListener('click', function () {
             tabs.forEach(t => t.classList.remove('active'));
@@ -61,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Gọi mặc định
     document.querySelector('.tab.active').click();
 });
 
@@ -73,13 +67,13 @@ function cancelOrder(orderId) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ orderId: orderId }) // ← gửi dạng JSON rõ ràng
+            body: JSON.stringify({ orderId: orderId })
         })
             .then(res => res.json())
             .then(data => {
                 alert(data.message);
                 if (data.success) {
-                    location.reload(); // reload lại trang để cập nhật trạng thái đơn
+                    location.reload();
                 }
             })
             .catch(error => {
@@ -89,6 +83,26 @@ function cancelOrder(orderId) {
     }
 }
 
-function reorder(productId) {
-    window.location.href = contextPath + '/product-detail?id=' + productId;
+function reorder(orderId) {
+    if (confirm("Thêm lại các sản phẩm của đơn hàng #" + orderId + " vào giỏ hàng?")) {
+        fetch(contextPath + '/reorder?orderId=' + orderId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = contextPath + '/cart';
+                } else {
+                    alert("Không thể mua lại: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi mua lại đơn hàng:', error);
+                alert("Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
+            });
+    }
 }

@@ -1,25 +1,21 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.WishlistDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
 import java.util.List;
 import java.util.Set;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.WishlistDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 
 public class WishlistService {
     private final WishlistDao wishlistDao = new WishlistDao();
 
-    /**
-     * Toggle wishlist: thêm nếu chưa có, xóa nếu đã có.
-     * @return true nếu đã thêm, false nếu đã xóa
-     */
     public boolean toggle(int userId, int productId) {
         if (wishlistDao.exists(userId, productId)) {
             wishlistDao.remove(userId, productId);
-            return false; // đã xóa
+            return false; 
         } else {
             wishlistDao.add(userId, productId);
-            return true; // đã thêm
+            return true; 
         }
     }
 

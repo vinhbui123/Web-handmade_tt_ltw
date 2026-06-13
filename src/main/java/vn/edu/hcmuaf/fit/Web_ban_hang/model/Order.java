@@ -11,11 +11,9 @@ public class Order implements Serializable {
     private String createdAt;
     private String updatedAt;
 
-    // Constructor
     public Order() {
     }
 
-    // Constuctor to get info from web to DB
     public Order(int status, int userId, int shippingFee, int paymentTypeId) {
         this.status = status;
         this.userId = userId;
@@ -23,7 +21,6 @@ public class Order implements Serializable {
         this.paymentTypeId = paymentTypeId;
     }
 
-    // Getter và Setter
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 

@@ -28,7 +28,6 @@ public class CaptchaUtil {
         g.fillRect(0, 0, width, height);
         g.setFont(new Font("Arial", Font.BOLD, 32));
 
-        // Add some light noise lines to stop bot passing captcha
         g.setColor(Color.LIGHT_GRAY);
         Random random = new Random();
         for (int i = 0; i < 6; i++) {
@@ -37,7 +36,6 @@ public class CaptchaUtil {
         }
 
         g.setColor(Color.BLACK);
-        // Draw the text as a single string to prevent overlapping
         g.drawString(captchaText, 20, 42);
 
         g.dispose();

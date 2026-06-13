@@ -1,7 +1,16 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order.apiGHN;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,16 +20,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.GHNAddressResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.Province;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.GHNService;
 
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-// Gọi ra các tỉnh thành trong api
 @WebServlet(urlPatterns = {"/provinces"})
 public class ProvincesGHN extends HttpServlet {
 
@@ -37,7 +36,6 @@ public class ProvincesGHN extends HttpServlet {
         }.getType();
         GHNAddressResponse<Province> provinceResponse = gson.fromJson(jsonProvinces, provinceType);
 
-        // Chỉ lấy ProvinceID và ProvinceName
         List<Map<String, Object>> filtered = new ArrayList<>();
         for (Province p : provinceResponse.getData()) {
             Map<String, Object> entry = new HashMap<>();

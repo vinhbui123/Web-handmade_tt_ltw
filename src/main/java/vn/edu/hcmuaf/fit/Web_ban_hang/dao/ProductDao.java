@@ -26,7 +26,6 @@ public class ProductDao {
     private static final Logger log = LoggerFactory.getLogger(ProductDao.class);
     static Map<Integer, Product> data = new HashMap<>();
 
-    // Phương thức lấy tất cả các sản phẩm
     public List<Product> getAll() {
         Map<Integer, Product> productMap = new LinkedHashMap<>();
         String query = "SELECT " +
@@ -84,9 +83,8 @@ public class ProductDao {
         return new ArrayList<>(productMap.values());
     }
 
-    // Phương thức lấy sản phẩm theo id
     public static Product getById(int id) {
-        String query = "SELECT * FROM products WHERE id = ?"; // Lấy SELECT * nên đã tự có weight
+        String query = "SELECT * FROM products WHERE id = ?"; 
         try (Connection connection = DBConnect.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
@@ -174,7 +172,6 @@ public class ProductDao {
         return new ArrayList<>(productMap.values());
     }
 
-    // Lấy màu sắc của sản phẩm
     private static List<Color> getColorsByProductId(int id) throws SQLException {
         List<Color> colors = new ArrayList<>();
         String query = "SELECT pc.color_id, c.name FROM product_color pc JOIN colors c ON c.id = pc.color_id WHERE pc.product_id = ?";
@@ -192,7 +189,6 @@ public class ProductDao {
         return colors;
     }
 
-    // Lấy chất liệu của sản phẩm
     private static List<Material> getMaterialsByProductId(int id) throws SQLException {
         List<Material> materials = new ArrayList<>();
         String query = "SELECT pm.material_id, m.name FROM product_materials pm JOIN materials m ON m.id = pm.material_id WHERE product_id = ?";
@@ -210,7 +206,6 @@ public class ProductDao {
         return materials;
     }
 
-    // Lấy hình ảnh phụ của sản phẩm
     private static List<String> getSubImagesByProductId(int id) throws SQLException {
         List<String> subImages = new ArrayList<>();
         String query = "SELECT img_path FROM images WHERE product_id = ?";
@@ -514,7 +509,6 @@ public class ProductDao {
     }
 
     public List<Product> getTopRatedProducts() {
-        // [CHỈNH SỬA]: Thêm p.weight
         String query = "SELECT p.id, p.name, p.price, p.discount, p.img, p.view, p.weight, " +
                 "AVG(c.rating) AS avg_rating " +
                 "FROM products p " +
@@ -544,7 +538,6 @@ public class ProductDao {
         return products;
     }
 
-    // Lấy danh sách sản phẩm có Phân trang.
     public List<Product> getProductsPaged(boolean isAdmin, Integer categoryId, int offset, int size) {
         List<Product> products = new ArrayList<>();
         Map<Integer, Product> productMap = new LinkedHashMap<>();
@@ -716,7 +709,6 @@ public class ProductDao {
             if (i < ids.size() - 1) placeholders.append(",");
         }
 
-        // [CHỈNH SỬA]: Thêm p.weight
         String sql = "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
                 "COALESCE(i.quantity, 0) AS stock " +
                 "FROM products p " +
@@ -756,11 +748,9 @@ public class ProductDao {
         }
         return result;
     }
-    // Hàm Vừa Tìm kiếm, Vừa Lọc, Vừa Sắp xếp
     public List<Product> getAdminProductsUnified(String keyword, Integer categoryId, Integer materialId, String sortBy, String order, int offset, int size) {
         List<Integer> matchedIds = null;
 
-        // Nếu có từ khóa, dùng thuật toán tìm kiếm mờ (Fuzzy) để quét danh sách ID
         if (keyword != null && !keyword.trim().isEmpty()) {
             List<Product> fuzzyMatches = searchProducts(keyword.trim());
             matchedIds = new ArrayList<>();
@@ -768,17 +758,14 @@ public class ProductDao {
                 matchedIds.add(p.getId());
             }
 
-            // Nếu nhập ID bằng số (tìm theo ID)
             if (keyword.trim().matches("\\d+")) {
                 int searchId = Integer.parseInt(keyword.trim());
                 if (!matchedIds.contains(searchId)) matchedIds.add(searchId);
             }
 
-            // Nếu tìm không ra ID nào -> Trả về rỗng luôn (tránh chạy query thừa)
             if (matchedIds.isEmpty()) return new ArrayList<>();
         }
 
-        // Xây dựng câu SQL kết hợp Lọc (Category, Material) và Sắp xếp
         List<Product> products = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.id, p.name, p.price, p.discount, p.view, p.img, p.catalog_id, p.weight, " +
@@ -797,7 +784,6 @@ public class ProductDao {
             sql.append("AND p.catalog_id = ? ");
         }
 
-        // Ép các sản phẩm phải nằm trong danh sách ID vừa tìm được
         if (matchedIds != null && !matchedIds.isEmpty()) {
             sql.append("AND p.id IN (");
             for (int i = 0; i < matchedIds.size(); i++) {
@@ -807,7 +793,6 @@ public class ProductDao {
             sql.append(") ");
         }
 
-        // Xử lý Sắp xếp chống SQL Injection
         String validSortCol = "p.id";
         if ("id".equals(sortBy)) validSortCol = "p.id";
         else if ("name".equals(sortBy)) validSortCol = "TRIM(p.name)";
@@ -857,7 +842,6 @@ public class ProductDao {
         return products;
     }
 
-    //  Hàm đếm tổng số lượng  (Để phân trang chạy chính xác)
     public int getTotalCountUnified(String keyword, Integer categoryId, Integer materialId) {
         List<Integer> matchedIds = null;
         if (keyword != null && !keyword.trim().isEmpty()) {

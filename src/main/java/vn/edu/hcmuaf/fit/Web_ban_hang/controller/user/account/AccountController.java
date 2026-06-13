@@ -1,5 +1,12 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.account;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,14 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 
 @WebServlet(name = "AccountController", urlPatterns = "/account")
 @MultipartConfig(
@@ -45,22 +46,19 @@ public class AccountController extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
 
-        // Get Inputs
         String fullName = request.getParameter("fullName");
-        String email = request.getParameter("email"); // Handle null if disabled in JSP!
+        String email = request.getParameter("email");
         String phoneNumber = request.getParameter("phoneNumber");
         String address = request.getParameter("address");
         String[] parts = fullName.trim().split(" ", 2);
         String firstName = parts.length > 0 ? parts[0] : "";
         String lastName = parts.length > 1 ? parts[1] : "";
-        // Validate
         String errorMsg = userService.validateUpdateProfile(firstName, lastName, phoneNumber,address);
         if (errorMsg != null) {
             handleUpdateUserError(request, response, errorMsg);
             return;
         }
 
-        // Update User Object Basic Info
         user.setFirstName(firstName);
         user.setLastName(lastName);
         if (email != null && !email.trim().isEmpty()) user.setEmail(email);
@@ -77,7 +75,6 @@ public class AccountController extends HttpServlet {
                 String oldFilePath = request.getServletContext().getRealPath("/") + user.getAvatar();
                 File oldFile = new File(oldFilePath);
 
-                // If the file exists on server, delete it
                 if (oldFile.exists() && oldFile.isFile()) {
                     boolean deleted = oldFile.delete();
                     if (!deleted) {
@@ -87,7 +84,6 @@ public class AccountController extends HttpServlet {
             }
 
             String originalFileName = Paths.get(avatarPart.getSubmittedFileName()).getFileName().toString();
-            // Make file save dont collision when upload
             String newFileName = System.currentTimeMillis() + "_" + originalFileName;
 
             String uploadPath = request.getServletContext().getRealPath("/images/avatars");
@@ -97,11 +93,9 @@ public class AccountController extends HttpServlet {
             String filePath = Paths.get(uploadPath, newFileName).toString();
             avatarPart.write(filePath);
 
-            // Update the user object with the new database path
             user.setAvatar("images/avatars/" + newFileName);
         }
 
-        // Update Database
         boolean success = this.userService.updateUser(user);
 
         if (!success) {
@@ -110,7 +104,6 @@ public class AccountController extends HttpServlet {
             return;
         }
 
-        // Update Session
         session.setAttribute("user", user);
         request.setAttribute("successMessage", "Thông tin của bạn đã được cập nhật thành công.");
         request.getRequestDispatcher("account.jsp").forward(request, response);

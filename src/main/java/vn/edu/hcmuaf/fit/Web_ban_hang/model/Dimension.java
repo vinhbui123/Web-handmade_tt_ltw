@@ -20,7 +20,6 @@ public class Dimension {
         this.totalHeight += height;
     }
 
-    // Getters
     public int getTotalWeight() {
         return totalWeight;
     }

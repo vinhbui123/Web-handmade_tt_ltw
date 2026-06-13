@@ -1,14 +1,15 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 @WebServlet("/images/*")
 public class UploadImage extends HttpServlet {
@@ -16,14 +17,6 @@ public class UploadImage extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-//        try (InputStream input = getClass().getClassLoader().getResourceAsStream("image.properties")) {
-//            Properties prop = new Properties();
-//            prop.load(input);
-//            uploadDir = prop.getProperty("upload.image.path");
-//        } catch (IOException e) {
-//            throw new ServletException("Không đọc được cấu hình ảnh từ image.properties", e);
-//        }
-        // Lấy đường dẫn thật tới thư mục /images trong webapp
         uploadDir = getServletContext().getRealPath("/images");
         if (uploadDir == null) {
             throw new ServletException("Không tìm thấy thư mục /images trong webapp");

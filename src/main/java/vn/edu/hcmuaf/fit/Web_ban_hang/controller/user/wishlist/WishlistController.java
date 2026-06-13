@@ -1,25 +1,27 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.wishlist;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @WebServlet(name = "WishlistController", urlPatterns = {"/wishlist", "/api/wishlist"})
 public class WishlistController extends HttpServlet {
@@ -56,7 +58,6 @@ public class WishlistController extends HttpServlet {
 
         Map<String, Object> result = new HashMap<>();
 
-        // Kiểm tra đăng nhập
         if (user == null) {
             result.put("status", false);
             result.put("message", "Bạn cần đăng nhập để sử dụng chức năng này!");
@@ -79,7 +80,6 @@ public class WishlistController extends HttpServlet {
                 result.put("action", "removed");
                 result.put("message", "Đã xóa khỏi danh sách yêu thích!");
             } else {
-                // Toggle: thêm nếu chưa có, xóa nếu đã có
                 boolean added = wishlistService.toggle(user.getId(), productId);
                 result.put("status", true);
                 result.put("action", added ? "added" : "removed");

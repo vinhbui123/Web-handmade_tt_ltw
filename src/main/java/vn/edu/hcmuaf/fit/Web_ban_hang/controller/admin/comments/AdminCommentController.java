@@ -1,51 +1,49 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.comments;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CommentDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CommentDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Comment;
+
 @WebServlet(urlPatterns = "/adminComments")
 public class AdminCommentController extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(AdminCommentController.class);
-    // Format thời gian cho Gson để hiển thị đẹp trên JSP
     private static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+    private static final int PAGE_SIZE = 10;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
 
-        // Gọi AJAX để lấy dữ liệu trang
+        // AJAX: trả JSON phân trang
         if ("list_ajax".equals(action)) {
             int page = 1;
-            int pageSize = 10;
-            if (req.getParameter("page") != null) {
+            try {
                 page = Integer.parseInt(req.getParameter("page"));
-            }
+            } catch (Exception ignored) {}
 
             CommentDao dao = new CommentDao();
             int totalComments = dao.getTotalCommentsCount();
-            int totalPages = (int) Math.ceil((double) totalComments / pageSize);
-            int offset = (page - 1) * pageSize;
+            int totalPages = (int) Math.ceil((double) totalComments / PAGE_SIZE);
+            int offset = (page - 1) * PAGE_SIZE;
 
-            List<Comment> comments = dao.getCommentsByPage(offset, pageSize);
+            List<Comment> comments = dao.getCommentsByPage(offset, PAGE_SIZE);
 
-            // Đóng gói dữ liệu trả về Frontend
             Map<String, Object> responseMap = new HashMap<>();
             responseMap.put("comments", comments);
             responseMap.put("totalPages", totalPages);
@@ -57,16 +55,20 @@ public class AdminCommentController extends HttpServlet {
             PrintWriter out = resp.getWriter();
             out.print(gson.toJson(responseMap));
             out.flush();
-        } else {
-            // Lần đầu tiên vào trang thì trả về khung JSP
-            req.getRequestDispatcher("/ad-comment.jsp").forward(req, resp);
+            return;
         }
+
+        // Mặc định: forward sang JSP
+        req.getRequestDispatcher("/ad-comment.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
         boolean isAjax = "true".equals(req.getParameter("ajax"));
+
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
 
         if ("delete".equals(action)) {
             boolean success = false;
@@ -80,14 +82,21 @@ public class AdminCommentController extends HttpServlet {
             }
 
             if (isAjax) {
-                resp.setContentType("application/json");
-                resp.setCharacterEncoding("UTF-8");
-                JsonObject jsonResponse = new JsonObject();
-                jsonResponse.addProperty("success", success);
-                resp.getWriter().print(jsonResponse.toString());
-                return;
+                PrintWriter out = resp.getWriter();
+                out.print(gson.toJson(Map.of("success", success)));
+                out.flush();
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/adminComments");
             }
+            return;
         }
-        resp.sendRedirect(req.getContextPath() + "/adminComments");
+
+        if (isAjax) {
+            PrintWriter out = resp.getWriter();
+            out.print(gson.toJson(Map.of("success", false, "message", "Unknown action")));
+            out.flush();
+        } else {
+            resp.sendRedirect(req.getContextPath() + "/adminComments");
+        }
     }
 }

@@ -1,27 +1,29 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.cart;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.OrderService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.ReadJsonUtil;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 @WebServlet(name = "CartController", urlPatterns = { "/cart", "/api/cart" })
 public class CartController extends HttpServlet {
@@ -35,7 +37,6 @@ public class CartController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
 
-        // CHECK LOGIN
         if (session.getAttribute("user") == null) {
             response.sendRedirect("login.jsp");
             return;
@@ -74,8 +75,6 @@ public class CartController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String reqPath = request.getServletPath();
-
-        // CHECK LOGIN
         HttpSession session = request.getSession();
         if (session.getAttribute("user") == null) {
             if (reqPath.equals("/api/cart")) {
@@ -94,11 +93,9 @@ public class CartController extends HttpServlet {
             return;
         }
 
-        // Xử lý JSON
         if (reqPath.equals("/api/cart")) {
             handleApiRequest(request, response);
         } else {
-            // Xử lý form submit (nếu có)
             handleFormRequest(request, response);
         }
     }
@@ -112,7 +109,6 @@ public class CartController extends HttpServlet {
             String jsonData = ReadJsonUtil.read(request);
             JsonObject jsonObject = gson.fromJson(jsonData, JsonObject.class);
 
-            // Mặc định là action add nếu không có action
             String action = "add";
             if (jsonObject.has("action")) {
                 action = jsonObject.get("action").getAsString();
@@ -128,13 +124,11 @@ public class CartController extends HttpServlet {
             Map<String, Object> result = new HashMap<>();
 
             if ("add".equals(action) || !jsonObject.has("action")) {
-                // Default add implied by cart.js body
                 int productId = jsonObject.get("productId").getAsInt();
                 int quantity = jsonObject.has("quantity") ? jsonObject.get("quantity").getAsInt() : 1;
 
                 Product product = productService.getById(productId);
                 if (product != null) {
-                    // Kiểm tra tồn kho trước khi thêm vào giỏ
                     int totalQuantity = quantity;
                     CartService existingCart = (CartService) session.getAttribute("cart");
                     if (existingCart != null) {
@@ -204,7 +198,6 @@ public class CartController extends HttpServlet {
             out.print(gson.toJson(result));
 
         } catch (Exception e) {
-            // e.printStackTrace();
             Map<String, Object> error = new HashMap<>();
             error.put("status", false);
             error.put("message", "Lỗi xử lý: " + e.getMessage());

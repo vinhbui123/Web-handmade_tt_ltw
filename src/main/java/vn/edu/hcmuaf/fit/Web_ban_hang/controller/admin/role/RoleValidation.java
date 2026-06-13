@@ -1,22 +1,91 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.role;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CategoryDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
-import jakarta.servlet.*;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CategoryDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.CookieUtil;
 
-import java.io.IOException;
-import java.util.List;
-
+/**
+ * Role 0: User thường       → Không truy cập admin
+ * Role 1: Admin             → Toàn quyền
+ * Role 2: Seller            → Tất cả trừ quản lý tài khoản & comment
+ * Role 3: Mod Nhập Hàng     → Chỉ nhập hàng, kiểm tra tồn kho, xem sản phẩm
+ * Role 4: Kiểm Duyệt Viên  → Chỉ quản lý tài khoản & comment
+ */
 @WebFilter("/*")
 public class RoleValidation implements Filter {
 
     private final CategoryDao categoryDao = new CategoryDao();
+
+    private static final Map<Integer, Set<String>> ROLE_PERMISSIONS = new HashMap<>();
+
+    static {
+        Set<String> sellerUrls = new HashSet<>(Arrays.asList(
+                "/admin",              
+                "/adminProducts",     
+                "/adminAdd",          
+                "/adminEdit",          
+                "/adminRemove",       
+                "/adminGetProduct",   
+                "/uploadProductImage", 
+                "/adminCategorys",     
+                "/adminMaterials",     
+                "/adminOrders",        
+                "/confirmOrder",       
+                "/cancelOrder",        
+                "/adminInventory",     
+                "/adminCoupons"        
+        ));
+        ROLE_PERMISSIONS.put(2, sellerUrls);
+
+        Set<String> modImportUrls = new HashSet<>(Arrays.asList(
+                "/admin",              
+                "/adminProducts",    
+                "/adminGetProduct",   
+                "/adminInventory"      
+        ));
+        ROLE_PERMISSIONS.put(3, modImportUrls);
+        Set<String> moderatorUrls = new HashSet<>(Arrays.asList(
+                "/admin",              
+                "/adminUsers",         
+                "/adminComments"       
+        ));
+        ROLE_PERMISSIONS.put(4, moderatorUrls);
+    }
+
+    private boolean hasPermission(int role, String uri) {
+        if (role == 0) return false;
+        if (role == 1) return true;
+        Set<String> allowedUrls = ROLE_PERMISSIONS.get(role);
+        if (allowedUrls == null) return false;
+
+        for (String allowedUrl : allowedUrls) {
+            if (uri.endsWith(allowedUrl) || uri.contains(allowedUrl)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -28,10 +97,9 @@ public class RoleValidation implements Filter {
         String uri = req.getRequestURI();
         String contextPath = req.getContextPath();
 
-        // 1. Bỏ qua tài nguyên tĩnh và các trang công khai (login, register)
-        // Để tránh vòng lặp redirect vô hạn hoặc chặn file css/js
         if (uri.endsWith("login.jsp") || uri.endsWith("register.jsp")
-                || uri.contains("/login") || uri.contains("/register") // Thêm trường hợp mapping URL không đuôi .jsp
+                || uri.endsWith("access-denied.jsp")
+                || uri.contains("/login") || uri.contains("/register")
                 || uri.contains("/api/") || uri.contains("/css/")
                 || uri.contains("/js/") || uri.contains("/images/")
                 || uri.contains("/fonts/") || uri.endsWith(".png")
@@ -42,51 +110,58 @@ public class RoleValidation implements Filter {
             return;
         }
 
-        // Tạo session nếu chưa có để lưu Category hoặc lấy User
         HttpSession session = req.getSession(true);
         User sessionUser = (User) session.getAttribute("user");
 
-        // 2. Load Global Data (Ví dụ: Danh mục sản phẩm cho Menu)
-        // Logic này giữ lại vì cần hiển thị Category ở mọi trang
+        // Auto-login từ cookie Remember Me
+        if (sessionUser == null) {
+            int cookieUserId = CookieUtil.getUserIdFromCookie(req);
+            if (cookieUserId > 0) {
+                UserService us = new UserService();
+                User cookieUser = us.getById(cookieUserId);
+                if (cookieUser != null && cookieUser.getStatus() != 0) {
+                    session.setAttribute("user", cookieUser);
+                    if (session.getAttribute("cart") == null) {
+                        session.setAttribute("cart", new CartService());
+                    }
+                    sessionUser = cookieUser;
+                } else {
+                    CookieUtil.clearRememberCookie(resp, contextPath);
+                }
+            }
+        }
+
         if (session.getAttribute("category") == null) {
             List<Category> categories = categoryDao.getAll();
             session.setAttribute("category", categories);
         }
 
-        // 3. Kiểm tra bảo mật cho trang Admin
-        if (uri.contains("/admin")) {
+        if (uri.contains("/admin") || uri.contains("/confirmOrder") || uri.contains("/cancelOrder")
+                || uri.contains("/uploadProductImage")) {
 
-            // 3.1. Kiểm tra đăng nhập (session có tồn tại User không?)
             if (sessionUser == null) {
-                // Chưa đăng nhập -> Chuyển hướng về trang Login
-                resp.sendRedirect(contextPath + "/login.jsp"); // Hoặc đường dẫn mapping "/login"
+                resp.sendRedirect(contextPath + "/login.jsp");
                 return;
             }
 
-            // 3.2. Kiểm tra trạng thái thực tế từ Database (đề phòng User bị khóa trong lúc đang đăng nhập)
             UserService userService = new UserService();
             User freshUser = userService.getById(sessionUser.getId());
 
             if (freshUser == null || freshUser.getStatus() == 0) {
-                // User không tồn tại hoặc bị khóa (Status = 0) -> Hủy session và đá về Login
                 session.invalidate();
                 resp.sendRedirect(contextPath + "/login.jsp");
                 return;
             }
 
-            // Cập nhật lại thông tin user mới nhất vào session
             session.setAttribute("user", freshUser);
 
-            // 3.3. Kiểm tra quyền (Role)
-            // Giả sử: 0 = User thường, 1 = Admin (hoặc > 0 là Admin tùy quy ước)
-            if (freshUser.getRole() != 1) {
-                // Đã đăng nhập nhưng không phải Admin -> Báo lỗi 403 Forbidden
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang quản trị.");
+            int role = freshUser.getRole();
+
+            if (!hasPermission(role, uri)) {
+                resp.sendRedirect(contextPath + "/access-denied.jsp");
                 return;
             }
         }
-
-        // 4. Cho phép request đi tiếp (vào trang chủ, trang sản phẩm, hoặc trang admin nếu đã qua các bước kiểm tra trên)
         chain.doFilter(request, response);
     }
 }

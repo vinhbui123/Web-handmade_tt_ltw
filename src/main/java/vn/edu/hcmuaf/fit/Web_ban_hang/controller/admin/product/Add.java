@@ -1,5 +1,10 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,11 +16,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.dao.AdminDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.MaterialDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
 
 @WebServlet(name = "Add", value = "/adminAdd")
 @MultipartConfig(
@@ -31,14 +31,13 @@ public class Add extends HttpServlet {
         String priceParam = request.getParameter("price");
         String description = request.getParameter("description");
         String catalogIdParam = request.getParameter("category");
-        Part filePart = request.getPart("image"); // Lấy ảnh từ form
+        Part filePart = request.getPart("image");
 
 
         try {
             int price = Integer.parseInt(priceParam);
             int catalogId = Integer.parseInt(catalogIdParam);
 
-            // Lấy tên file
             String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
             String imgPath;
 
@@ -53,7 +52,7 @@ public class Add extends HttpServlet {
 
                 imgPath = "images/" + fileName;
             } else {
-                imgPath = "images/default.jpg"; // Có thể thay bằng ảnh mặc định
+                imgPath = "images/default.jpg"; 
             }
 
             Product product = new Product();
@@ -89,8 +88,8 @@ public class Add extends HttpServlet {
             MaterialDao materialDao = new MaterialDao();
             List<Material> materials = materialDao.getAll();
             request.setAttribute("materials", materials);
-            // Đặt thông báo vào session để giữ khi redirect
-            request.getSession().setAttribute("message", "✔️ Thêm sản phẩm thành công!");
+   
+            request.getSession().setAttribute("message", " Thêm sản phẩm thành công!");
             request.getSession().setAttribute("messageType", "success");
             response.sendRedirect(request.getContextPath() + "/adminProducts");
 

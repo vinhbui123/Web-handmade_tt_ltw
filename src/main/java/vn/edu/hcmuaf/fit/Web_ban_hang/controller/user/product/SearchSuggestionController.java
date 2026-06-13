@@ -1,8 +1,13 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,10 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
 
 @WebServlet("/api/search-suggestions")
 public class SearchSuggestionController extends HttpServlet {
@@ -39,12 +40,10 @@ public class SearchSuggestionController extends HttpServlet {
         ProductService productService = new ProductService();
         List<Product> products = productService.searchProducts(keyword);
 
-        // Giới hạn số lượng gợi ý
         if (products.size() > MAX_SUGGESTIONS) {
             products = products.subList(0, MAX_SUGGESTIONS);
         }
 
-        // Xây dựng JSON response
         JsonArray jsonArray = new JsonArray();
         for (Product p : products) {
             JsonObject obj = new JsonObject();
@@ -54,7 +53,6 @@ public class SearchSuggestionController extends HttpServlet {
             obj.addProperty("price", p.getPrice());
             obj.addProperty("discount", p.getDiscount());
 
-            // Tính giá sau giảm
             int finalPrice = p.getDiscount() > 0
                     ? p.getPrice() - (p.getPrice() * p.getDiscount() / 100)
                     : p.getPrice();

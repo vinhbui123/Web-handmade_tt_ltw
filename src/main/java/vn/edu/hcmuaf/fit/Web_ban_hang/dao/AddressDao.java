@@ -1,9 +1,5 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Dimension;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Dimension;
 
 public class AddressDao {
 
@@ -43,7 +43,6 @@ public class AddressDao {
         return null;
     }
 
-    // Gọi tất cả địa chỉ cụ thể của user dựa theo id user
     public List<Address> getAddressByIdUser(int userId) {
         List<Address> addressList = new ArrayList<>();
         String sql = "SELECT * FROM user_addresses WHERE user_id = ?";
@@ -93,7 +92,6 @@ public class AddressDao {
             stmt.setString(6, address.getAddressDetail());
             stmt.setString(7, address.getAddressType());
             stmt.setBoolean(8, address.isDefault());
-            // reset địa chỉ mặc định (đảm bảo lưu duy nhất 1 địa chỉ mặc định trong sơ đồ)
             if (address.isDefault()) {
                 resetDefaultAddress(conn, address.getUserId());
             }
@@ -126,7 +124,6 @@ public class AddressDao {
             stmt.setString(7, address.getAddressDetail());
             stmt.setString(8, address.getAddressType());
             stmt.setBoolean(9, address.isDefault());
-            // reset địa chỉ mặc định (đảm bảo lưu duy nhất 1 địa chỉ mặc định trong sơ đồ)
             if (address.isDefault()) {
                 resetDefaultAddress(conn, address.getUserId());
             }
@@ -171,20 +168,18 @@ public class AddressDao {
         String setSql = "UPDATE user_addresses SET is_default = 1 WHERE id = ?";
 
         try (Connection conn = DBConnect.getConnection()) {
-            conn.setAutoCommit(false); // Bắt đầu transaction
+            conn.setAutoCommit(false); 
 
-            // Reset tất cả địa chỉ của user này về không mặc định
             resetDefaultAddress(conn, address.getUserId());
 
-            // Cập nhật địa chỉ được chọn thành mặc định
             try (PreparedStatement setStmt = conn.prepareStatement(setSql)) {
                 setStmt.setInt(1, address.getId());
                 int affected = setStmt.executeUpdate();
 
-                conn.commit(); // Xác nhận transaction nếu thành công
+                conn.commit(); 
                 return affected > 0;
             } catch (SQLException e) {
-                conn.rollback(); // Nếu có lỗi thì rollback
+                conn.rollback(); 
                 throw e;
             }
 

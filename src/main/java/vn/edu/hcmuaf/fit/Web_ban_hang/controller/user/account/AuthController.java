@@ -15,37 +15,35 @@ import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
+import vn.edu.hcmuaf.fit.Web_ban_hang.utils.CookieUtil;
 
-// 1. Update urlPatterns to include both login and logout
 @WebServlet(name = "AuthController", urlPatterns = {"/login", "/logout"})
 public class AuthController extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private static final int MAX_ATTEMPTS = 5;
     private static final long LOCK_TIME = 5 * 60 * 1000;
 
+    private static final boolean BYPASS_CAPTCHA = false;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String path = request.getServletPath();
-
-        // 2. Check which URL triggered this method
         if ("/logout".equals(path)) {
             handleLogout(request, response);
         } else {
-            // Default to showing the login page
             request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Post is usually only for the Login form submission
         String usernameOrEmail = request.getParameter("username");
         String password = request.getParameter("password");
         String captchaInput = request.getParameter("captcha");
+        String remember = request.getParameter("remember");
 
         HttpSession session = request.getSession(true);
 
-        // Kiểm tra tài khoản có bị khóa không
         Long lockTime = (Long) session.getAttribute("lockTime");
         Integer failedAttempts = (Integer) session.getAttribute("failedAttempts");
 
@@ -56,27 +54,27 @@ public class AuthController extends HttpServlet {
             return;
         }
 
-        // Validate CAPTCHA
-        String sessionCaptcha = (String) session.getAttribute("captcha");
-        if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
-            failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
-            session.setAttribute("failedAttempts", failedAttempts);
+        if (!BYPASS_CAPTCHA) {
+            String sessionCaptcha = (String) session.getAttribute("captcha");
+            if (sessionCaptcha == null || captchaInput == null || !sessionCaptcha.equals(captchaInput.trim())) {
+                failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
+                session.setAttribute("failedAttempts", failedAttempts);
 
-            if (failedAttempts >= MAX_ATTEMPTS) {
-                session.setAttribute("lockTime", Instant.now().toEpochMilli());
-                request.setAttribute("errorMessage", "Bạn đã nhập CAPTCHA sai quá 5 lần. Tài khoản bị khóa trong 5 phút.");
-            } else {
-                request.setAttribute("errorMessage", "Mã CAPTCHA không chính xác. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
+                if (failedAttempts >= MAX_ATTEMPTS) {
+                    session.setAttribute("lockTime", Instant.now().toEpochMilli());
+                    request.setAttribute("errorMessage", "Bạn đã nhập CAPTCHA sai quá 5 lần. Tài khoản bị khóa trong 5 phút.");
+                } else {
+                    request.setAttribute("errorMessage", "Mã CAPTCHA không chính xác. Bạn còn " + (MAX_ATTEMPTS - failedAttempts) + " lần thử.");
+                }
+
+                request.setAttribute("username", usernameOrEmail);
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
             }
-
-            request.setAttribute("username", usernameOrEmail);
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-            return;
         }
 
-        // --- Authenticate User ---
         UserService userService = new UserService();
-        session.removeAttribute("user"); // Clear previous user if any
+        session.removeAttribute("user");
 
         User user = userService.authenticateUser(usernameOrEmail, password);
 
@@ -88,15 +86,19 @@ public class AuthController extends HttpServlet {
                 return;
             }
 
-            // Reset attempts on successful login
             session.removeAttribute("failedAttempts");
             session.removeAttribute("lockTime");
 
-            // Set session attributes
             if (session.getAttribute("cart") == null) {
                 session.setAttribute("cart", new CartService());
             }
             session.setAttribute("user", user);
+
+            // Remember Me: lưu cookie mã hóa nếu checkbox được tick
+            if ("on".equals(remember)) {
+                CookieUtil.setRememberCookie(response, user.getId(), request.getContextPath());
+            }
+
             log.info("Đăng nhập thành công: {}", user.getUsername());
             response.sendRedirect(request.getContextPath() + ("/home"));
             return;
@@ -116,14 +118,15 @@ public class AuthController extends HttpServlet {
         request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
-    // Helper method to handle logout logic
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
 
+        // Xoá cookie remember me khi logout
+        CookieUtil.clearRememberCookie(response, request.getContextPath());
+
         if (session != null) {
-            session.invalidate(); // Remove session form client
+            session.invalidate();
         }
-    // Redirect to home (using context path for safety)
         response.sendRedirect(request.getContextPath() + "/home");
     }
 }

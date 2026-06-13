@@ -1,7 +1,11 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.address;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,9 +15,6 @@ import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.AddressService;
-
-import java.io.BufferedReader;
-import java.io.IOException;
 
 @WebServlet("/default-address")
 public class DefaultAddressController extends HttpServlet {
@@ -31,7 +32,6 @@ public class DefaultAddressController extends HttpServlet {
                 resp.addProperty("status", false);
                 resp.addProperty("message", "Vui lòng đăng nhập!");
             } else {
-                // Đọc ID địa chỉ từ JSON gửi lên
                 BufferedReader reader = request.getReader();
                 JsonObject data = gson.fromJson(reader, JsonObject.class);
                 int addressId = data.get("addressId").getAsInt();
@@ -41,12 +41,10 @@ public class DefaultAddressController extends HttpServlet {
                 address.setId(addressId);
                 address.setUserId(user.getId());
 
-                // Gọi hàm setDefault trong Service của bạn
                 boolean success = service.setDefault(address);
 
                 if (success) {
                     resp.addProperty("status", true);
-                    // Trả về địa chỉ mặc định mới để cập nhật UI Checkout
                     Address defaultAddr = service.getAddressDefault(user.getId());
                     session.setAttribute("addressDefault", defaultAddr);
                     resp.add("addressDefault", gson.toJsonTree(defaultAddr));

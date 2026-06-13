@@ -1,24 +1,25 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.utils;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.*;
-import jakarta.servlet.ServletContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
-/**
- * Tiện ích gửi email.
- * Credentials (MAIL_FROM, MAIL_PASSWORD) được đọc từ context-param trong web.xml.
- * Mỗi thành viên tự điền email và App Password của mình vào web.xml – không hardcode trong code.
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.mail.Authenticator;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.ServletContext;
+
+
 public class EmailUtil {
 
     private static final Logger log = LoggerFactory.getLogger(EmailUtil.class);
-
-    /** Tạo một Jakarta Mail Session từ context-params của web.xml */
     private static Session buildSession(ServletContext ctx) {
         String fromEmail    = ctx.getInitParameter("MAIL_FROM");
         String fromPassword = ctx.getInitParameter("MAIL_PASSWORD");
@@ -42,14 +43,6 @@ public class EmailUtil {
             }
         });
     }
-
-    /**
-     * Gửi OTP 6 chữ số về email người dùng (dùng cho luồng quên mật khẩu).
-     *
-     * @param ctx      ServletContext để đọc MAIL_FROM / MAIL_PASSWORD từ web.xml
-     * @param toEmail  Email đích
-     * @param otp      Mã OTP 6 chữ số
-     */
     public static void sendOtpEmail(ServletContext ctx, String toEmail, String otp)
             throws MessagingException, UnsupportedEncodingException {
 
@@ -95,11 +88,6 @@ public class EmailUtil {
         log.info("OTP email sent to: {}", toEmail);
     }
 
-    /**
-     * Gửi link đặt lại mật khẩu (giữ lại để tương thích nếu cần dùng lại).
-     *
-     * @deprecated Dùng sendOtpEmail thay thế cho flow OTP.
-     */
     @Deprecated
     public static void sendResetPasswordEmail(ServletContext ctx, String toEmail, String resetLink)
             throws MessagingException, UnsupportedEncodingException {

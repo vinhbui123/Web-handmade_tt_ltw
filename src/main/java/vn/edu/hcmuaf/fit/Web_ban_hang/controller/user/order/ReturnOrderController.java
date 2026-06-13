@@ -23,7 +23,6 @@ public class ReturnOrderController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Đảm bảo đọc tiếng Việt không bị lỗi font
         request.setCharacterEncoding("UTF-8");
 
         try {

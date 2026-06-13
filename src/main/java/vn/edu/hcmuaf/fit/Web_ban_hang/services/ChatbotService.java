@@ -81,7 +81,6 @@ public class ChatbotService {
         String lowerMsg = userMessage.toLowerCase();
 
         try {
-            // --- Top sản phẩm xem nhiều nhất ---
             if (containsAny(lowerMsg, "xem nhiều", "phổ biến", "hot", "bán chạy", "top", "nổi bật", "trending", "được xem")) {
                 List<Product> topViewed = productService.getProductViewest(10);
                 if (!topViewed.isEmpty()) {
@@ -93,7 +92,6 @@ public class ChatbotService {
                 }
             }
 
-            // --- Sản phẩm đánh giá cao ---
             if (containsAny(lowerMsg, "đánh giá", "rating", "tốt nhất", "chất lượng", "recommend", "gợi ý", "nên mua")) {
                 List<Product> topRated = productService.getTopRatedProducts();
                 if (!topRated.isEmpty()) {
@@ -106,9 +104,7 @@ public class ChatbotService {
                 }
             }
 
-            // --- Tìm kiếm sản phẩm theo từ khóa ---
             if (containsAny(lowerMsg, "tìm", "search", "có bán", "có sản phẩm", "muốn mua", "cần mua")) {
-                // Trích xuất từ khóa tìm kiếm (bỏ các từ phổ biến)
                 String keyword = extractSearchKeyword(lowerMsg);
                 if (keyword != null && !keyword.isEmpty()) {
                     List<Product> searchResults = productService.searchProducts(keyword);
@@ -128,7 +124,6 @@ public class ChatbotService {
                 }
             }
 
-            // --- Danh mục sản phẩm ---
             if (containsAny(lowerMsg, "danh mục", "loại", "category", "phân loại", "nhóm sản phẩm", "có những gì")) {
                 List<Category> categories = categoryService.getAll();
                 if (!categories.isEmpty()) {
@@ -139,7 +134,6 @@ public class ChatbotService {
                 }
             }
 
-            // --- Giá / Khuyến mãi ---
             if (containsAny(lowerMsg, "giá", "giảm giá", "khuyến mãi", "sale", "rẻ", "đắt", "bao nhiêu", "promotion")) {
                 List<Product> allProducts = productService.getAll();
                 long discountedCount = allProducts.stream().filter(p -> p.getDiscount() > 0).count();
@@ -158,7 +152,6 @@ public class ChatbotService {
                 }
             }
 
-            // --- Thống kê tổng quan (khi hỏi chung chung) ---
             if (containsAny(lowerMsg, "có bao nhiêu", "tổng", "thống kê", "tất cả", "toàn bộ")) {
                 List<Product> all = productService.getAll();
                 List<Category> cats = categoryService.getAll();

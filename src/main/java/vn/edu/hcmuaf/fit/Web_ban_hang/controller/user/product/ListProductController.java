@@ -1,5 +1,11 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,12 +18,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @WebServlet(name = "ListProductController", value = "/list-product")
 public class ListProductController extends HttpServlet {
@@ -33,11 +33,9 @@ public class ListProductController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String sortParam = request.getParameter("sort");
-        // Get all categories for filter dropdown
         List<Category> categories = categoryService.getAll();
         request.setAttribute("categories", categories);
 
-        // Get filter parameters
         String categoryParam = request.getParameter("category");
         String minPriceParam = request.getParameter("minPrice");
         String maxPriceParam = request.getParameter("maxPrice");
@@ -46,7 +44,6 @@ public class ListProductController extends HttpServlet {
         List<Product> products;
         String categoryName = "Tất cả sản phẩm";
 
-        // Get products based on filters
         if (typeParam != null) {
             if ("top-viewed".equals(typeParam)) {
                 products = productService.getProductViewest(10);
@@ -61,7 +58,6 @@ public class ListProductController extends HttpServlet {
             try {
                 int categoryId = Integer.parseInt(categoryParam);
                 products = productService.getByCategory(categoryId);
-                // Find category name
                 for (Category cat : categories) {
                     if (cat.getId() == categoryId) {
                         categoryName = cat.getName();
@@ -75,7 +71,6 @@ public class ListProductController extends HttpServlet {
             products = productService.getAll();
         }
 
-        // Apply price filters
         if (minPriceParam != null && !minPriceParam.isEmpty()) {
             try {
                 int minPrice = Integer.parseInt(minPriceParam);
@@ -119,7 +114,6 @@ public class ListProductController extends HttpServlet {
         request.setAttribute("products", products);
         request.setAttribute("categoryName", categoryName);
 
-        // Inject wishlist data
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         if (user != null) {

@@ -25,7 +25,7 @@ public class ReadJsonUtil {
 
     //  Đọc JSON từ request body và parse thành object.
     //  Ví dụ: OrderDTO dto = ReadJsonUtil.parseJson(request, OrderDTO.class); để map cho các class khác
-    
+
     public static <T> T parseJson(HttpServletRequest request, Class<T> map) throws IOException {
         String json = read(request);
         return gson.fromJson(json, map);
