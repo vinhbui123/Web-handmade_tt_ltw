@@ -25,7 +25,7 @@
         <div class="container-header">
             <div class="header-logo">
                 <a href="home">
-                    <img src="images/logo.png">
+                    <img src="${pageContext.request.contextPath}/images/logo.png">
                 </a>
             </div>
 

@@ -25,11 +25,11 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.utils.CookieUtil;
 
 /**
- * Role 0: User thường       → Không truy cập admin
- * Role 1: Admin             → Toàn quyền
- * Role 2: Seller            → Tất cả trừ quản lý tài khoản & comment
- * Role 3: Mod Nhập Hàng     → Chỉ nhập hàng, kiểm tra tồn kho, xem sản phẩm
- * Role 4: Kiểm Duyệt Viên  → Chỉ quản lý tài khoản & comment
+ * Role 0: User thường        Không truy cập admin
+ * Role 1: Admin              Toàn quyền
+ * Role 2: Seller             Tất cả trừ quản lý tài khoản & comment
+ * Role 3: Mod Nhập Hàng      Chỉ nhập hàng, kiểm tra tồn kho, xem sản phẩm
+ * Role 4: Kiểm Duyệt Viên    Chỉ quản lý tài khoản & comment
  */
 @WebFilter("/*")
 public class RoleValidation implements Filter {
@@ -60,7 +60,11 @@ public class RoleValidation implements Filter {
         Set<String> modImportUrls = new HashSet<>(Arrays.asList(
                 "/admin",              
                 "/adminProducts",    
+                "/adminAdd",
+                "/adminEdit",
+                "/adminRemove",
                 "/adminGetProduct",   
+                "/uploadProductImage", 
                 "/adminInventory"      
         ));
         ROLE_PERMISSIONS.put(3, modImportUrls);
