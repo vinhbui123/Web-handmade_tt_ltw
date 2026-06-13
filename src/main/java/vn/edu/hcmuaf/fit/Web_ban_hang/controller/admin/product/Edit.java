@@ -76,6 +76,6 @@ public class Edit extends HttpServlet {
             request.getSession().setAttribute("messageType", "error");
         }
 
-        response.sendRedirect(request.getContextPath() + "/adminProduct");
+        response.sendRedirect(request.getContextPath() + "/adminProducts");
     }
 }
