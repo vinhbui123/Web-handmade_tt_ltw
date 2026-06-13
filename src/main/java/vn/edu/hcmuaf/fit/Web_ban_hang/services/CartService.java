@@ -114,4 +114,7 @@ public class CartService implements Serializable {
         cp.setQuantity(1);
         return cp;
     }
+    public void setData(Map<Integer, CartProduct> dbData) {
+        this.data = dbData;
+    }
 }
