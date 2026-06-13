@@ -88,8 +88,8 @@
             <div class="header-action">
                 <div class="header-cart" onclick="window.location.href='cart'">
                     <i class="fas fa-cart-shopping"></i>
-                    <c:if test="${sessionScope.cart !=  null}">
-                        <span class="cart-count">${sessionScope.cart.getList().size()}</span>
+                    <c:if test="${sessionScope.cart != null}">
+                        <span class="cart-count">${sessionScope.cart.totalQuantityAll}</span>
                     </c:if>
                     <span class="cart-text"> Giỏ Hàng</span>
                 </div>

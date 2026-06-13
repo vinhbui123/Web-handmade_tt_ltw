@@ -114,8 +114,10 @@ public class CheckoutController extends HttpServlet {
             if (!orderDTO.isBuyNow()) {
                 CartService cart = (CartService) session.getAttribute("cart");
                 if (cart != null) {
+                    vn.edu.hcmuaf.fit.Web_ban_hang.dao.CartDbDao cartDbDao = new vn.edu.hcmuaf.fit.Web_ban_hang.dao.CartDbDao();
                     for (OrderDetail detail : details) {
                         cart.remove(detail.getProductId());
+                        cartDbDao.remove(orderDTO.getUserId(), detail.getProductId());
                     }
                 }
             }
@@ -123,7 +125,6 @@ public class CheckoutController extends HttpServlet {
             session.removeAttribute("appliedCoupon");
 
             if (order.getPaymentTypeId() == 2) {
-                System.out.println("========== ĐÃ VÀO ĐƯỢC LUỒNG VNPAY ==========");
                 long totalAmount = order.getShippingFee();
                 for (OrderDetail detail : details) {
                     totalAmount += (detail.getTotalMoney() - detail.getDiscountAmount());

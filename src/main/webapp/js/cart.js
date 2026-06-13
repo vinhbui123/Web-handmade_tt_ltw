@@ -63,7 +63,8 @@ function addToCart(productId, quantity = 1) {
                 showCartPopup(data.message, true);
             } else {
                 if (data.redirect) {
-                    window.location.href = data.redirect;
+                    alert(data.message || "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+                    window.location.href = contextPath + "/" + data.redirect;
                     return;
                 }
                 showCartPopup(data.message, false);
@@ -143,8 +144,6 @@ function updateSelection(productId, isSelected) {
                     console.log('[updateSelection] Updated quantity to:', data.selectedQuantity);
                 }
 
-                // Update "Select All" checkbox state based on current state of all checkboxes
-                // This runs AFTER the checkbox state has been updated
                 setTimeout(() => {
                     const allCheckboxes = document.querySelectorAll('.product-checkbox');
                     const selectAllCheckbox = document.getElementById('select-all');
@@ -155,6 +154,11 @@ function updateSelection(productId, isSelected) {
                     }
                 }, 0);
             } else {
+                if (data.redirect) {
+                    alert(data.message || "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+                    window.location.href = contextPath + "/" + data.redirect;
+                    return;
+                }
                 showCartPopup(data.message, false);
             }
         })
@@ -193,6 +197,11 @@ function selectAll(isSelected) {
                     totalQuantityDisplay.innerText = data.selectedQuantity;
                 }
             } else {
+                if (data.redirect) {
+                    alert(data.message || "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+                    window.location.href = contextPath + "/" + data.redirect;
+                    return;
+                }
                 showCartPopup(data.message, false);
             }
         })
@@ -200,4 +209,3 @@ function selectAll(isSelected) {
             console.error("Lỗi select all:", error);
         });
 }
-

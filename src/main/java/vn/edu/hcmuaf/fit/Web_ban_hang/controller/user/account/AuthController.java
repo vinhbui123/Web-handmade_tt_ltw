@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.CartDbDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.UserService;
@@ -89,9 +90,10 @@ public class AuthController extends HttpServlet {
             session.removeAttribute("failedAttempts");
             session.removeAttribute("lockTime");
 
-            if (session.getAttribute("cart") == null) {
-                session.setAttribute("cart", new CartService());
-            }
+            CartService cart = new CartService();
+            CartDbDao cartDbDao = new CartDbDao();
+            cart.setData(cartDbDao.getCartByUserId(user.getId()));
+            session.setAttribute("cart", cart);
             session.setAttribute("user", user);
 
             // Remember Me: lưu cookie mã hóa nếu checkbox được tick
@@ -103,7 +105,7 @@ public class AuthController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + ("/home"));
             return;
         }
-        
+
         failedAttempts = (failedAttempts == null) ? 1 : failedAttempts + 1;
         session.setAttribute("failedAttempts", failedAttempts);
 
