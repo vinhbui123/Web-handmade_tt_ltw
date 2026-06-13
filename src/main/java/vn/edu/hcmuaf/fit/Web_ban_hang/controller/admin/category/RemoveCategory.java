@@ -18,9 +18,14 @@ public class RemoveCategory extends HttpServlet {
         if (categoryId != null) {
             int id = Integer.parseInt(categoryId);
             AdminDao adminDao = new AdminDao();
-            adminDao.deleteCategory(id);
+            boolean success = adminDao.deleteCategory(id);
+            if (!success) {
+                request.getSession().setAttribute("error", "Không thể xóa danh mục này vì đang có sản phẩm thuộc danh mục này.");
+            } else {
+                request.getSession().setAttribute("success", "Xóa danh mục thành công.");
+            }
         }
 
-        response.sendRedirect("adminCategory");
+        response.sendRedirect("adminCategorys");
     }
 }

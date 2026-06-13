@@ -1,5 +1,8 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product;
 
+import java.io.IOException;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,9 +15,6 @@ import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.User;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.WishlistService;
-
-import java.io.IOException;
-import java.util.List;
 
 @WebServlet(name = "ProductDetail", value = "/product-detail")
 public class ProductDetail extends HttpServlet {
@@ -54,7 +54,6 @@ public class ProductDetail extends HttpServlet {
                 request.setAttribute("product", product);
                 request.setAttribute("products", products);
 
-                // Wishlist check
                 HttpSession session = request.getSession();
                 User user = (User) session.getAttribute("user");
                 if (user != null) {
@@ -72,4 +71,4 @@ public class ProductDetail extends HttpServlet {
             response.sendRedirect("layoutProduct.jsp");
         }
     }
-}
+}
