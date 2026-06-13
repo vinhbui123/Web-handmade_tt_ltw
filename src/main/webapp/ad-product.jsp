@@ -107,7 +107,7 @@
         </div>
 
         <c:choose>
-            <c:when test="${sessionScope.user.role == 1}">
+            <c:when test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
                 <button class="btn-add" onclick="openModal('add')" style="margin: 0; padding: 10px 20px; font-size: 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <i class="fa-solid fa-plus"></i> Thêm Sản Phẩm
                 </button>
@@ -179,7 +179,7 @@
                     </td>
                     <td>
                         <c:choose>
-                            <c:when test="${sessionScope.user.role == 1}">
+                            <c:when test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
                                 <i class="fa-solid fa-pen-to-square btn-edit"
                                    onclick="openModal('edit', ${product.id})"></i>
                             </c:when>
@@ -190,7 +190,7 @@
                         </c:choose>
 
                         <c:choose>
-                            <c:when test="${sessionScope.user.role == 1}">
+                            <c:when test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
                                 <form action="${pageContext.request.contextPath}/adminRemove" method="post"
                                       style="display: inline;">
                                     <input type="hidden" name="productId" value="${product.id}">

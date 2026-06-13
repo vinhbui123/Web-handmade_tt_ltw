@@ -2,6 +2,8 @@ package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -17,7 +19,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.product.ApplyCouponController;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.OrderDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.OrderDTO;
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Coupon;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Order;
@@ -42,6 +46,7 @@ public class CheckoutController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
+        Connection conn = null;
         try {
             OrderDTO orderDTO = ReadJsonUtil.parseJson(request, OrderDTO.class);
 
@@ -51,6 +56,7 @@ public class CheckoutController extends HttpServlet {
             List<OrderDetail> details = orderService.toDetailOrder(orderDTO.getDetails());
 
             InventoryDao inventoryDao = new InventoryDao();
+            OrderDao orderDao = new OrderDao();
 
             HttpSession session = request.getSession(false);
             if (session == null) {
@@ -86,17 +92,24 @@ public class CheckoutController extends HttpServlet {
                 }
             }
 
+            conn = DBConnect.getConnection();
+            conn.setAutoCommit(false);
+
+            // Trừ kho TỪNG SP (SELECT ... FOR UPDATE chống race condition)
             for (OrderDetail detail : details) {
-                boolean success = inventoryDao.exportProduct(detail.getProductId(), detail.getQuantity(),
+                boolean success = inventoryDao.exportProduct(conn, detail.getProductId(), detail.getQuantity(),
                         orderDTO.getUserId(), "export");
                 if (!success) {
+                    conn.rollback();
                     out.print("{\"success\": false, \"message\": \"Không đủ hàng trong kho cho SP ID: "
                             + detail.getProductId() + "\"}");
                     return;
                 }
             }
 
-            orderService.addOrder(order, details);
+            orderDao.addOrder(conn, order, details);
+
+            conn.commit();
 
             if (!orderDTO.isBuyNow()) {
                 CartService cart = (CartService) session.getAttribute("cart");
@@ -123,12 +136,14 @@ public class CheckoutController extends HttpServlet {
                 out.print("{\"success\": true}");
             }
         } catch (Exception e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ignored) {}
             log.error("Checkout failed", e);
             java.util.Map<String, Object> errorMap = new java.util.HashMap<>();
             errorMap.put("success", false);
             errorMap.put("message", e.getMessage() != null ? e.getMessage() : "Lỗi hệ thống");
             out.print(new Gson().toJson(errorMap));
         } finally {
+            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
             out.flush();
             out.close();
         }

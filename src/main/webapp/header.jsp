@@ -25,7 +25,7 @@
         <div class="container-header">
             <div class="header-logo">
                 <a href="home">
-                    <img src="images/logo.png">
+                    <img src="${pageContext.request.contextPath}/images/logo.png">
                 </a>
             </div>
 
@@ -112,8 +112,8 @@
                 </c:if>
 
                 <c:set var="user" value="${sessionScope.user}"/>
-                <c:if test="${user != null && user.role == 1}">
-                    <a href="${pageContext.request.contextPath}/adminProducts" class="admin-btn">
+                <c:if test="${user != null && user.role != 0}">
+                    <a href="${pageContext.request.contextPath}/admin" class="admin-btn">
                         <i class="fa-solid fa-user-tie"></i> Trang Quản Trị
                     </a>
                 </c:if>

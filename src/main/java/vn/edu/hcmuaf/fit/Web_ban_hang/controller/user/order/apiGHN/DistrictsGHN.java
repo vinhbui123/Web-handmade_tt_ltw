@@ -1,7 +1,16 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.user.order.apiGHN;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,14 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.District;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.dto.GHN.GHNAddressResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.GHNService;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @WebServlet(urlPatterns = {"/districts"})
 public class DistrictsGHN extends HttpServlet {
@@ -33,7 +34,6 @@ public class DistrictsGHN extends HttpServlet {
         PrintWriter out = response.getWriter();
         Gson gson = new Gson();
 
-        // Validate
         if (provinceId == null || provinceId.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("code", 400);

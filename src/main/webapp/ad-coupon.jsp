@@ -24,9 +24,11 @@
   </header>
 
   <section class="product-management">
-    <button class="btn-add" onclick="openCouponModal('add')">
-      <i class="fa-solid fa-plus"></i> Thêm Mã Mới
-    </button>
+    <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2}">
+        <button class="btn-add" onclick="openCouponModal('add')">
+            <i class="fa-solid fa-plus"></i> Thêm Mã Mới
+        </button>
+    </c:if>
 
     <table class="product-table" style="margin-top: 20px;">
       <thead>
@@ -72,25 +74,27 @@
               ${cp.formattedExpiredDate}
           </td>
           <td>
-            <i class="fa-solid fa-pen-to-square btn-edit"
-               data-id="${cp.id}"
-               data-code="${cp.code}"
-               data-type="${cp.type}"
-               data-val="${cp.discountValue}"
-               data-per="${cp.discountPercent}"
-               data-min="${cp.minOrderAmount}"
-               data-max="${cp.maxDiscountValue}"
-               data-start="${cp.startDate}"
-               data-end="${cp.endDate}"
-               onclick="openCouponModal('edit', this)"></i>
+            <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2}">
+                <i class="fa-solid fa-pen-to-square btn-edit"
+                   data-id="${cp.id}"
+                   data-code="${cp.code}"
+                   data-type="${cp.type}"
+                   data-val="${cp.discountValue}"
+                   data-per="${cp.discountPercent}"
+                   data-min="${cp.minOrderAmount}"
+                   data-max="${cp.maxDiscountValue}"
+                   data-start="${cp.startDate}"
+                   data-end="${cp.endDate}"
+                   onclick="openCouponModal('edit', this)"></i>
 
-            <form action="adminCoupons" method="post" style="display: inline;">
-              <input type="hidden" name="action" value="delete">
-              <input type="hidden" name="id" value="${cp.id}">
-              <button type="submit" class="btn-delete" onclick="return confirm('Xóa mã này?')">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </form>
+                <form action="adminCoupons" method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="id" value="${cp.id}">
+                  <button type="submit" class="btn-delete" onclick="return confirm('Xóa mã này?')">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+            </c:if>
           </td>
         </tr>
       </c:forEach>

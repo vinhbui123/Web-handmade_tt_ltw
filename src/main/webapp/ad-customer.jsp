@@ -80,9 +80,11 @@
                 </td>
                 <td><%= user.getStatus() == 1 ? "Hoạt động" : "Bị khóa" %></td>
                 <td>
-                    <i class="fa-solid fa-pen-to-square btn-edit"
-                       onclick="openCustomerModal('<%= user.getId() %>', '<%= user.getRole() %>', '<%= user.getStatus() %>')">
-                    </i>
+                    <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 4}">
+                        <i class="fa-solid fa-pen-to-square btn-edit"
+                           onclick="openCustomerModal('<%= user.getId() %>', '<%= user.getRole() %>', '<%= user.getStatus() %>')">
+                        </i>
+                    </c:if>
                 </td>
             </tr>
             <% }

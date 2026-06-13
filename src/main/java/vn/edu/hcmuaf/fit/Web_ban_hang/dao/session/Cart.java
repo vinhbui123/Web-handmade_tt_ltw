@@ -1,15 +1,15 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao.session;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.InventoryDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
+import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
 
 public class Cart {
     Map<Integer, CartProduct> data = new HashMap<>();
@@ -18,7 +18,6 @@ public class Cart {
         if (data.containsKey(p.getId())) {
             update(p.getId(), data.get(p.getId()).getQuantity() + quantity);
         } else {
-            // Nếu sản phẩm chưa tồn tại, thêm mới với số lượng ban đầu
             CartProduct cartProduct = convert(p);
             cartProduct.setQuantity(quantity);
             data.put(p.getId(), cartProduct);
@@ -30,7 +29,6 @@ public class Cart {
         if (data.containsKey(id)) {
             return update(id, data.get(id).getQuantity() + quantity);
         } else {
-            // Nếu sản phẩm chưa tồn tại, thêm mới với số lượng ban đầu
             ProductService productService = new ProductService();
             InventoryDao inventoryDao = new InventoryDao();
             int stock = inventoryDao.getStock(id);

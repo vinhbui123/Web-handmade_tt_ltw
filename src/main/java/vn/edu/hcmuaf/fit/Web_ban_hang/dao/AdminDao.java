@@ -133,15 +133,30 @@ public class AdminDao {
         }
     }
 
-    public void deleteCategory(int categoryId) {
+    public boolean deleteCategory(int categoryId) {
+        String checkSql = "SELECT COUNT(*) FROM products WHERE catalog_id = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+            ps.setInt(1, categoryId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         String sql = "DELETE FROM categories WHERE id = ?";
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, categoryId);
-            ps.executeUpdate();
+            int rows = ps.executeUpdate();
+            return rows > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     public void updateCategory(Category category) {

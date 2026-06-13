@@ -106,7 +106,7 @@ public class GoogleCallbackServlet extends HttpServlet {
             if (user.getStatus() == 0) {
                 log.info("Đăng nhập Google thất bại: Tài khoản bị khóa ({})", email);
                 request.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
-                request.getRequestDispatcher("login.jsp").forward(request, response);
+                request.getRequestDispatcher("/login.jsp").forward(request, response);
                 return;
             }
             log.info("{} Đăng nhập Google thành công", user.getFirstName() + " " + user.getLastName());

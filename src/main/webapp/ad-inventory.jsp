@@ -49,7 +49,7 @@
     </div>
 
     <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; margin-top: 15px;">
-        <c:if test="${sessionScope.user.role == 1}">
+        <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
             <form action="${pageContext.request.contextPath}/adminInventory" method="post" class="inventory-form" style="margin: 0;">
                 <input type="hidden" name="type" value="import">
                 <label><strong>Nhập hàng</strong></label><br>
@@ -59,7 +59,7 @@
             </form>
         </c:if>
 
-        <c:if test="${sessionScope.user.role == 1}">
+        <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
             <form action="${pageContext.request.contextPath}/adminInventory" method="post" class="inventory-form" style="margin: 0;">
                 <input type="hidden" name="type" value="export">
                 <label><strong>Xuất hàng</strong></label><br>
@@ -108,7 +108,7 @@
                     </td>
                     <td>
                         <c:choose>
-                            <c:when test="${sessionScope.user.role == 1}">
+                            <c:when test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
                                 <button class="btn-import" onclick="openImportModal(${product.id}, '${product.name}')">Nhập</button>
                             </c:when>
                             <c:otherwise>
@@ -117,7 +117,7 @@
                         </c:choose>
 
                         <c:choose>
-                            <c:when test="${sessionScope.user.role == 1}">
+                            <c:when test="${sessionScope.user.role == 1 || sessionScope.user.role == 2 || sessionScope.user.role == 3}">
                                 <button class="btn-export" onclick="openExportModal(${product.id}, '${product.name}')">Xuất</button>
                             </c:when>
                             <c:otherwise>

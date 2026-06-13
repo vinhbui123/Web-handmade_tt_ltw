@@ -1,9 +1,9 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.services;
 
+import java.util.List;
+
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.AddressDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Address;
-
-import java.util.List;
 
 public class AddressService {
     AddressDao addressDao = new AddressDao();

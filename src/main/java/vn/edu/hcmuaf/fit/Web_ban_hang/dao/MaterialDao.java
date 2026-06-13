@@ -1,8 +1,5 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.dao;
 
-import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
-import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,9 +7,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import vn.edu.hcmuaf.fit.Web_ban_hang.db.DBConnect;
+import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
+
 public class MaterialDao {
 
-    // Lấy tất cả chất liệu
     public List<Material> getAll() {
         List<Material> materials = new ArrayList<>();
         String query = "SELECT id, name FROM materials";
@@ -33,7 +32,6 @@ public class MaterialDao {
         return materials;
     }
 
-    // Lấy chất liệu theo ID
     public Material getById(int id) {
         String query = "SELECT id, name FROM materials WHERE id = ?";
 
@@ -55,7 +53,6 @@ public class MaterialDao {
         return null;
     }
 
-    // Lấy danh sách sản phẩm theo chất liệu
     public List<Integer> getProductIdsByMaterialId(int materialId) {
         List<Integer> productIds = new ArrayList<>();
         String query = "SELECT product_id FROM product_materials WHERE material_id = ?";

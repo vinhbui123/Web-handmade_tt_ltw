@@ -15,7 +15,16 @@
   </header>
 
   <section class="category-management">
-    <c:if test="${sessionScope.user.role == 1}">
+    <c:if test="${not empty sessionScope.error}">
+      <div class="alert alert-danger" style="color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; padding: 10px; margin-bottom: 15px; border-radius: 5px;">${sessionScope.error}</div>
+      <c:remove var="error" scope="session"/>
+    </c:if>
+    <c:if test="${not empty sessionScope.success}">
+      <div class="alert alert-success" style="color: #155724; background-color: #d4edda; border-color: #c3e6cb; padding: 10px; margin-bottom: 15px; border-radius: 5px;">${sessionScope.success}</div>
+      <c:remove var="success" scope="session"/>
+    </c:if>
+
+    <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2}">
       <button class="btn-add" onclick="openCategoryModal()">
         <i class="fa-solid fa-plus"></i> Thêm Danh Mục
       </button>
@@ -35,13 +44,13 @@
           <td>${category.id}</td>
           <td>${category.name}</td>
           <td>
-            <c:if test="${sessionScope.user.role == 1}">
+            <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2}">
               <button class="btn-edit" onclick="openEditCategoryModal('${category.id}', '${category.name}')">
                 <i class="fa-solid fa-pen"></i>
               </button>
             </c:if>
 
-            <c:if test="${sessionScope.user.role == 1}">
+            <c:if test="${sessionScope.user.role == 1 || sessionScope.user.role == 2}">
               <form action="${pageContext.request.contextPath}/removeCategory" method="post" style="display: inline;">
                 <input type="hidden" name="categoryId" value="${category.id}">
                 <button type="submit" class="btn-delete" onclick="return confirm('Bạn có chắc muốn xóa danh mục này?');">
@@ -60,7 +69,7 @@
     <div class="modal-content">
       <span class="close" onclick="closeCategoryModal()">&times;</span>
       <h2>Thêm Danh Mục</h2>
-      <form id="categoryForm" action="${pageContext.request.contextPath}/adminCategory" method="post">
+      <form id="categoryForm" action="${pageContext.request.contextPath}/adminCategorys" method="post">
         <label for="categoryName">Tên Danh Mục:</label>
         <input type="text" id="categoryName" name="categoryName" required>
 

@@ -1,19 +1,19 @@
 package vn.edu.hcmuaf.fit.Web_ban_hang.controller.admin.product;
 
+import java.io.IOException;
+import java.util.List;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import vn.edu.hcmuaf.fit.Web_ban_hang.dao.MaterialDao;
+import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Category;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Material;
 import vn.edu.hcmuaf.fit.Web_ban_hang.model.Product;
 import vn.edu.hcmuaf.fit.Web_ban_hang.services.CategoryService;
-import vn.edu.hcmuaf.fit.Web_ban_hang.services.ProductService;
-import vn.edu.hcmuaf.fit.Web_ban_hang.dao.ProductDao;
-import java.io.IOException;
-import java.util.List;
 
 @WebServlet(name = "Show", value = "/adminProducts")
 public class Show extends HttpServlet {

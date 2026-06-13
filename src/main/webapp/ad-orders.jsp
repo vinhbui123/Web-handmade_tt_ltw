@@ -124,7 +124,7 @@
 
 <script>
     const contextPath = '${pageContext.request.contextPath}';
-    const isAdmin = ${sessionScope.user.role == 1 ? 'true' : 'false'};
+    const isAdmin = ${sessionScope.user.role == 1 || sessionScope.user.role == 2 ? 'true' : 'false'};
     let currentGlobalPage = 1;
     let currentReturnOrderId = null;
 
