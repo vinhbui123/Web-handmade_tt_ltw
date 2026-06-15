@@ -71,9 +71,10 @@ public class FacebookCallbackServlet extends HttpServlet {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
 
-                if (session.getAttribute("cart") == null) {
-                    session.setAttribute("cart", new CartService());
-                }
+                vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService cart = new vn.edu.hcmuaf.fit.Web_ban_hang.services.CartService();
+                vn.edu.hcmuaf.fit.Web_ban_hang.dao.CartDbDao cartDbDao = new vn.edu.hcmuaf.fit.Web_ban_hang.dao.CartDbDao();
+                cart.setData(cartDbDao.getCartByUserId(user.getId()));
+                session.setAttribute("cart", cart);
             }
             response.sendRedirect(request.getContextPath() + "/home");
 

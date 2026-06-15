@@ -273,50 +273,55 @@
                             }
                         </script>
 
-                        <script>
-                            function removeCoupon() {
-                                var contextPath = document.body.dataset.contextPath || '';
+                <script>
+                    function removeCoupon() {
+                        var contextPath = document.body.dataset.contextPath || '';
 
-                                fetch(contextPath + "/remove-coupon", {
-                                    method: "POST"
-                                })
-                                    .then(function (response) {
-                                        if (!response.ok) {
-                                            throw new Error("Server trả về lỗi: " + response.status);
-                                        }
-                                        return response.json();
-                                    })
-                                    .then(function (data) {
-                                        if (data.success) {
-                                            showCartPopup(data.message, true);
+                        fetch(contextPath + "/remove-coupon", {
+                            method: "POST"
+                        })
+                            .then(function (response) {
+                                if (!response.ok) {
+                                    throw new Error("Server trả về lỗi: " + response.status);
+                                }
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                if (data.success) {
+                                    showCartPopup(data.message, true);
 
-                                            var discountContainer = document.getElementById("discount-container");
-                                            if (discountContainer) {
-                                                discountContainer.remove();
-                                            }
+                                    var discountContainer = document.getElementById("discount-container");
+                                    if (discountContainer) {
+                                        discountContainer.remove();
+                                    }
 
-                                            var totalPriceDisplay = document.getElementById("cart-total-price");
-                                            if (totalPriceDisplay && data.newTotal !== undefined) {
-                                                totalPriceDisplay.innerText = formatVND(data.newTotal);
-                                            }
+                                    var totalPriceDisplay = document.getElementById("cart-total-price");
+                                    if (totalPriceDisplay && data.newTotal !== undefined) {
+                                        totalPriceDisplay.innerText = formatVND(data.newTotal);
+                                    }
 
-                                            var codeInput = document.getElementById("coupon-code");
-                                            if (codeInput) {
-                                                codeInput.value = '';
-                                            }
-                                        } else {
-                                            showCartPopup(data.message, false);
-                                        }
-                                    })
-                                    .catch(function (error) {
-                                        console.error("Lỗi remove coupon:", error);
-                                        showCartPopup("Có lỗi xảy ra khi hủy mã giảm giá!", false);
-                                    });
-                            }
-                        </script>
+                                    var codeInput = document.getElementById("coupon-code");
+                                    if (codeInput) {
+                                        codeInput.value = '';
+                                    }
+                                } else {
+                                    showCartPopup(data.message, false);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error("Lỗi remove coupon:", error);
+                                showCartPopup("Có lỗi xảy ra khi hủy mã giảm giá!", false);
+                            });
+                    }
+                </script> <c:if test="${not empty stockWarning}">
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            var warningMessage = `<c:out value="${stockWarning}" escapeXml="false"/>`;
+                            alert("THÔNG BÁO TỪ GIỎ HÀNG:\n\n" + warningMessage);
+                        });
+                    </script>
+                </c:if>
 
-                        <script
-                            src="${pageContext.request.contextPath}/js/cart.js?v=<%= System.currentTimeMillis() %>"></script>
+                <script src="${pageContext.request.contextPath}/js/cart.js?v=<%= System.currentTimeMillis() %>"></script>
             </body>
-
             </html>
